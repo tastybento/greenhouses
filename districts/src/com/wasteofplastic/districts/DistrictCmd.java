@@ -12,6 +12,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.util.Vector;
 
 public class DistrictCmd implements CommandExecutor {
     public boolean busyFlag = true;
@@ -103,7 +104,9 @@ public class DistrictCmd implements CommandExecutor {
 			ds.remove(d);
 			plugin.setDistricts(ds);
 			// Return blocks
-			int blocks = Math.abs((d.getPos1().getBlockX() - d.getPos2().getBlockX()) * (d.getPos1().getBlockZ() - d.getPos2().getBlockZ()));
+			int height = Math.abs(d.getPos1().getBlockX() - d.getPos2().getBlockX()) + 1;
+			int width = Math.abs(d.getPos1().getBlockX() - d.getPos2().getBlockX()) + 1;
+			int blocks = height * width;
 			int balance = plugin.players.addBlocks(playerUUID, blocks);
 			player.sendMessage("Recovered " + blocks + " blocks. Your balance is " + balance);
 			players.setInDistrict(playerUUID, null);
@@ -193,6 +196,14 @@ public class DistrictCmd implements CommandExecutor {
 		    player.sendMessage(ChatColor.RED + "/district claim <number of blocks radius>");
 		    return true;		    
 		}
+		// Check if they have enough blocks
+		int blocksRequired = (blocks*2+1)*(blocks*2+1);
+		if (blocksRequired > players.getBlockBalance(playerUUID)) {
+		    player.sendMessage(ChatColor.RED + "You do not have enough blocks!");
+		    player.sendMessage(ChatColor.RED + "Blocks available: " + players.getBlockBalance(playerUUID));
+		    player.sendMessage(ChatColor.RED + "Blocks required: " + blocksRequired);
+		    return true;  
+		}
 		if (blocks < 5) {
 		    player.sendMessage(ChatColor.RED + "The minimum radius is 5 blocks");
 		    return true;		    
@@ -207,9 +218,11 @@ public class DistrictCmd implements CommandExecutor {
 		    plugin.getDistricts().add(d);
 		    plugin.getPos1s().remove(playerUUID);
 		    players.setInDistrict(playerUUID, d);
+		    players.removeBlocks(playerUUID, blocksRequired);
+		    player.sendMessage(ChatColor.GOLD + "District created!");
+		    player.sendMessage(ChatColor.GOLD + "You have " + players.getBlockBalance(playerUUID) + " blocks left.");
 		} else {
-		    player.sendMessage(ChatColor.RED + "That sized district could not be made because it overlaps another district");
-		    return true;		    		    
+		    player.sendMessage(ChatColor.RED + "That sized district could not be made because it overlaps another district");		    		    
 		}
 		return true;
 	    } else if (split[0].equalsIgnoreCase("sell")) { 

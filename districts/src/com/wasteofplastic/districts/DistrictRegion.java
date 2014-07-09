@@ -19,8 +19,8 @@ public class DistrictRegion {
     private World world;
     private UUID owner;
     private UUID renter;
-    private List<UUID> ownerTrusted;
-    private List<UUID> renterTrusted;
+    private List<UUID> ownerTrusted = new ArrayList<UUID>();
+    private List<UUID> renterTrusted = new ArrayList<UUID>();
     private boolean forSale = false;
     private boolean forRent = false;
     private Double price = 0D;
@@ -477,9 +477,6 @@ public class DistrictRegion {
     
     public List<String> getOwnerTrustedUUID() {
 	List<String> trustedByOwner = new ArrayList<String>();
-	if (ownerTrusted.isEmpty()) {
-	    return trustedByOwner;
-	}
 	for (UUID playerUUID: ownerTrusted) {
 	    trustedByOwner.add(playerUUID.toString());
 	}
@@ -491,9 +488,6 @@ public class DistrictRegion {
      */
     public List<String> getRenterTrusted() {
 	List<String> trustedByRenter = new ArrayList<String>();
-	if (ownerTrusted.isEmpty()) {
-	    return trustedByRenter;
-	}
 	for (UUID playerUUID: ownerTrusted) {
 	    trustedByRenter.add(plugin.players.getName(playerUUID));
 	}
