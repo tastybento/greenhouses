@@ -1,0 +1,22 @@
+name: Districts
+main: com.wasteofplastic.districts.Districts
+version: 0.1
+description: Districts
+author: Tastybento
+depend: [Vault]
+commands:
+    district:
+        description: Main player command
+        aliases: [dist, d]
+        usage:  |
+             /district help
+    dadmin:
+        description: Admin commands
+        usage:  |
+            /dadmin
+permissions:    
+  districts.*:
+    children:
+      districts.create:
+         description: Let the player create districts
+         default: true
