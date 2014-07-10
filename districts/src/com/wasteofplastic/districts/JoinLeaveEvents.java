@@ -30,8 +30,9 @@ public class JoinLeaveEvents implements Listener {
 	players.setPlayerName(playerUUID, event.getPlayer().getName());
 	players.save(playerUUID);
 	plugin.getLogger().info("Cached " + event.getPlayer().getName());
+	// TODO: Check leases and expire any old ones.
+	
 	// Load any messages for the player
-	// DEBUG - TEST ONLY
 	final List<String> messages = plugin.getMessages(playerUUID);
 	if (!messages.isEmpty()) {
 	    plugin.getServer().getScheduler().runTaskLater(plugin, new Runnable() {
@@ -49,6 +50,8 @@ public class JoinLeaveEvents implements Listener {
 
     @EventHandler(priority = EventPriority.NORMAL)
     public void onPlayerQuit(final PlayerQuitEvent event) {
+	// Remove any lingering positions
+	plugin.getPos1s().remove(event.getPlayer().getUniqueId());
 	//plugin.setMessage(event.getPlayer().getUniqueId(), "Hello! This is a test. You logged out");
 	players.removeOnlinePlayer(event.getPlayer().getUniqueId());
     }

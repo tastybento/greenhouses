@@ -188,6 +188,7 @@ public class Districts extends JavaPlugin {
 	Settings.allowCrafting = getConfig().getBoolean("districts.allowcrafting", false);
 	Settings.allowBrewing = getConfig().getBoolean("districts.allowbrewing", false);
 	Settings.allowGateUse = getConfig().getBoolean("districts.allowgateuse", false);
+	Settings.allowMobHarm = getConfig().getBoolean("districts.allowmobharm", false);
 
 	Settings.worldName = getConfig().getString("districts.worldName","world");
 	// Localization

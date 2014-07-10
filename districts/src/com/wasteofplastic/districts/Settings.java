@@ -24,8 +24,10 @@ public class Settings {
     public static boolean allowCrafting;
     public static boolean allowBrewing;
     public static boolean allowGateUse;
+    public static boolean allowMobHarm;
     // General
     public static String worldName;
     public static int beginningBlocks;
+   
     
 }

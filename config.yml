@@ -41,4 +41,6 @@ districts:
    allowbrewing: false
    # Allow gates to be used
    allowgateuse: false
+   # Allow non-monster mobs to be hurt
+   allowhurtmobs: false
    

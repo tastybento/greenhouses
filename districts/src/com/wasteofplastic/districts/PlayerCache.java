@@ -63,11 +63,9 @@ public class PlayerCache {
      * Removes all players on the server now from cache and saves their info
      */
     public void removeAllPlayers() {
-	for (Player onlinePlayer : plugin.getServer().getOnlinePlayers()) {
-	    if (playerCache.containsKey(onlinePlayer.getUniqueId())) {
-		playerCache.get(onlinePlayer.getUniqueId()).save();
-		playerCache.remove(onlinePlayer.getUniqueId());
-	    }
+	for (UUID p : playerCache.keySet()) {
+	    playerCache.get(p).save();
+	    playerCache.remove(p);
 	}
     }
 
@@ -258,7 +256,16 @@ public class PlayerCache {
        return playerCache.get(playerUUID).removeBlocks(blocks);
     }
 
+    public boolean getVisualize(UUID playerUUID) {
+	addPlayer(playerUUID);
+	return playerCache.get(playerUUID).isVisualize();
+    }
 
+    public void setVisualize(UUID playerUUID, boolean visualize) {
+	addPlayer(playerUUID);
+	playerCache.get(playerUUID).setVisualize(visualize);
+    }
+    
 }
 
 

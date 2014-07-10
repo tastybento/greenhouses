@@ -1,6 +1,5 @@
 package com.wasteofplastic.districts;
 
-import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -13,6 +12,7 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.ItemFrame;
+import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
@@ -72,21 +72,31 @@ public class DistrictGuard implements Listener {
 		event.setTo(newLoc);
 	    }
 	}
-	// Check if they are wielding a golden hoe
-	if (player.getItemInHand() != null) {
-	    //plugin.getLogger().info("Item in hand");
-	    if (player.getItemInHand().getType().equals(Material.GOLD_HOE)) {
+	if (!plugin.getPos1s().containsKey(player.getUniqueId())) {
+	    // Check if visualizations are turned on for this player
+	    if (plugin.players.getVisualize(player.getUniqueId())) {
+		// Check if they are in a district
 		if (visualizations.containsKey(player.getUniqueId())) {
 		    return;
 		}
 		DistrictRegion d = plugin.players.getInDistrict(player.getUniqueId());
 		if (d != null) {
 		    visualize(d,player);
-		} 
+		} else {
+		    devisualize(player);
+		}
 	    } else {
+		if (visualizations.containsKey(player.getUniqueId())) {
+		    devisualize(player);
+		}
+	    }
+	}
+	// Check if they are wielding a golden hoe
+	if (player.getItemInHand() != null) {
+	    //plugin.getLogger().info("Item in hand");
+	    if (!player.getItemInHand().getType().equals(Material.GOLD_HOE)) {
 		// no longer holding a golden hoe
 		//plugin.getLogger().info("No longer holding hoe");
-		devisualize(player);
 		if (plugin.getPos1s().containsKey(player.getUniqueId())) {
 		    // Remove the point
 		    player.sendMessage(ChatColor.GOLD + "Cancelling district mark");
@@ -94,8 +104,7 @@ public class DistrictGuard implements Listener {
 		}
 	    }
 	} else {
-	    // not holding anything
-	    devisualize(player);
+	    // Empty hand
 	    if (plugin.getPos1s().containsKey(player.getUniqueId())) {
 		// Remove the point
 		player.sendMessage(ChatColor.GOLD + "Cancelling district mark");
@@ -164,7 +173,7 @@ public class DistrictGuard implements Listener {
 	    player.sendBlockChange(v, Material.REDSTONE_BLOCK, (byte)0);
 	    positions.add(v);
 	}
-	
+
 
 	// Save these locations
 	visualizations.put(player.getUniqueId(), positions);
@@ -177,7 +186,7 @@ public class DistrictGuard implements Listener {
 	if (visualizations.containsKey(player.getUniqueId())) {
 	    devisualize(player);
 	}
-	player.sendBlockChange(l, Material.GLOWSTONE, (byte)0);
+	player.sendBlockChange(l, Material.REDSTONE_BLOCK, (byte)0);
 	// Save these locations
 	List<Location> pos = new ArrayList<Location>();
 	pos.add(l);
@@ -378,6 +387,7 @@ public class DistrictGuard implements Listener {
 	    plugin.getDistricts().add(d);
 	    plugin.getPos1s().remove(playerUUID);
 	    visualize(d, p);
+	    e.setCancelled(true);
 	} else {
 	    plugin.getPos1s().put(playerUUID, b.getLocation());
 	    p.sendMessage("Setting position 1 : " + b.getLocation().getBlockX() + ", " + b.getLocation().getBlockZ());
@@ -389,6 +399,7 @@ public class DistrictGuard implements Listener {
 		    visualize(b.getLocation(),p);
 		}
 	    }, 10L);
+	    e.setCancelled(true);
 	}
 
     }
@@ -408,7 +419,7 @@ public class DistrictGuard implements Listener {
 	if (!e.getPlayer().getWorld().getName().equalsIgnoreCase(Settings.worldName)) {
 	    return;
 	}
-	if (!d.getAllowBreakBlocks()) {
+	if (!d.getAllowBreakBlocks(e.getPlayer().getUniqueId())) {
 	    e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
 	    e.setCancelled(true);
 	}
@@ -427,7 +438,7 @@ public class DistrictGuard implements Listener {
 	// Check to see if it's an item frame
 	if (e.getEntity() instanceof ItemFrame) {
 	    if (e.getDamager() instanceof Player) {
-		if (!plugin.players.getInDistrict(e.getDamager().getUniqueId()).getAllowBreakBlocks() && !((Player)e.getDamager()).isOp()) {
+		if (!plugin.players.getInDistrict(e.getDamager().getUniqueId()).getAllowBreakBlocks(e.getDamager().getUniqueId()) && !((Player)e.getDamager()).isOp()) {
 		    ((Player)e.getDamager()).sendMessage(ChatColor.RED + Locale.districtProtected);
 		    e.setCancelled(true);
 		    return;
@@ -435,22 +446,31 @@ public class DistrictGuard implements Listener {
 	    }
 
 	}
-	// If the target is not a player return
-	if (!(e.getEntity() instanceof Player)) {
-	    return;
-	}
-	plugin.getLogger().info("Entity is " + ((Player)e.getEntity()).getName());
-	if (e.getDamager() instanceof Player)
-	    plugin.getLogger().info("Damager is " + ((Player)e.getDamager()).getName());
-
 	DistrictRegion d = plugin.players.getInDistrict(e.getEntity().getUniqueId());
 	if (d == null) {
 	    // Not in a district
 	    //plugin.getLogger().info("Not in a district");
 	    return;
 	}
+	plugin.getLogger().info("Entity is " + ((Player)e.getEntity()).getName());
+	if (e.getDamager() instanceof Player)
+	    plugin.getLogger().info("Damager is " + ((Player)e.getDamager()).getName());
+
+	// If the target is not a player check if mobs can be hurt
+	if (!(e.getEntity() instanceof Player)) {
+	    if (e.getEntity() instanceof Monster) {
+		return;
+	    } else {
+		if (!d.getAllowHurtMobs(e.getEntity().getUniqueId())) {
+		    ((Player)e.getDamager()).sendMessage(ChatColor.RED + Locale.districtProtected);
+		    e.setCancelled(true);
+		    return;
+		}
+	    }
+	}
+
 	// If PVP is okay then return
-	if (plugin.players.getInDistrict(e.getEntity().getUniqueId()).getAllowPVP()) {
+	if (plugin.players.getInDistrict(e.getEntity().getUniqueId()).getAllowPVP(e.getEntity().getUniqueId())) {
 	    //plugin.getLogger().info("PVP allowed");
 	    return;
 	}
@@ -472,7 +492,7 @@ public class DistrictGuard implements Listener {
 		if (e.getEntity() instanceof Player) {
 		    plugin.getLogger().info("Player vs Player!");
 		    // Arrow shot by a player at another player
-		    if (!plugin.players.getInDistrict(((Player)e.getEntity()).getUniqueId()).getAllowPVP()) {
+		    if (!plugin.players.getInDistrict(e.getEntity().getUniqueId()).getAllowPVP(e.getEntity().getUniqueId())) {
 			plugin.getLogger().info("Target player is in a no-PVP district!");
 			((Player)arrow.getShooter()).sendMessage("Target is in a no-PVP district!");
 			e.setCancelled(true);
@@ -483,7 +503,7 @@ public class DistrictGuard implements Listener {
 	} else {
 	    //plugin.getLogger().info("Player attack");
 	    // Just a player attack
-	    if (!plugin.players.getInDistrict(e.getEntity().getUniqueId()).getAllowPVP()) {
+	    if (!plugin.players.getInDistrict(e.getEntity().getUniqueId()).getAllowPVP(e.getEntity().getUniqueId())) {
 		((Player)e.getDamager()).sendMessage("Target is in a no-PVP district!");
 		e.setCancelled(true);
 		return;
@@ -508,7 +528,7 @@ public class DistrictGuard implements Listener {
 	    return;
 	}
 
-	if (!d.getAllowPlaceBlocks() && !e.getPlayer().isOp()) {
+	if (!d.getAllowPlaceBlocks(e.getPlayer().getUniqueId()) && !e.getPlayer().isOp()) {
 	    e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
 	    e.setCancelled(true);
 	}
@@ -526,7 +546,7 @@ public class DistrictGuard implements Listener {
 	if (!e.getPlayer().getWorld().getName().equalsIgnoreCase(Settings.worldName)) {
 	    return;
 	}
-	if (!d.getAllowBedUse() && !e.getPlayer().isOp()) {
+	if (!d.getAllowBedUse(e.getPlayer().getUniqueId()) && !e.getPlayer().isOp()) {
 	    e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
 	    e.setCancelled(true);
 	}
@@ -550,7 +570,7 @@ public class DistrictGuard implements Listener {
 	    return;
 	}
 	Player p = (Player)e.getRemover();
-	if (!d.getAllowBreakBlocks() && !p.isOp()) {
+	if (!d.getAllowBreakBlocks(e.getRemover().getUniqueId()) && !p.isOp()) {
 	    p.sendMessage(ChatColor.RED + Locale.districtProtected);
 	    e.setCancelled(true);
 	}
@@ -568,7 +588,7 @@ public class DistrictGuard implements Listener {
 	    return;
 	}
 
-	if (!d.getAllowBucketUse() && !e.getPlayer().isOp()) {
+	if (!d.getAllowBucketUse(e.getPlayer().getUniqueId()) && !e.getPlayer().isOp()) {
 	    e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
 	    e.setCancelled(true);
 	}
@@ -584,7 +604,7 @@ public class DistrictGuard implements Listener {
 	    return;
 	}
 
-	if (!d.getAllowBucketUse() && !e.getPlayer().isOp()) {
+	if (!d.getAllowBucketUse(e.getPlayer().getUniqueId()) && !e.getPlayer().isOp()) {
 	    e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
 	    e.setCancelled(true);
 	}
@@ -602,7 +622,7 @@ public class DistrictGuard implements Listener {
 	    return;
 	}
 
-	if (!d.getAllowShearing()) {
+	if (!d.getAllowShearing(e.getPlayer().getUniqueId())) {
 	    e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
 	    e.setCancelled(true);
 	}
@@ -629,14 +649,14 @@ public class DistrictGuard implements Listener {
 	    switch (e.getClickedBlock().getType()) {
 	    case WOODEN_DOOR:
 	    case TRAP_DOOR:
-		if (!d.getAllowDoorUse()) {
+		if (!d.getAllowDoorUse(e.getPlayer().getUniqueId())) {
 		    e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
 		    e.setCancelled(true);
 		    return; 
 		}
 		break;
 	    case FENCE_GATE:
-		if (!d.getAllowGateUse()) {
+		if (!d.getAllowGateUse(e.getPlayer().getUniqueId())) {
 		    e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
 		    e.setCancelled(true);
 		    return;  
@@ -650,14 +670,14 @@ public class DistrictGuard implements Listener {
 	    case HOPPER:
 	    case HOPPER_MINECART:
 	    case STORAGE_MINECART:
-		if (!d.getAllowChestAccess()) {
+		if (!d.getAllowChestAccess(e.getPlayer().getUniqueId())) {
 		    e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
 		    e.setCancelled(true);
 		    return; 
 		}
 		break;
 	    case SOIL:
-		if (!d.getAllowCropTrample()) {
+		if (!d.getAllowCropTrample(e.getPlayer().getUniqueId())) {
 		    e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
 		    e.setCancelled(true);
 		    return; 
@@ -665,7 +685,7 @@ public class DistrictGuard implements Listener {
 		break;
 	    case BREWING_STAND:
 	    case CAULDRON:
-		if (!d.getAllowBrewing()) {
+		if (!d.getAllowBrewing(e.getPlayer().getUniqueId())) {
 		    e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
 		    e.setCancelled(true);
 		    return; 
@@ -678,7 +698,7 @@ public class DistrictGuard implements Listener {
 	    case DIODE_BLOCK_ON:
 	    case REDSTONE_COMPARATOR_ON:
 	    case REDSTONE_COMPARATOR_OFF:
-		if (!d.getAllowRedStone()) {
+		if (!d.getAllowRedStone(e.getPlayer().getUniqueId())) {
 		    e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
 		    e.setCancelled(true);
 		    return; 
@@ -688,7 +708,7 @@ public class DistrictGuard implements Listener {
 		break;
 	    case FURNACE:
 	    case BURNING_FURNACE:
-		if (!d.getAllowFurnaceUse()) {
+		if (!d.getAllowFurnaceUse(e.getPlayer().getUniqueId())) {
 		    e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
 		    e.setCancelled(true);
 		    return; 
@@ -700,7 +720,7 @@ public class DistrictGuard implements Listener {
 		break;
 	    case JUKEBOX:
 	    case NOTE_BLOCK:
-		if (!d.getAllowMusic()) {
+		if (!d.getAllowMusic(e.getPlayer().getUniqueId())) {
 		    e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
 		    e.setCancelled(true);
 		    return; 
@@ -711,7 +731,7 @@ public class DistrictGuard implements Listener {
 	    case STONE_BUTTON:
 	    case WOOD_BUTTON:
 	    case LEVER:
-		if (!d.getAllowLeverButtonUse()) {
+		if (!d.getAllowLeverButtonUse(e.getPlayer().getUniqueId())) {
 		    e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
 		    e.setCancelled(true);
 		    return; 
@@ -720,7 +740,7 @@ public class DistrictGuard implements Listener {
 	    case TNT:
 		break;
 	    case WORKBENCH:
-		if (!d.getAllowCrafting()) {
+		if (!d.getAllowCrafting(e.getPlayer().getUniqueId())) {
 		    e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
 		    e.setCancelled(true);
 		    return; 
@@ -739,7 +759,7 @@ public class DistrictGuard implements Listener {
 		return;
 	    }
 	    if (e.getMaterial().equals(Material.ENDER_PEARL)) {
-		if (!d.getAllowEnderPearls()) {
+		if (!d.getAllowEnderPearls(e.getPlayer().getUniqueId())) {
 		    e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
 		    e.setCancelled(true);
 		}
@@ -754,7 +774,7 @@ public class DistrictGuard implements Listener {
 			return;
 		    } else {
 			// Splash potions are allowed only if PVP is allowed
-			if (!d.getAllowPVP()) {
+			if (!d.getAllowPVP(e.getPlayer().getUniqueId())) {
 			    e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
 			    e.setCancelled(true);
 			}
