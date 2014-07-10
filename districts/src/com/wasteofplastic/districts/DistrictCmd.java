@@ -116,7 +116,7 @@ public class DistrictCmd implements CommandExecutor {
 	    } else if (split[0].equalsIgnoreCase("view")) {
 		// Toggle the visualization setting
 		if (players.getVisualize(playerUUID)) {
-		    DistrictGuard.devisualize(player);
+		    plugin.devisualize(player);
 		    player.sendMessage(ChatColor.YELLOW + "Switching district boundary off");
 		} else {
 		    player.sendMessage(ChatColor.YELLOW + "Switching district boundary on");
@@ -149,13 +149,9 @@ public class DistrictCmd implements CommandExecutor {
 		    Location pos1 = new Location(player.getWorld(),plugin.getPos1s().get(playerUUID).getBlockX(),0,plugin.getPos1s().get(playerUUID).getBlockZ());
 		    Location pos2 = new Location(player.getWorld(),player.getLocation().getBlockX(),0,player.getLocation().getBlockZ());
 		    if (!plugin.checkDistrictIntersection(pos1, pos2)) {
-			DistrictRegion d = new DistrictRegion(plugin, pos1, pos2, playerUUID);
-			d.setEnterMessage("Welcome to " + player.getDisplayName() + "'s district!");
-			d.setFarewellMessage("Now leaving " + player.getDisplayName() + "'s district.");
-			plugin.getDistricts().add(d);
-			plugin.getPos1s().remove(playerUUID);
-			players.setInDistrict(playerUUID, d);
+			plugin.createNewDistrict(pos1, pos2, player);
 			players.removeBlocks(playerUUID, blocks);
+			players.save(playerUUID);
 			player.sendMessage(ChatColor.GOLD + "District created!");
 			player.sendMessage(ChatColor.GOLD + "You have " + players.getBlockBalance(playerUUID) + " blocks left.");
 		    } else {
@@ -171,7 +167,7 @@ public class DistrictCmd implements CommandExecutor {
 		if (d != null) {
 		    if (d.getOwner().equals(playerUUID)) {
 			player.sendMessage(ChatColor.RED + "Removing district!");
-			DistrictGuard.devisualize(player);
+			plugin.devisualize(player);
 			// Remove the district
 			HashSet<DistrictRegion> ds = plugin.getDistricts();
 			ds.remove(d);
@@ -216,7 +212,7 @@ public class DistrictCmd implements CommandExecutor {
 			// Check if owner is online
 			Player owner = plugin.getServer().getPlayer(d.getOwner());
 			if (owner != null) {
-			    DistrictGuard.devisualize(owner);
+			    plugin.devisualize(owner);
 			    owner.sendMessage("You successfully sold a district for " + VaultHelper.econ.format(d.getPrice()) + " to " + player.getDisplayName());
 			}	
 			Location pos1 = d.getPos1();
@@ -227,10 +223,8 @@ public class DistrictCmd implements CommandExecutor {
 			ds.remove(d);
 			plugin.setDistricts(ds);
 			// Recreate the district for this player
-			DistrictRegion newRegion = new DistrictRegion(plugin, pos1,pos2,playerUUID);
-			newRegion.setEnterMessage("Welcome to " + player.getDisplayName() + "'s district!");
-			newRegion.setFarewellMessage("Now leaving " + player.getDisplayName() + "'s district.");
-			players.setInDistrict(playerUUID, newRegion);
+			plugin.createNewDistrict(pos1, pos2, player);
+			players.save(owner.getUniqueId());
 			return true;
 		    } else {
 			player.sendMessage(ChatColor.RED + "There was an economy problem trying to purchase the district for "+ VaultHelper.econ.format(d.getPrice()) + "!");
@@ -246,11 +240,11 @@ public class DistrictCmd implements CommandExecutor {
 			player.sendMessage(ChatColor.RED + "This district is not for rent!");
 			return true;
 		    }
-		    if (d.getOwner().equals(playerUUID)) {
+		    if (d.getOwner() != null && d.getOwner().equals(playerUUID)) {
 			player.sendMessage(ChatColor.RED + "You already own this district!");
 			return true;
 		    }
-		    if (d.getRenter().equals(playerUUID)) {
+		    if (d.getRenter() != null && d.getRenter().equals(playerUUID)) {
 			player.sendMessage(ChatColor.RED + "You are already renting this district!");
 			return true;			
 		    }
@@ -265,7 +259,7 @@ public class DistrictCmd implements CommandExecutor {
 			// Check if owner is online
 			Player owner = plugin.getServer().getPlayer(d.getOwner());
 			if (owner != null) {
-			    DistrictGuard.devisualize(owner);
+			    plugin.devisualize(owner);
 			    owner.sendMessage("You successfully rented a district for " + VaultHelper.econ.format(d.getPrice()) + " to " + player.getDisplayName());
 			}
 			d.setForRent(false);
@@ -275,6 +269,7 @@ public class DistrictCmd implements CommandExecutor {
 			player.sendMessage("You rented the district for "+ VaultHelper.econ.format(d.getPrice()) + " 1 week!");
 			d.setEnterMessage("Welcome to " + player.getDisplayName() + "'s rented district!");
 			d.setFarewellMessage("Now leaving " + player.getDisplayName() + "'s rented district.");
+			players.save(owner.getUniqueId());
 			return true;
 		    } else {
 			player.sendMessage(ChatColor.RED + "There was an economy problem trying to rent the district for "+ VaultHelper.econ.format(d.getPrice()) + "!");
@@ -301,6 +296,7 @@ public class DistrictCmd implements CommandExecutor {
 
 
 	    }
+	    break;
 	case 2:
 	    if (split[0].equalsIgnoreCase("untrust")) {
 		DistrictRegion d = players.getInDistrict(playerUUID);
@@ -425,15 +421,11 @@ public class DistrictCmd implements CommandExecutor {
 		Location pos1 = new Location(player.getWorld(),player.getLocation().getBlockX()-blocks,0,player.getLocation().getBlockZ()-blocks);
 		Location pos2 = new Location(player.getWorld(),player.getLocation().getBlockX()+blocks,0,player.getLocation().getBlockZ()+blocks);
 		if (!plugin.checkDistrictIntersection(pos1, pos2)) {
-		    DistrictRegion d = new DistrictRegion(plugin, pos1, pos2, playerUUID);
-		    d.setEnterMessage("Welcome to " + player.getDisplayName() + "'s district!");
-		    d.setFarewellMessage("Now leaving " + player.getDisplayName() + "'s district.");
-		    plugin.getDistricts().add(d);
-		    plugin.getPos1s().remove(playerUUID);
-		    players.setInDistrict(playerUUID, d);
+		    plugin.createNewDistrict(pos1, pos2, player);
 		    players.removeBlocks(playerUUID, blocksRequired);
 		    player.sendMessage(ChatColor.GOLD + "District created!");
 		    player.sendMessage(ChatColor.GOLD + "You have " + players.getBlockBalance(playerUUID) + " blocks left.");
+		    players.save(playerUUID);
 		} else {
 		    player.sendMessage(ChatColor.RED + "That sized district could not be made because it overlaps another district");		    		    
 		}

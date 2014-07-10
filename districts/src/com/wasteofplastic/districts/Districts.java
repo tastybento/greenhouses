@@ -13,12 +13,15 @@ import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.util.Vector;
 
 /**
  * @author ben
@@ -43,7 +46,9 @@ public class Districts extends JavaPlugin {
     private YamlConfiguration messageStore;
     // A map of where pos1's are stored
     private HashMap<UUID,Location> pos1s = new HashMap<UUID,Location>();
-
+    // Where visualization blocks are kept
+    private static HashMap<UUID, List<Location>> visualizations = new HashMap<UUID, List<Location>>();
+ 
 
     /**
      * @return plugin object instance
@@ -249,8 +254,6 @@ public class Districts extends JavaPlugin {
 	loadMessages();
 
 	// Kick off a few tasks on the next tick
-	// By calling getIslandWorld(), if there is no island
-	// world, it will be created
 	getServer().getScheduler().runTask(getPlugin(), new Runnable() {
 	    @Override
 	    public void run() {
@@ -264,9 +267,33 @@ public class Districts extends JavaPlugin {
 			getLogger().info("Success!");
 		    };
 		}
+		// Load players and check leases
+		loadDistricts();
 	    }
 	});
     }
+
+    protected void loadDistricts() {
+	// Load all known districts
+	for (final File f : playersFolder.listFiles()) {
+	    // Need to remove the .yml suffix
+	    String fileName = f.getName();
+	    if (fileName.endsWith(".yml")) {
+		try {
+		    final UUID playerUUID = UUID.fromString(fileName.substring(0, fileName.length() - 4));
+		    if (playerUUID == null) {
+			getLogger().warning("Player file contains erroneous UUID data.");
+			getLogger().info("Looking at " + fileName.substring(0, fileName.length() - 4));
+		    }
+		    new Players(this, playerUUID);    
+		} catch (Exception e) {
+		    e.printStackTrace();
+		}
+	    }
+	}
+	
+    }
+
 
     /**
      * Registers events
@@ -463,4 +490,118 @@ public class Districts extends JavaPlugin {
 	}
 	return false;
     }
+    
+    /**
+     * Creates a new district
+     * @param pos1
+     * @param pos2
+     * @param owner
+     * @return the district region
+     */
+    public DistrictRegion createNewDistrict(Location pos1, Location pos2, Player owner) {
+	    DistrictRegion d = new DistrictRegion(plugin, pos1, pos2, owner.getUniqueId());
+	    d.setEnterMessage("Entering " + owner.getDisplayName() + "'s district!");
+	    d.setFarewellMessage("Now leaving " + owner.getDisplayName() + "'s district.");
+	    getDistricts().add(d);
+	    getPos1s().remove(owner.getUniqueId());
+	    visualize(d, owner);
+	    players.save(owner.getUniqueId());
+	    return d;
+    }
+    
+    @SuppressWarnings("deprecation") void visualize(DistrictRegion d, Player player) {
+	// Deactivate any previous visualization
+	if (visualizations.containsKey(player.getUniqueId())) {
+	    devisualize(player);
+	}
+	// Get the four corners
+	int minx = Math.min(d.getPos1().getBlockX(), d.getPos2().getBlockX());
+	int maxx = Math.max(d.getPos1().getBlockX(), d.getPos2().getBlockX());
+	int minz = Math.min(d.getPos1().getBlockZ(), d.getPos2().getBlockZ());
+	int maxz = Math.max(d.getPos1().getBlockZ(), d.getPos2().getBlockZ());
+
+	// Draw the lines - we do not care in what order
+	List<Location> positions = new ArrayList<Location>();
+	/*
+	for (int x = minx; x<= maxx; x++) {
+	    for (int z = minz; z<= maxz; z++) {
+		Location v = new Location(player.getWorld(),x,0,z);
+		v = player.getWorld().getHighestBlockAt(v).getLocation().subtract(new Vector(0,1,0));
+		player.sendBlockChange(v, Material.REDSTONE_BLOCK, (byte)0);
+		positions.add(v);
+	    }
+	}*/
+	for (int x = minx; x<= maxx; x++) {
+	    Location v = new Location(player.getWorld(),x,0,minz);
+	    v = player.getWorld().getHighestBlockAt(v).getLocation().subtract(new Vector(0,1,0));
+	    player.sendBlockChange(v, Material.REDSTONE_BLOCK, (byte)0);
+	    positions.add(v);
+	}
+	for (int x = minx; x<= maxx; x++) {
+	    Location v = new Location(player.getWorld(),x,0,maxz);
+	    v = player.getWorld().getHighestBlockAt(v).getLocation().subtract(new Vector(0,1,0));
+	    player.sendBlockChange(v, Material.REDSTONE_BLOCK, (byte)0);
+	    positions.add(v);
+	}
+	for (int z = minz; z<= maxz; z++) {
+	    Location v = new Location(player.getWorld(),minx,0,z);
+	    v = player.getWorld().getHighestBlockAt(v).getLocation().subtract(new Vector(0,1,0));
+	    player.sendBlockChange(v, Material.REDSTONE_BLOCK, (byte)0);
+	    positions.add(v);
+	}
+	for (int z = minz; z<= maxz; z++) {
+	    Location v = new Location(player.getWorld(),maxx,0,z);
+	    v = player.getWorld().getHighestBlockAt(v).getLocation().subtract(new Vector(0,1,0));
+	    player.sendBlockChange(v, Material.REDSTONE_BLOCK, (byte)0);
+	    positions.add(v);
+	}
+
+
+	// Save these locations
+	visualizations.put(player.getUniqueId(), positions);
+    }
+
+    @SuppressWarnings("deprecation") void visualize(Location l, Player player) {
+	plugin.getLogger().info("Visualize location");
+	// Deactivate any previous visualization
+	if (visualizations.containsKey(player.getUniqueId())) {
+	    devisualize(player);
+	}
+	player.sendBlockChange(l, Material.REDSTONE_BLOCK, (byte)0);
+	// Save these locations
+	List<Location> pos = new ArrayList<Location>();
+	pos.add(l);
+	visualizations.put(player.getUniqueId(), pos);
+    }
+    
+    @SuppressWarnings("deprecation")
+    public void devisualize(Player player) {
+	//Districts.getPlugin().getLogger().info("Removing visualization");
+	if (!visualizations.containsKey(player.getUniqueId())) {
+	    return;
+	}
+	for (Location pos: visualizations.get(player.getUniqueId())) {
+	    Block b = pos.getBlock();	    
+	    player.sendBlockChange(pos, b.getType(), b.getData());
+	}
+	visualizations.remove(player.getUniqueId());
+    }
+
+
+    /**
+     * @return the visualizations
+     */
+    public HashMap<UUID, List<Location>> getVisualizations() {
+        return visualizations;
+    }
+
+
+    /**
+     * @param visualizations the visualizations to set
+     */
+    public void setVisualizations(HashMap<UUID, List<Location>> visualizations) {
+        Districts.visualizations = visualizations;
+    }
+
+
 }

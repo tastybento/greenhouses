@@ -80,7 +80,7 @@ public class AdminCmd implements CommandExecutor {
 		}
 		sender.sendMessage(ChatColor.GREEN + "District Flags:");
 		for (String flag : d.getFlags().keySet()) {
-		    sender.sendMessage(flag + ": " + d.getFlags().get(d));
+		    sender.sendMessage(flag + ": " + d.getFlags().get(flag));
 		}
 		return true;
 	    } else {

@@ -1,8 +1,5 @@
 package com.wasteofplastic.districts;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.UUID;
 
 import org.bukkit.ChatColor;
@@ -31,7 +28,6 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerShearEntityEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.Potion;
-import org.bukkit.util.Vector;
 
 /**
  * @author ben
@@ -39,9 +35,7 @@ import org.bukkit.util.Vector;
  */
 public class DistrictGuard implements Listener {
     private final Districts plugin;
-    // Where visualization blocks are kept
-    private static HashMap<UUID, List<Location>> visualizations = new HashMap<UUID, List<Location>>();
-    public DistrictGuard(final Districts plugin) {
+   public DistrictGuard(final Districts plugin) {
 	this.plugin = plugin;
 
     }
@@ -76,18 +70,18 @@ public class DistrictGuard implements Listener {
 	    // Check if visualizations are turned on for this player
 	    if (plugin.players.getVisualize(player.getUniqueId())) {
 		// Check if they are in a district
-		if (visualizations.containsKey(player.getUniqueId())) {
+		if (plugin.getVisualizations().containsKey(player.getUniqueId())) {
 		    return;
 		}
 		DistrictRegion d = plugin.players.getInDistrict(player.getUniqueId());
 		if (d != null) {
-		    visualize(d,player);
+		    plugin.visualize(d,player);
 		} else {
-		    devisualize(player);
+		    plugin.devisualize(player);
 		}
 	    } else {
-		if (visualizations.containsKey(player.getUniqueId())) {
-		    devisualize(player);
+		if (plugin.getVisualizations().containsKey(player.getUniqueId())) {
+		    plugin.devisualize(player);
 		}
 	    }
 	}
@@ -113,85 +107,6 @@ public class DistrictGuard implements Listener {
 	}
     }
 
-    @SuppressWarnings("deprecation")
-    public static void devisualize(Player player) {
-	//Districts.getPlugin().getLogger().info("Removing visualization");
-	if (!visualizations.containsKey(player.getUniqueId())) {
-	    return;
-	}
-	for (Location pos: visualizations.get(player.getUniqueId())) {
-	    Block b = pos.getBlock();	    
-	    player.sendBlockChange(pos, b.getType(), b.getData());
-	}
-	visualizations.remove(player.getUniqueId());
-    }
-
-    @SuppressWarnings("deprecation")
-    private void visualize(DistrictRegion d, Player player) {
-	// Deactivate any previous visualization
-	if (visualizations.containsKey(player.getUniqueId())) {
-	    devisualize(player);
-	}
-	// Get the four corners
-	int minx = Math.min(d.getPos1().getBlockX(), d.getPos2().getBlockX());
-	int maxx = Math.max(d.getPos1().getBlockX(), d.getPos2().getBlockX());
-	int minz = Math.min(d.getPos1().getBlockZ(), d.getPos2().getBlockZ());
-	int maxz = Math.max(d.getPos1().getBlockZ(), d.getPos2().getBlockZ());
-
-	// Draw the lines - we do not care in what order
-	List<Location> positions = new ArrayList<Location>();
-	/*
-	for (int x = minx; x<= maxx; x++) {
-	    for (int z = minz; z<= maxz; z++) {
-		Location v = new Location(player.getWorld(),x,0,z);
-		v = player.getWorld().getHighestBlockAt(v).getLocation().subtract(new Vector(0,1,0));
-		player.sendBlockChange(v, Material.REDSTONE_BLOCK, (byte)0);
-		positions.add(v);
-	    }
-	}*/
-	for (int x = minx; x<= maxx; x++) {
-	    Location v = new Location(player.getWorld(),x,0,minz);
-	    v = player.getWorld().getHighestBlockAt(v).getLocation().subtract(new Vector(0,1,0));
-	    player.sendBlockChange(v, Material.REDSTONE_BLOCK, (byte)0);
-	    positions.add(v);
-	}
-	for (int x = minx; x<= maxx; x++) {
-	    Location v = new Location(player.getWorld(),x,0,maxz);
-	    v = player.getWorld().getHighestBlockAt(v).getLocation().subtract(new Vector(0,1,0));
-	    player.sendBlockChange(v, Material.REDSTONE_BLOCK, (byte)0);
-	    positions.add(v);
-	}
-	for (int z = minz; z<= maxz; z++) {
-	    Location v = new Location(player.getWorld(),minx,0,z);
-	    v = player.getWorld().getHighestBlockAt(v).getLocation().subtract(new Vector(0,1,0));
-	    player.sendBlockChange(v, Material.REDSTONE_BLOCK, (byte)0);
-	    positions.add(v);
-	}
-	for (int z = minz; z<= maxz; z++) {
-	    Location v = new Location(player.getWorld(),maxx,0,z);
-	    v = player.getWorld().getHighestBlockAt(v).getLocation().subtract(new Vector(0,1,0));
-	    player.sendBlockChange(v, Material.REDSTONE_BLOCK, (byte)0);
-	    positions.add(v);
-	}
-
-
-	// Save these locations
-	visualizations.put(player.getUniqueId(), positions);
-    }
-
-    @SuppressWarnings("deprecation")
-    private void visualize(Location l, Player player) {
-	plugin.getLogger().info("Visualize location");
-	// Deactivate any previous visualization
-	if (visualizations.containsKey(player.getUniqueId())) {
-	    devisualize(player);
-	}
-	player.sendBlockChange(l, Material.REDSTONE_BLOCK, (byte)0);
-	// Save these locations
-	List<Location> pos = new ArrayList<Location>();
-	pos.add(l);
-	visualizations.put(player.getUniqueId(), pos);
-    }
 
     /**
      * @param player
@@ -256,7 +171,7 @@ public class DistrictGuard implements Listener {
 	    if (!fromDistrict.getFarewellMessage().isEmpty()) {
 		player.sendMessage(fromDistrict.getFarewellMessage());
 		// Stop visualization
-		devisualize(player);
+		plugin.devisualize(player);
 	    }
 	    plugin.players.setInDistrict(player.getUniqueId(), null);
 	} else if (fromDistrict == null && toDistrict != null){
@@ -290,7 +205,6 @@ public class DistrictGuard implements Listener {
     }
 
 
-    // TODO: Visualizations still dont work. Removing visualizations are called every move.
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onClick(PlayerInteractEvent e) {
 	//plugin.getLogger().info("On click");
@@ -358,7 +272,7 @@ public class DistrictGuard implements Listener {
 	    if (to.getBlockX() == origin.getBlockX() && to.getBlockZ()==origin.getBlockZ()) {
 		p.sendMessage("Setting position 1 : " + b.getLocation().getBlockX() + ", " + b.getLocation().getBlockZ());
 		p.sendMessage("Click on the opposite corner of the district");
-		visualize(b.getLocation(),p);
+		plugin.visualize(b.getLocation(),p);
 		e.setCancelled(true);
 		return;
 	    }
@@ -381,12 +295,7 @@ public class DistrictGuard implements Listener {
 	    p.sendMessage("Position 1 : " + pos.getBlockX() + ", " + pos.getBlockZ());
 	    p.sendMessage("Position 2 : " + b.getLocation().getBlockX() + ", " + b.getLocation().getBlockZ());
 	    p.sendMessage("Creating district!");
-	    DistrictRegion d = new DistrictRegion(plugin, pos, b.getLocation(), p.getUniqueId());
-	    d.setEnterMessage("Entering " + p.getDisplayName() + "'s district!");
-	    d.setFarewellMessage("Now leaving " + p.getDisplayName() + "'s district.");
-	    plugin.getDistricts().add(d);
-	    plugin.getPos1s().remove(playerUUID);
-	    visualize(d, p);
+	    plugin.createNewDistrict(pos, b.getLocation(), p);
 	    e.setCancelled(true);
 	} else {
 	    plugin.getPos1s().put(playerUUID, b.getLocation());
@@ -396,7 +305,7 @@ public class DistrictGuard implements Listener {
 	    plugin.getServer().getScheduler().runTaskLater(plugin, new Runnable() {
 		@Override
 		public void run() {
-		    visualize(b.getLocation(),p);
+		    plugin.visualize(b.getLocation(),p);
 		}
 	    }, 10L);
 	    e.setCancelled(true);
@@ -459,6 +368,7 @@ public class DistrictGuard implements Listener {
 	// If the target is not a player check if mobs can be hurt
 	if (!(e.getEntity() instanceof Player)) {
 	    if (e.getEntity() instanceof Monster) {
+		plugin.getLogger().info("Entity is a monster - ok to hurt"); 
 		return;
 	    } else {
 		if (!d.getAllowHurtMobs(e.getEntity().getUniqueId())) {
@@ -471,10 +381,10 @@ public class DistrictGuard implements Listener {
 
 	// If PVP is okay then return
 	if (plugin.players.getInDistrict(e.getEntity().getUniqueId()).getAllowPVP(e.getEntity().getUniqueId())) {
-	    //plugin.getLogger().info("PVP allowed");
+	    plugin.getLogger().info("PVP allowed");
 	    return;
 	}
-	//plugin.getLogger().info("PVP not allowed");
+	plugin.getLogger().info("PVP not allowed");
 	// If the attacker is non-human and not an arrow then everything is okay
 	if (!(e.getDamager() instanceof Player) && !(e.getDamager() instanceof Projectile)) {
 	    return;

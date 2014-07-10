@@ -148,9 +148,9 @@ public class DistrictRegion {
      * @return the allowPVP
      */
     public Boolean getAllowPVP(UUID uuid) {
-	if (plugin.getServer().getPlayer(uuid).isOp() || owner.equals(uuid) || renter.equals(uuid) || ownerTrusted.contains(uuid) || renterTrusted.contains(uuid)) {
-	    return true;
-	}
+	//if (checkOwnerTenants(uuid)) {
+	//    return true;
+	//}
 	return (Boolean)flags.get("allowPVP");
     }
 
@@ -159,17 +159,34 @@ public class DistrictRegion {
      * @return the allowBreakBlocks
      */
     public Boolean getAllowBreakBlocks(UUID uuid) {
-	if (plugin.getServer().getPlayer(uuid).isOp() || owner.equals(uuid) || renter.equals(uuid) || ownerTrusted.contains(uuid) || renterTrusted.contains(uuid)) {
+	if (checkOwnerTenants(uuid)) {
 	    return true;
 	}
 	return (Boolean)flags.get("allowBreakBlocks");
     }
 
+    private Boolean checkOwnerTenants(UUID uuid) {
+	if (plugin.getServer().getPlayer(uuid).isOp()) {
+	    //plugin.getLogger().info("Op");
+	    return true;
+	} else 	if (owner != null && owner.equals(uuid)) {
+	    //plugin.getLogger().info("Owner");
+	    return true;
+	} else if (renter != null && renter.equals(uuid)) {
+	    plugin.getLogger().info("Renter");
+	    return true;
+	} else if (ownerTrusted.contains(uuid) || renterTrusted.contains(uuid)) {
+	    plugin.getLogger().info("Trusted");
+	    return true;
+	}
+	return false;
+    }
+    
     /**
      * @return the allowPlaceBlocks
      */
     public Boolean getAllowPlaceBlocks(UUID uuid) {
-	if (plugin.getServer().getPlayer(uuid).isOp() || owner.equals(uuid) || renter.equals(uuid) || ownerTrusted.contains(uuid) || renterTrusted.contains(uuid)) {
+	if (checkOwnerTenants(uuid)) {
 	    return true;
 	}
 	return (Boolean)flags.get("allowPlaceBlocks");
@@ -179,7 +196,7 @@ public class DistrictRegion {
      * @return the allowBedUse
      */
     public Boolean getAllowBedUse(UUID uuid) {
-	if (plugin.getServer().getPlayer(uuid).isOp() || owner.equals(uuid) || renter.equals(uuid) || ownerTrusted.contains(uuid) || renterTrusted.contains(uuid)) {
+	if (checkOwnerTenants(uuid)) {
 	    return true;
 	}
 	return (Boolean)flags.get("allowBedUse");
@@ -189,7 +206,7 @@ public class DistrictRegion {
      * @return the allowBucketUse
      */
     public Boolean getAllowBucketUse(UUID uuid) {
-	if (plugin.getServer().getPlayer(uuid).isOp() || owner.equals(uuid) || renter.equals(uuid) || ownerTrusted.contains(uuid) || renterTrusted.contains(uuid)) {
+	if (checkOwnerTenants(uuid)) {
 	    return true;
 	}
 	return (Boolean)flags.get("allowBucketUse");
@@ -199,7 +216,7 @@ public class DistrictRegion {
      * @return the allowShearing
      */
     public Boolean getAllowShearing(UUID uuid) {
-	if (plugin.getServer().getPlayer(uuid).isOp() || owner.equals(uuid) || renter.equals(uuid) || ownerTrusted.contains(uuid) || renterTrusted.contains(uuid)) {
+	if (checkOwnerTenants(uuid)) {
 	    return true;
 	}
 	return (Boolean)flags.get("allowShearing");
@@ -209,7 +226,7 @@ public class DistrictRegion {
      * @return the allowEnderPearls
      */
     public Boolean getAllowEnderPearls(UUID uuid) {
-	if (plugin.getServer().getPlayer(uuid).isOp() || owner.equals(uuid) || renter.equals(uuid) || ownerTrusted.contains(uuid) || renterTrusted.contains(uuid)) {
+	if (checkOwnerTenants(uuid)) {
 	    return true;
 	}
 
@@ -220,7 +237,7 @@ public class DistrictRegion {
      * @return the allowDoorUse
      */
     public Boolean getAllowDoorUse(UUID uuid) {
-	if (plugin.getServer().getPlayer(uuid).isOp() || owner.equals(uuid) || renter.equals(uuid) || ownerTrusted.contains(uuid) || renterTrusted.contains(uuid)) {
+	if (checkOwnerTenants(uuid)) {
 	    return true;
 	}
 	return (Boolean)flags.get("allowDoorUse");
@@ -230,7 +247,7 @@ public class DistrictRegion {
      * @return the allowLeverButtonUse
      */
     public Boolean getAllowLeverButtonUse(UUID uuid) {
-	if (plugin.getServer().getPlayer(uuid).isOp() || owner.equals(uuid) || renter.equals(uuid) || ownerTrusted.contains(uuid) || renterTrusted.contains(uuid)) {
+	if (checkOwnerTenants(uuid)) {
 	    return true;
 	}
 	return (Boolean)flags.get("allowLeverButtonUse");
@@ -240,7 +257,7 @@ public class DistrictRegion {
      * @return the allowCropTrample
      */
     public Boolean getAllowCropTrample(UUID uuid) {
-	if (plugin.getServer().getPlayer(uuid).isOp() || owner.equals(uuid) || renter.equals(uuid) || ownerTrusted.contains(uuid) || renterTrusted.contains(uuid)) {
+	if (checkOwnerTenants(uuid)) {
 	    return true;
 	}
 	return (Boolean)flags.get("allowCropTrample");
@@ -250,7 +267,7 @@ public class DistrictRegion {
      * @return the allowChestAccess
      */
     public Boolean getAllowChestAccess(UUID uuid) {
-	if (plugin.getServer().getPlayer(uuid).isOp() || owner.equals(uuid) || renter.equals(uuid) || ownerTrusted.contains(uuid) || renterTrusted.contains(uuid)) {
+	if (checkOwnerTenants(uuid)) {
 	    return true;
 	}
 	return (Boolean)flags.get("allowChestAccess");
@@ -260,7 +277,7 @@ public class DistrictRegion {
      * @return the allowFurnaceUse
      */
     public Boolean getAllowFurnaceUse(UUID uuid) {
-	if (plugin.getServer().getPlayer(uuid).isOp() || owner.equals(uuid) || renter.equals(uuid) || ownerTrusted.contains(uuid) || renterTrusted.contains(uuid)) {
+	if (checkOwnerTenants(uuid)) {
 	    return true;
 	}
 	return (Boolean)flags.get("allowFurnaceUse");
@@ -270,7 +287,7 @@ public class DistrictRegion {
      * @return the allowRedStone
      */
     public Boolean getAllowRedStone(UUID uuid) {
-	if (plugin.getServer().getPlayer(uuid).isOp() || owner.equals(uuid) || renter.equals(uuid) || ownerTrusted.contains(uuid) || renterTrusted.contains(uuid)) {
+	if (checkOwnerTenants(uuid)) {
 	    return true;
 	}
 	return (Boolean)flags.get("allowRedStone");
@@ -280,7 +297,7 @@ public class DistrictRegion {
      * @return the allowMusic
      */
     public Boolean getAllowMusic(UUID uuid) {
-	if (plugin.getServer().getPlayer(uuid).isOp() || owner.equals(uuid) || renter.equals(uuid) || ownerTrusted.contains(uuid) || renterTrusted.contains(uuid)) {
+	if (checkOwnerTenants(uuid)) {
 	    return true;
 	}
 	return (Boolean)flags.get("allowMusic");
@@ -290,7 +307,7 @@ public class DistrictRegion {
      * @return the allowCrafting
      */
     public Boolean getAllowCrafting(UUID uuid) {
-	if (plugin.getServer().getPlayer(uuid).isOp() || owner.equals(uuid) || renter.equals(uuid) || ownerTrusted.contains(uuid) || renterTrusted.contains(uuid)) {
+	if (checkOwnerTenants(uuid)) {
 	    return true;
 	}
 	return (Boolean)flags.get("allowCrafting");
@@ -300,7 +317,7 @@ public class DistrictRegion {
      * @return the allowBrewing
      */
     public Boolean getAllowBrewing(UUID uuid) {
-	if (plugin.getServer().getPlayer(uuid).isOp() || owner.equals(uuid) || renter.equals(uuid) || ownerTrusted.contains(uuid) || renterTrusted.contains(uuid)) {
+	if (checkOwnerTenants(uuid)) {
 	    return true;
 	}
 	return (Boolean)flags.get("allowBrewing");
@@ -310,14 +327,14 @@ public class DistrictRegion {
      * @return the allowGateUse
      */
     public Boolean getAllowGateUse(UUID uuid) {
-	if (plugin.getServer().getPlayer(uuid).isOp() || owner.equals(uuid) || renter.equals(uuid) || ownerTrusted.contains(uuid) || renterTrusted.contains(uuid)) {
+	if (checkOwnerTenants(uuid)) {
 	    return true;
 	}
 	return (Boolean)flags.get("allowGateUse");
     }
 
     public Boolean getAllowHurtMobs(UUID uuid) {
-	if (plugin.getServer().getPlayer(uuid).isOp() || owner.equals(uuid) || renter.equals(uuid) || ownerTrusted.contains(uuid) || renterTrusted.contains(uuid)) {
+	if (checkOwnerTenants(uuid)) {
 	    return true;
 	}
 	return (Boolean)flags.get("allowHurtMobs");
