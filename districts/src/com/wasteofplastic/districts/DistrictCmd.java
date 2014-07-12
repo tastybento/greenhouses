@@ -182,18 +182,26 @@ public class DistrictCmd implements CommandExecutor {
 		if (d != null) {
 		    if (d.getOwner().equals(playerUUID)) {
 			player.sendMessage(ChatColor.RED + "Removing district!");
-			plugin.devisualize(player);
 			// Remove the district
 			HashSet<DistrictRegion> ds = plugin.getDistricts();
 			ds.remove(d);
 			plugin.setDistricts(ds);
+			// Find everyone who is in this district and remove them
+			for (Player p : plugin.getServer().getOnlinePlayers()) {
+			    if (d.intersectsDistrict(p.getLocation())) {
+				players.setInDistrict(p.getUniqueId(), null);
+				plugin.devisualize(p);
+				if (!player.equals(p)) {
+				    p.sendMessage(player.getDisplayName() + ChatColor.RED + " removed their district!");
+				}
+			    }
+			}
 			// Return blocks
 			int height = Math.abs(d.getPos1().getBlockX() - d.getPos2().getBlockX()) + 1;
 			int width = Math.abs(d.getPos1().getBlockX() - d.getPos2().getBlockX()) + 1;
 			int blocks = height * width;
 			int balance = plugin.players.addBlocks(playerUUID, blocks);
 			player.sendMessage("Recovered " + blocks + " blocks. Your balance is " + balance);
-			players.setInDistrict(playerUUID, null);
 			return true;
 		    }
 		    player.sendMessage(ChatColor.RED + "This is not your district!");

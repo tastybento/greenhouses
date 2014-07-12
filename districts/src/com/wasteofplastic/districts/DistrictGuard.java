@@ -443,15 +443,14 @@ public class DistrictGuard implements Listener {
      */
     @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerBlockPlace(final BlockPlaceEvent e) {
-	DistrictRegion d = plugin.players.getInDistrict(e.getPlayer().getUniqueId());
-	if (d == null || e.getPlayer().isOp()) {
-	    // Not in a district
-	    return;
-	}
 	if (!e.getPlayer().getWorld().getName().equalsIgnoreCase(Settings.worldName)) {
 	    return;
 	}
-
+	// If the offending block is not in a district, forget it!
+	DistrictRegion d = plugin.getInDistrict(e.getBlock().getLocation());
+	if (d == null) {
+	    return;
+	}
 	if (!d.getAllowPlaceBlocks(e.getPlayer().getUniqueId()) && !e.getPlayer().isOp()) {
 	    e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
 	    e.setCancelled(true);
@@ -462,12 +461,12 @@ public class DistrictGuard implements Listener {
     // Prevent sleeping in other beds
     @EventHandler(priority = EventPriority.NORMAL)
     public void onPlayerBedEnter(final PlayerBedEnterEvent e) {
-	DistrictRegion d = plugin.players.getInDistrict(e.getPlayer().getUniqueId());
-	if (d == null || e.getPlayer().isOp()) {
-	    // Not in a district
+	if (!e.getPlayer().getWorld().getName().equalsIgnoreCase(Settings.worldName)) {
 	    return;
 	}
-	if (!e.getPlayer().getWorld().getName().equalsIgnoreCase(Settings.worldName)) {
+	// If the offending bed is not in a district, forget it!
+	DistrictRegion d = plugin.getInDistrict(e.getBed().getLocation());
+	if (d == null) {
 	    return;
 	}
 	if (!d.getAllowBedUse(e.getPlayer().getUniqueId()) && !e.getPlayer().isOp()) {
@@ -481,16 +480,16 @@ public class DistrictGuard implements Listener {
      */
     @EventHandler(priority = EventPriority.NORMAL)
     public void onBreakHanging(final HangingBreakByEntityEvent e) {
+	if (!e.getRemover().getWorld().getName().equalsIgnoreCase(Settings.worldName)) {
+	    return;
+	}
 	if (!(e.getRemover() instanceof Player)) {
 	    // Enderman?
 	    return;
 	}
-	DistrictRegion d = plugin.players.getInDistrict(e.getRemover().getUniqueId());
+	// If the offending item is not in a district, forget it!
+	DistrictRegion d = plugin.getInDistrict(e.getEntity().getLocation());
 	if (d == null) {
-	    // Not in a district
-	    return;
-	}
-	if (!e.getRemover().getWorld().getName().equalsIgnoreCase(Settings.worldName)) {
 	    return;
 	}
 	Player p = (Player)e.getRemover();
@@ -503,15 +502,14 @@ public class DistrictGuard implements Listener {
 
     @EventHandler(priority = EventPriority.NORMAL)
     public void onBucketEmpty(final PlayerBucketEmptyEvent e) {
-	DistrictRegion d = plugin.players.getInDistrict(e.getPlayer().getUniqueId());
-	if (d == null || e.getPlayer().isOp()) {
-	    // Not in a district
-	    return;
-	}
 	if (!e.getPlayer().getWorld().getName().equalsIgnoreCase(Settings.worldName)) {
 	    return;
 	}
-
+	// If the offending item is not in a district, forget it!
+	DistrictRegion d = plugin.getInDistrict(e.getBlockClicked().getLocation());
+	if (d == null) {
+	    return;
+	}
 	if (!d.getAllowBucketUse(e.getPlayer().getUniqueId()) && !e.getPlayer().isOp()) {
 	    e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
 	    e.setCancelled(true);
@@ -519,12 +517,12 @@ public class DistrictGuard implements Listener {
     }
     @EventHandler(priority = EventPriority.NORMAL)
     public void onBucketFill(final PlayerBucketFillEvent e) {
-	DistrictRegion d = plugin.players.getInDistrict(e.getPlayer().getUniqueId());
-	if (d == null|| e.getPlayer().isOp()) {
-	    // Not in a district
+	if (!e.getPlayer().getWorld().getName().equalsIgnoreCase(Settings.worldName)) {
 	    return;
 	}
-	if (!e.getPlayer().getWorld().getName().equalsIgnoreCase(Settings.worldName)) {
+	// If the offending item is not in a district, forget it!
+	DistrictRegion d = plugin.getInDistrict(e.getBlockClicked().getLocation());
+	if (d == null) {
 	    return;
 	}
 
@@ -537,15 +535,14 @@ public class DistrictGuard implements Listener {
     // Protect sheep
     @EventHandler(priority = EventPriority.NORMAL)
     public void onShear(final PlayerShearEntityEvent e) {
-	DistrictRegion d = plugin.players.getInDistrict(e.getPlayer().getUniqueId());
-	if (d == null || e.getPlayer().isOp()) {
-	    // Not in a district
-	    return;
-	}
 	if (!e.getPlayer().getWorld().getName().equalsIgnoreCase(Settings.worldName)) {
 	    return;
 	}
-
+	// If the offending item is not in a district, forget it!
+	DistrictRegion d = plugin.getInDistrict(e.getEntity().getLocation());
+	if (d == null) {
+	    return;
+	}
 	if (!d.getAllowShearing(e.getPlayer().getUniqueId())) {
 	    e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
 	    e.setCancelled(true);
@@ -555,18 +552,19 @@ public class DistrictGuard implements Listener {
 
     @EventHandler(priority = EventPriority.NORMAL)
     public void onPlayerInteract(final PlayerInteractEvent e) {
-	DistrictRegion d = plugin.players.getInDistrict(e.getPlayer().getUniqueId());
-	if (d == null || e.getPlayer().isOp()) {
-	    // Not in a district
-	    return;
-	}
-
 	if (!e.getPlayer().getWorld().getName().equalsIgnoreCase(Settings.worldName)) {
 	    return;
 	}
+
 	// Player is off island
 	// Check for disallowed clicked blocks
 	if (e.getClickedBlock() != null) {
+	    // If the offending item is not in a district, forget it!
+	    DistrictRegion d = plugin.getInDistrict(e.getClickedBlock().getLocation());
+	    if (d == null) {
+		return;
+	    }
+
 	    //plugin.getLogger().info("DEBUG: clicked block " + e.getClickedBlock());
 	    //plugin.getLogger().info("DEBUG: Material " + e.getMaterial());
 
@@ -676,6 +674,12 @@ public class DistrictGuard implements Listener {
 	}
 	// Check for disallowed in-hand items
 	if (e.getMaterial() != null) {
+		// If the player is not in a district, forget it!
+		DistrictRegion d = plugin.getInDistrict(e.getPlayer().getLocation());
+		if (d == null) {
+		    return;
+		}
+
 	    if (e.getMaterial().equals(Material.BOAT) && (e.getClickedBlock() != null && !e.getClickedBlock().isLiquid())) {
 		// Trying to put a boat on non-liquid
 		e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
