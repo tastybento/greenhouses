@@ -38,9 +38,13 @@ public class PlayerCache {
      */
         
     public void addPlayer(final UUID playerUUID) {
+	if (!plugin.getServer().getOfflinePlayer(playerUUID).hasPlayedBefore()) {
+	    plugin.getLogger().severe("Asked to create a player that does not exist!");
+	} else {
 	if (!playerCache.containsKey(playerUUID)) {
 	    final Players player = new Players(plugin, playerUUID);
 	    playerCache.put(playerUUID,player);
+	}
 	}
     }
     
@@ -214,6 +218,10 @@ public class PlayerCache {
 	playerCache.get(playerUUID).setInDistrict(inDistrict);
     }
     
+    /**
+     * @param playerUUID
+     * @return the district the player is in or null if no district
+     */
     public DistrictRegion getInDistrict(UUID playerUUID) {
 	addPlayer(playerUUID);
 	return playerCache.get(playerUUID).getInDistrict();

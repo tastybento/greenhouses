@@ -35,7 +35,7 @@ import org.bukkit.potion.Potion;
  */
 public class DistrictGuard implements Listener {
     private final Districts plugin;
-   public DistrictGuard(final Districts plugin) {
+    public DistrictGuard(final Districts plugin) {
 	this.plugin = plugin;
 
     }
@@ -320,12 +320,14 @@ public class DistrictGuard implements Listener {
      */
     @EventHandler(priority = EventPriority.HIGH)
     public void onBlockBreak(final BlockBreakEvent e) {
-	DistrictRegion d = plugin.players.getInDistrict(e.getPlayer().getUniqueId());
-	if (d == null || e.getPlayer().isOp()) {
-	    // Not in a district
+	if (!e.getPlayer().getWorld().getName().equalsIgnoreCase(Settings.worldName)) {
 	    return;
 	}
-	if (!e.getPlayer().getWorld().getName().equalsIgnoreCase(Settings.worldName)) {
+	// Get the district that this block is in (if any)
+	DistrictRegion d = plugin.getInDistrict(e.getBlock().getLocation());
+	//DistrictRegion d = plugin.players.getInDistrict(e.getPlayer().getUniqueId());
+	if (d == null || e.getPlayer().isOp()) {
+	    // Not in a district
 	    return;
 	}
 	if (!d.getAllowBreakBlocks(e.getPlayer().getUniqueId())) {
@@ -344,10 +346,22 @@ public class DistrictGuard implements Listener {
 	    plugin.getLogger().info("Not in world");
 	    return;
 	}
+	// Get the district that this block is in (if any)
+	DistrictRegion d = plugin.getInDistrict(e.getEntity().getLocation());
+	if (d == null) {
+	    plugin.getLogger().info("Not in a district");
+	    return;	    
+	}
+	// Ops can do anything
+	if (e.getDamager() instanceof Player) {
+	    if (((Player)e.getDamager()).isOp()) {
+		return;
+	    }
+	}
 	// Check to see if it's an item frame
 	if (e.getEntity() instanceof ItemFrame) {
 	    if (e.getDamager() instanceof Player) {
-		if (!plugin.players.getInDistrict(e.getDamager().getUniqueId()).getAllowBreakBlocks(e.getDamager().getUniqueId()) && !((Player)e.getDamager()).isOp()) {
+		if (!d.getAllowBreakBlocks(e.getDamager().getUniqueId())) {
 		    ((Player)e.getDamager()).sendMessage(ChatColor.RED + Locale.districtProtected);
 		    e.setCancelled(true);
 		    return;
@@ -355,40 +369,40 @@ public class DistrictGuard implements Listener {
 	    }
 
 	}
-	DistrictRegion d = plugin.players.getInDistrict(e.getEntity().getUniqueId());
-	if (d == null) {
-	    // Not in a district
-	    //plugin.getLogger().info("Not in a district");
-	    return;
-	}
-	plugin.getLogger().info("Entity is " + ((Player)e.getEntity()).getName());
-	if (e.getDamager() instanceof Player)
-	    plugin.getLogger().info("Damager is " + ((Player)e.getDamager()).getName());
-
-	// If the target is not a player check if mobs can be hurt
-	if (!(e.getEntity() instanceof Player)) {
-	    if (e.getEntity() instanceof Monster) {
-		plugin.getLogger().info("Entity is a monster - ok to hurt"); 
-		return;
-	    } else {
-		if (!d.getAllowHurtMobs(e.getEntity().getUniqueId())) {
-		    ((Player)e.getDamager()).sendMessage(ChatColor.RED + Locale.districtProtected);
-		    e.setCancelled(true);
-		    return;
-		}
-	    }
-	}
-
-	// If PVP is okay then return
-	if (plugin.players.getInDistrict(e.getEntity().getUniqueId()).getAllowPVP(e.getEntity().getUniqueId())) {
-	    plugin.getLogger().info("PVP allowed");
-	    return;
-	}
-	plugin.getLogger().info("PVP not allowed");
 	// If the attacker is non-human and not an arrow then everything is okay
 	if (!(e.getDamager() instanceof Player) && !(e.getDamager() instanceof Projectile)) {
 	    return;
 	}
+	plugin.getLogger().info("Entity is " + e.getEntity().toString());
+	// Check for player initiated damage
+	if (e.getDamager() instanceof Player) {
+	    plugin.getLogger().info("Damager is " + ((Player)e.getDamager()).getName());
+	    // If the target is not a player check if mobs can be hurt
+	    if (!(e.getEntity() instanceof Player)) {
+		if (e.getEntity() instanceof Monster) {
+		    plugin.getLogger().info("Entity is a monster - ok to hurt"); 
+		    return;
+		} else {
+		    plugin.getLogger().info("Entity is a non-monster - check if ok to hurt"); 
+		    if (!d.getAllowHurtMobs(e.getEntity().getUniqueId())) {
+			((Player)e.getDamager()).sendMessage(ChatColor.RED + Locale.districtProtected);
+			e.setCancelled(true);
+			return;
+		    }
+		}
+	    } else {
+		// PVP
+		// If PVP is okay then return
+		// Target is in a district
+		if (d.getAllowPVP()) {
+		    plugin.getLogger().info("PVP allowed");
+		    return;
+		}
+		plugin.getLogger().info("PVP not allowed");
+
+	    }
+	}
+
 	plugin.getLogger().info("Player attack (or arrow)");
 	// Only damagers who are players or arrows are left
 	// If the projectile is anything else than an arrow don't worry about it in this listener
@@ -402,7 +416,7 @@ public class DistrictGuard implements Listener {
 		if (e.getEntity() instanceof Player) {
 		    plugin.getLogger().info("Player vs Player!");
 		    // Arrow shot by a player at another player
-		    if (!plugin.players.getInDistrict(e.getEntity().getUniqueId()).getAllowPVP(e.getEntity().getUniqueId())) {
+		    if (!d.getAllowPVP()) {
 			plugin.getLogger().info("Target player is in a no-PVP district!");
 			((Player)arrow.getShooter()).sendMessage("Target is in a no-PVP district!");
 			e.setCancelled(true);
@@ -411,9 +425,9 @@ public class DistrictGuard implements Listener {
 		}
 	    }
 	} else {
-	    //plugin.getLogger().info("Player attack");
+	    plugin.getLogger().info("Player attack");
 	    // Just a player attack
-	    if (!plugin.players.getInDistrict(e.getEntity().getUniqueId()).getAllowPVP(e.getEntity().getUniqueId())) {
+	    if (!d.getAllowPVP()) {
 		((Player)e.getDamager()).sendMessage("Target is in a no-PVP district!");
 		e.setCancelled(true);
 		return;
@@ -684,7 +698,7 @@ public class DistrictGuard implements Listener {
 			return;
 		    } else {
 			// Splash potions are allowed only if PVP is allowed
-			if (!d.getAllowPVP(e.getPlayer().getUniqueId())) {
+			if (!d.getAllowPVP()) {
 			    e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
 			    e.setCancelled(true);
 			}

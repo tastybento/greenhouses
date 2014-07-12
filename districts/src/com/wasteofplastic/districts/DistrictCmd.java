@@ -9,6 +9,7 @@ import net.milkbowl.vault.economy.EconomyResponse;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -86,11 +87,24 @@ public class DistrictCmd implements CommandExecutor {
 		if (d.getOwner().equals(playerUUID) || d.getRenter().equals(playerUUID)) {
 		    if (d.getOwner().equals(playerUUID)) {
 			if (!d.getOwnerTrusted().isEmpty()) {
+			    // Tell everyone
+			    for (UUID n : d.getOwnerTrustedUUID()) {
+				Player p = plugin.getServer().getPlayer(n);
+				if (p != null) {
+				    p.sendMessage(ChatColor.RED + player.getDisplayName() + " untrusted you in a district.");
+				}
+			    }
 			    // Blank it out
 			    d.setOwnerTrusted(new ArrayList<UUID>());
 			}
 		    } else {
 			if (!d.getRenterTrusted().isEmpty()) {
+			    for (UUID n : d.getRenterTrustedUUID()) {
+				Player p = plugin.getServer().getPlayer(n);
+				if (p != null) {
+				    p.sendMessage(ChatColor.RED + player.getDisplayName() + " untrusted you in a district.");
+				}
+			    }
 			    // Blank it out
 			    d.setRenterTrusted(new ArrayList<UUID>());
 			}
@@ -107,7 +121,8 @@ public class DistrictCmd implements CommandExecutor {
 			player.sendMessage("None");
 		    } else for (String name : d.getRenterTrusted()) {
 			player.sendMessage(name);
-		    }			
+		    }
+		    return true;
 		} else {
 		    player.sendMessage(ChatColor.RED + "You must be the owner or renter of this district to do that.");
 		    return true;
@@ -209,12 +224,17 @@ public class DistrictCmd implements CommandExecutor {
 		    // It's for sale, the player can afford it and it's not the owner - sell!
 		    EconomyResponse resp = VaultHelper.econ.withdrawPlayer(player, d.getPrice());
 		    if (resp.transactionSuccess()) {
+			// Pay the owner
+			OfflinePlayer owner = plugin.getServer().getOfflinePlayer(d.getOwner());
+			EconomyResponse r = VaultHelper.econ.depositPlayer(owner, d.getPrice());
+			if (!r.transactionSuccess()) {
+			    plugin.getLogger().severe("Could not pay " + owner.getName() + " " + d.getPrice() + " for district they sold to " + player.getName());
+			}
 			// Check if owner is online
-			Player owner = plugin.getServer().getPlayer(d.getOwner());
-			if (owner != null) {
-			    plugin.devisualize(owner);
-			    owner.sendMessage("You successfully sold a district for " + VaultHelper.econ.format(d.getPrice()) + " to " + player.getDisplayName());
-			}	
+			if (owner.isOnline()) {
+			    plugin.devisualize((Player)owner);
+			    ((Player)owner).sendMessage("You successfully sold a district for " + VaultHelper.econ.format(d.getPrice()) + " to " + player.getDisplayName());
+			}
 			Location pos1 = d.getPos1();
 			Location pos2 = d.getPos2();
 			player.sendMessage("You purchased the district for "+ VaultHelper.econ.format(d.getPrice()) + "!");
@@ -295,6 +315,27 @@ public class DistrictCmd implements CommandExecutor {
 		return true;
 
 
+	    } else if (split[0].equalsIgnoreCase("trust")) {
+		DistrictRegion d = players.getInDistrict(playerUUID);
+		if (d == null) {
+		    player.sendMessage(ChatColor.RED + "Move to a district first to see trust info.");
+		    return true;
+		}
+		player.sendMessage(ChatColor.GOLD + "[District Info]");
+		player.sendMessage(ChatColor.GREEN + "[Owner's trusted players]");
+		if (d.getOwnerTrusted().isEmpty()) {
+		    player.sendMessage("None");
+		} else for (String name : d.getOwnerTrusted()) {
+		    player.sendMessage(name);
+		}
+		player.sendMessage(ChatColor.GREEN + "[Renter's trusted players]");
+		if (d.getRenterTrusted().isEmpty()) {
+		    player.sendMessage("None");
+		} else for (String name : d.getRenterTrusted()) {
+		    player.sendMessage(name);
+		}
+		return true;
+
 	    }
 	    break;
 	case 2:
@@ -318,15 +359,26 @@ public class DistrictCmd implements CommandExecutor {
 			} else {
 			    // Remove trusted player
 			    d.removeOwnerTrusted(trusted);
+				Player p = plugin.getServer().getPlayer(trusted);
+				if (p != null) {
+				    p.sendMessage(ChatColor.RED + player.getDisplayName() + " untrusted you in a district.");
+				}
+			 
+
 			}
 		    } else {
 			if (d.getRenterTrusted().isEmpty()) {
 			    player.sendMessage(ChatColor.RED + "No one is trusted in this district.");
 			} else {
+				Player p = plugin.getServer().getPlayer(trusted);
+				if (p != null) {
+				    p.sendMessage(ChatColor.RED + player.getDisplayName() + " untrusted you in a district.");
+				}
 			    // Blank it out
 			    d.removeRenterTrusted(trusted);
 			}
 		    }
+		    players.save(d.getOwner());
 		    player.sendMessage(ChatColor.GOLD + "[District Trusted Players]");
 		    player.sendMessage(ChatColor.GREEN + "[Owner's]");
 		    if (d.getOwnerTrusted().isEmpty()) {
@@ -339,7 +391,8 @@ public class DistrictCmd implements CommandExecutor {
 			player.sendMessage("None");
 		    } else for (String name : d.getRenterTrusted()) {
 			player.sendMessage(name);
-		    }			
+		    }	
+		    return true;
 		} else {
 		    player.sendMessage(ChatColor.RED + "You must be the owner or renter of this district to do that.");
 		    return true;
@@ -351,38 +404,51 @@ public class DistrictCmd implements CommandExecutor {
 		    player.sendMessage(ChatColor.RED + "Move to a district you own or rent first.");
 		    return true;
 		}
-		if (d.getOwner().equals(playerUUID) || d.getRenter().equals(playerUUID)) {
+		if ((d.getOwner() != null && d.getOwner().equals(playerUUID)) || (d.getRenter() != null && d.getRenter().equals(playerUUID))) {
 		    // Check that we know this person
 		    UUID trusted = players.getUUID(split[1]);
 		    if (trusted != null) {
+			/*
+			 * TODO: ADD IN AFTER TESTING!
+			if (d.getOwner() != null && d.getOwner().equals(trusted)) {
+			    player.sendMessage(ChatColor.RED + "That player is the owner and so trusted already.");
+				return true;
+			}
+			if (d.getRenter() != null && d.getRenter().equals(trusted)) {
+			    player.sendMessage(ChatColor.RED + "That player is the renter and so trusted already.");
+				return true;
+			}*/			
+			// This is a known player, name is OK
 			if (d.getOwner().equals(playerUUID)) {
-			    if (d.getOwnerTrusted().contains(trusted)) {
+			    if (!d.addOwnerTrusted(trusted)) {
 				player.sendMessage(ChatColor.RED + "That player is already trusted.");
 				return true;
-			    } else {
-				d.addOwnerTrusted(trusted);
 			    }
 			} else {
-			    if (d.getRenterTrusted().contains(trusted)) {
+			    if (!d.addRenterTrusted(trusted)) {
 				player.sendMessage(ChatColor.RED + "That player is already trusted.");
 				return true;
-			    } else {
-				d.addRenterTrusted(trusted);
-			    }			    
+			    } 			    
 			}
-			player.sendMessage(ChatColor.GOLD + "[District Trusted Players]");
-			player.sendMessage(ChatColor.GREEN + "[Owner's]");
+			Player p = plugin.getServer().getPlayer(trusted);
+			if (p != null) {
+			    p.sendMessage(ChatColor.RED + player.getDisplayName() + " trusts you in a district.");
+			}
+			players.save(d.getOwner());
+			player.sendMessage(ChatColor.GOLD + "[District Info]");
+			player.sendMessage(ChatColor.GREEN + "[Owner's trusted players]");
 			if (d.getOwnerTrusted().isEmpty()) {
 			    player.sendMessage("None");
 			} else for (String name : d.getOwnerTrusted()) {
 			    player.sendMessage(name);
 			}
-			player.sendMessage(ChatColor.GREEN + "[Renter's]");
+			player.sendMessage(ChatColor.GREEN + "[Renter's trusted players]");
 			if (d.getRenterTrusted().isEmpty()) {
 			    player.sendMessage("None");
 			} else for (String name : d.getRenterTrusted()) {
 			    player.sendMessage(name);
-			}			
+			}
+			return true;
 		    } else {
 			player.sendMessage(ChatColor.RED + "Unknown player.");
 			return true;
@@ -413,8 +479,8 @@ public class DistrictCmd implements CommandExecutor {
 		    player.sendMessage(ChatColor.RED + "Blocks required: " + blocksRequired);
 		    return true;  
 		}
-		if (blocks < 5) {
-		    player.sendMessage(ChatColor.RED + "The minimum radius is 5 blocks");
+		if (blocks < 2) {
+		    player.sendMessage(ChatColor.RED + "The minimum radius is 2 blocks");
 		    return true;		    
 		}
 		// Find the corners of this district

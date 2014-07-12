@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.bukkit.ChatColor;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -24,14 +25,26 @@ public class JoinLeaveEvents implements Listener {
      */
     @EventHandler(priority = EventPriority.NORMAL)
     public void onPlayerJoin(final PlayerJoinEvent event) {
-	final UUID playerUUID = event.getPlayer().getUniqueId();
+	Player p = event.getPlayer();
+	final UUID playerUUID = p.getUniqueId();
 	players.addPlayer(playerUUID);
 	// Set the player's name (it may have changed)
-	players.setPlayerName(playerUUID, event.getPlayer().getName());
+	players.setPlayerName(playerUUID, p.getName());
 	players.save(playerUUID);
-	plugin.getLogger().info("Cached " + event.getPlayer().getName());
+	plugin.getLogger().info("Cached " + p.getName());
 	// TODO: Check leases and expire any old ones.
-	
+	// Check to see if the player is in a district - one may have cropped up around them while they were logged off
+	for (DistrictRegion d: plugin.getDistricts()) {
+	    if (d.intersectsDistrict(p.getLocation())) {
+		plugin.getLogger().info(p.getName() + " is in a known district");
+		if (players.getInDistrict(playerUUID) == null || !players.getInDistrict(playerUUID).equals(d)) {
+		    players.setInDistrict(playerUUID, d);
+		    p.sendMessage(d.getEnterMessage());
+		}
+		players.setVisualize(playerUUID, true);
+		break;
+	    }
+	}
 	// Load any messages for the player
 	final List<String> messages = plugin.getMessages(playerUUID);
 	if (!messages.isEmpty()) {

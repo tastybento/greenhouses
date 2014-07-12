@@ -48,7 +48,7 @@ public class Districts extends JavaPlugin {
     private HashMap<UUID,Location> pos1s = new HashMap<UUID,Location>();
     // Where visualization blocks are kept
     private static HashMap<UUID, List<Location>> visualizations = new HashMap<UUID, List<Location>>();
- 
+
 
     /**
      * @return plugin object instance
@@ -149,7 +149,6 @@ public class Districts extends JavaPlugin {
 	    e.printStackTrace();
 	}
 	// Get the localization strings
-
 	getLocale();
 	Locale.adminHelpdelete = getLocale().getString("adminHelp.delete", "deletes the district you are standing in.");
 	Locale.errorUnknownPlayer = getLocale().getString("error.unknownPlayer","That player is unknown.");
@@ -158,21 +157,11 @@ public class Districts extends JavaPlugin {
 	Locale.errorOfflinePlayer = getLocale().getString("error.offlinePlayer", "That player is offline or doesn't exist.");
 	Locale.errorUnknownCommand = getLocale().getString("error.unknownCommand","Unknown command.");
 	Locale.districtProtected = getLocale().getString("error.districtProtected", "District protected");
-
 	Locale.newsHeadline = getLocale().getString("news.headline", "[District News]");
-	////////////////////////////////////////////////////////////////
-	//Admin commands that use /acid //
-	////////////////////////////////////////////////////////////////
-
-	//Help
-
 	Locale.adminHelpreload = getLocale().getString("adminHelp.reload","reload configuration from file.");
 	Locale.adminHelpdelete = getLocale().getString("adminHelp.delete","deletes the district you are standing in.");
 	Locale.adminHelpinfo = getLocale().getString("adminHelp.info","display information for the given player.");
-
-	//acid reload
-	Locale.reloadconfigReloaded = getLocale().getString("reload.configurationReloaded", "Configuration reloaded from file.");
-	//delete
+	Locale.reloadconfigReloaded = getLocale().getString("reload.configurationReloaded", "Configuration reloaded from file.");	//delete
 	Locale.deleteremoving = getLocale().getString("delete.removing","District removed.");
 
 	// Assign settings
@@ -194,10 +183,9 @@ public class Districts extends JavaPlugin {
 	Settings.allowBrewing = getConfig().getBoolean("districts.allowbrewing", false);
 	Settings.allowGateUse = getConfig().getBoolean("districts.allowgateuse", false);
 	Settings.allowMobHarm = getConfig().getBoolean("districts.allowmobharm", false);
-
+	// Other settings
 	Settings.worldName = getConfig().getString("districts.worldName","world");
-	// Localization
-	//Locale.changingObsidiantoLava = locale.getString("changingObsidiantoLava", "Changing obsidian back into lava. Be careful!");
+	Settings.beginningBlocks = getConfig().getInt("districts.beginningblocks",25);
     }
 
     /*
@@ -275,6 +263,7 @@ public class Districts extends JavaPlugin {
 
     protected void loadDistricts() {
 	// Load all known districts
+	// Load all the players
 	for (final File f : playersFolder.listFiles()) {
 	    // Need to remove the .yml suffix
 	    String fileName = f.getName();
@@ -291,7 +280,15 @@ public class Districts extends JavaPlugin {
 		}
 	    }
 	}
-	
+	// Put all online players in districts
+	for (Player p : getServer().getOnlinePlayers()) {
+	    for (DistrictRegion d: districts) {
+		if (d.intersectsDistrict(p.getLocation())) {
+		    players.setInDistrict(p.getUniqueId(), d);
+		    break;
+		}
+	    }
+	}
     }
 
 
@@ -490,7 +487,7 @@ public class Districts extends JavaPlugin {
 	}
 	return false;
     }
-    
+
     /**
      * Creates a new district
      * @param pos1
@@ -499,16 +496,25 @@ public class Districts extends JavaPlugin {
      * @return the district region
      */
     public DistrictRegion createNewDistrict(Location pos1, Location pos2, Player owner) {
-	    DistrictRegion d = new DistrictRegion(plugin, pos1, pos2, owner.getUniqueId());
-	    d.setEnterMessage("Entering " + owner.getDisplayName() + "'s district!");
-	    d.setFarewellMessage("Now leaving " + owner.getDisplayName() + "'s district.");
-	    getDistricts().add(d);
-	    getPos1s().remove(owner.getUniqueId());
-	    visualize(d, owner);
-	    players.save(owner.getUniqueId());
-	    return d;
+	DistrictRegion d = new DistrictRegion(plugin, pos1, pos2, owner.getUniqueId());
+	d.setEnterMessage("Entering " + owner.getDisplayName() + "'s district!");
+	d.setFarewellMessage("Now leaving " + owner.getDisplayName() + "'s district.");
+	getDistricts().add(d);
+	getPos1s().remove(owner.getUniqueId());
+	players.save(owner.getUniqueId());
+	// Find everyone who is in this district and visualize them
+	for (Player p : getServer().getOnlinePlayers()) {
+	    if (d.intersectsDistrict(p.getLocation())) {
+		if (!p.equals(owner)) {
+		    p.sendMessage("You are now in " + owner.getDisplayName() + "'s district!");
+		}
+		players.setInDistrict(p.getUniqueId(), d);
+		visualize(d,p);
+	    }
+	}
+	return d;
     }
-    
+
     @SuppressWarnings("deprecation") void visualize(DistrictRegion d, Player player) {
 	// Deactivate any previous visualization
 	if (visualizations.containsKey(player.getUniqueId())) {
@@ -573,7 +579,7 @@ public class Districts extends JavaPlugin {
 	pos.add(l);
 	visualizations.put(player.getUniqueId(), pos);
     }
-    
+
     @SuppressWarnings("deprecation")
     public void devisualize(Player player) {
 	//Districts.getPlugin().getLogger().info("Removing visualization");
@@ -592,7 +598,7 @@ public class Districts extends JavaPlugin {
      * @return the visualizations
      */
     public HashMap<UUID, List<Location>> getVisualizations() {
-        return visualizations;
+	return visualizations;
     }
 
 
@@ -600,8 +606,20 @@ public class Districts extends JavaPlugin {
      * @param visualizations the visualizations to set
      */
     public void setVisualizations(HashMap<UUID, List<Location>> visualizations) {
-        Districts.visualizations = visualizations;
+	Districts.visualizations = visualizations;
     }
+
+
+    public DistrictRegion getInDistrict(Location location) {
+	for (DistrictRegion d : districts) {
+	    if (d.intersectsDistrict(location)) {
+		return d;
+	    }
+	}
+	// This location is not in a district
+	return null;
+    }
+
 
 
 }

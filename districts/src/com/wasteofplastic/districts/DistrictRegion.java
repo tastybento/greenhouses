@@ -147,10 +147,7 @@ public class DistrictRegion {
     /**
      * @return the allowPVP
      */
-    public Boolean getAllowPVP(UUID uuid) {
-	//if (checkOwnerTenants(uuid)) {
-	//    return true;
-	//}
+    public Boolean getAllowPVP() {
 	return (Boolean)flags.get("allowPVP");
     }
 
@@ -530,11 +527,19 @@ public class DistrictRegion {
     /**
      * @param Trust a player
      */
-    public void addOwnerTrusted(UUID trusted) {
+    public boolean addOwnerTrusted(UUID trusted) {
+	if (ownerTrusted.contains(trusted)) {
+	    return false;
+	}
 	ownerTrusted.add(trusted);
+	return true;
     }
-    public void addRenterTrusted(UUID player) {
+    public boolean addRenterTrusted(UUID player) {
+	if (renterTrusted.contains(player)) {
+	    return false;
+	}
 	renterTrusted.add(player);
+	return true;
     }
 
     public void removeOwnerTrusted(UUID player) {
@@ -554,8 +559,12 @@ public class DistrictRegion {
 	}
 	return trustedByOwner;
     }
-    
-    public List<String> getOwnerTrustedUUID() {
+ 
+    public List<UUID> getOwnerTrustedUUID() {
+	return ownerTrusted;
+    }
+
+    public List<String> getOwnerTrustedUUIDString() {
 	List<String> trustedByOwner = new ArrayList<String>();
 	for (UUID playerUUID: ownerTrusted) {
 	    trustedByOwner.add(playerUUID.toString());
@@ -568,18 +577,21 @@ public class DistrictRegion {
      */
     public List<String> getRenterTrusted() {
 	List<String> trustedByRenter = new ArrayList<String>();
-	for (UUID playerUUID: ownerTrusted) {
+	for (UUID playerUUID: renterTrusted) {
 	    trustedByRenter.add(plugin.players.getName(playerUUID));
 	}
 	return trustedByRenter;
     }
 
-    public List<String> getRenterTrustedUUID() {
+    public List<String> getRenterTrustedUUIDString() {
 	List<String> trustedByRenter = new ArrayList<String>();
-	for (UUID playerUUID: ownerTrusted) {
+	for (UUID playerUUID: renterTrusted) {
 	    trustedByRenter.add(playerUUID.toString());
 	}
 	return trustedByRenter;
+    }
+    public List<UUID> getRenterTrustedUUID() {
+	return renterTrusted;
     }
 
 

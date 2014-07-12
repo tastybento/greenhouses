@@ -186,8 +186,8 @@ public class Players {
 			playerInfo.set("districts." + index + ".lastPayment",  formatter.format(district.getLastPayment()));
 		    }
 		    // Get the trusted players
-		    playerInfo.set("districts." + index + ".ownerTrusted", district.getOwnerTrustedUUID());
-		    playerInfo.set("districts." + index + ".renterTrusted", district.getRenterTrustedUUID());		   		    
+		    playerInfo.set("districts." + index + ".ownerTrusted", district.getOwnerTrustedUUIDString());
+		    playerInfo.set("districts." + index + ".renterTrusted", district.getRenterTrustedUUIDString());		   		    
 		    // Save the various other flags here
 		    playerInfo.createSection("districts." + index + ".flags", district.getFlags());		    
 		    // TODO
