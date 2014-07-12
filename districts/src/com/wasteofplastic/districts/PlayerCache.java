@@ -69,8 +69,8 @@ public class PlayerCache {
     public void removeAllPlayers() {
 	for (UUID p : playerCache.keySet()) {
 	    playerCache.get(p).save();
-	    playerCache.remove(p);
 	}
+	playerCache.clear();
     }
 
     /*
@@ -164,6 +164,7 @@ public class PlayerCache {
      * @param playerUUID
      */
     public void save(UUID playerUUID) {
+	addPlayer(playerUUID);
 	playerCache.get(playerUUID).save();
     }
 

@@ -3,7 +3,11 @@ districts:
    worldName: world
    # Starting blocks - the number of blocks a player will get at the start
    beginningblocks: 25
-
+   # How often to check leases in hours. If this is 0, then leases will be checked
+   # once when the plugin is loaded. If your server is automatically reset every day
+   # this may be sufficient. The smaller this number, the quicker a lease will expire
+   # after the deadline. 12 hours should be sufficient.
+   checkleases: 12
 
    ### Default settings for districts. Owners will be able to customize the settings
    ### using the control panel

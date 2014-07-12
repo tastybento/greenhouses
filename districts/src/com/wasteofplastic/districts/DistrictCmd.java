@@ -46,7 +46,7 @@ public class DistrictCmd implements CommandExecutor {
 	}
 	final Player player = (Player) sender;
 	// Basic permissions check to even use /district
-	if (!VaultHelper.checkPerm(player, "districts.create")) {
+	if (!VaultHelper.checkPerm(player, "districts.player")) {
 	    player.sendMessage(ChatColor.RED + Locale.errorNoPermission);
 	    return true;
 	}
@@ -297,7 +297,7 @@ public class DistrictCmd implements CommandExecutor {
 			player.sendMessage("You rented the district for "+ VaultHelper.econ.format(d.getPrice()) + " 1 week!");
 			d.setEnterMessage("Welcome to " + player.getDisplayName() + "'s rented district!");
 			d.setFarewellMessage("Now leaving " + player.getDisplayName() + "'s rented district.");
-			players.save(owner.getUniqueId());
+			players.save(d.getOwner());
 			return true;
 		    } else {
 			player.sendMessage(ChatColor.RED + "There was an economy problem trying to rent the district for "+ VaultHelper.econ.format(d.getPrice()) + "!");
@@ -323,24 +323,40 @@ public class DistrictCmd implements CommandExecutor {
 		return true;
 
 
-	    } else if (split[0].equalsIgnoreCase("trust")) {
+	    } else if (split[0].equalsIgnoreCase("trust") || split[0].equalsIgnoreCase("info")) {
 		DistrictRegion d = players.getInDistrict(playerUUID);
 		if (d == null) {
-		    player.sendMessage(ChatColor.RED + "Move to a district first to see trust info.");
+		    player.sendMessage(ChatColor.RED + "Move to a district first to see info.");
 		    return true;
 		}
 		player.sendMessage(ChatColor.GOLD + "[District Info]");
-		player.sendMessage(ChatColor.GREEN + "[Owner's trusted players]");
-		if (d.getOwnerTrusted().isEmpty()) {
-		    player.sendMessage("None");
-		} else for (String name : d.getOwnerTrusted()) {
-		    player.sendMessage(name);
+		if (d.getOwner() != null) {
+		    Player owner = plugin.getServer().getPlayer(d.getOwner());
+		    if (owner != null) {
+			player.sendMessage(ChatColor.YELLOW + "Owner: " + owner.getDisplayName() + " (" + owner.getName() + ")");
+		    } else {
+			player.sendMessage(ChatColor.YELLOW + "Owner: " + players.getName(d.getOwner()));
+		    }
+		    player.sendMessage(ChatColor.GREEN + "[Owner's trusted players]");
+		    if (d.getOwnerTrusted().isEmpty()) {
+			player.sendMessage("None");
+		    } else for (String name : d.getOwnerTrusted()) {
+			player.sendMessage(name);
+		    }
 		}
-		player.sendMessage(ChatColor.GREEN + "[Renter's trusted players]");
-		if (d.getRenterTrusted().isEmpty()) {
-		    player.sendMessage("None");
-		} else for (String name : d.getRenterTrusted()) {
-		    player.sendMessage(name);
+		if (d.getRenter() != null) {
+		    Player renter = plugin.getServer().getPlayer(d.getRenter());
+		    if (renter != null) {
+			player.sendMessage(ChatColor.YELLOW + "Renter: " + renter.getDisplayName() + " (" + renter.getName() + ")");
+		    } else {
+			player.sendMessage(ChatColor.YELLOW + "Renter: " + players.getName(d.getRenter()));
+		    }
+		    player.sendMessage(ChatColor.GREEN + "[Renter's trusted players]");
+		    if (d.getRenterTrusted().isEmpty()) {
+			player.sendMessage("None");
+		    } else for (String name : d.getRenterTrusted()) {
+			player.sendMessage(name);
+		    }
 		}
 		return true;
 
@@ -367,21 +383,21 @@ public class DistrictCmd implements CommandExecutor {
 			} else {
 			    // Remove trusted player
 			    d.removeOwnerTrusted(trusted);
-				Player p = plugin.getServer().getPlayer(trusted);
-				if (p != null) {
-				    p.sendMessage(ChatColor.RED + player.getDisplayName() + " untrusted you in a district.");
-				}
-			 
+			    Player p = plugin.getServer().getPlayer(trusted);
+			    if (p != null) {
+				p.sendMessage(ChatColor.RED + player.getDisplayName() + " untrusted you in a district.");
+			    }
+
 
 			}
 		    } else {
 			if (d.getRenterTrusted().isEmpty()) {
 			    player.sendMessage(ChatColor.RED + "No one is trusted in this district.");
 			} else {
-				Player p = plugin.getServer().getPlayer(trusted);
-				if (p != null) {
-				    p.sendMessage(ChatColor.RED + player.getDisplayName() + " untrusted you in a district.");
-				}
+			    Player p = plugin.getServer().getPlayer(trusted);
+			    if (p != null) {
+				p.sendMessage(ChatColor.RED + player.getDisplayName() + " untrusted you in a district.");
+			    }
 			    // Blank it out
 			    d.removeRenterTrusted(trusted);
 			}

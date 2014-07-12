@@ -30,7 +30,13 @@ public class AdminCmd implements CommandExecutor {
      * , org.bukkit.command.Command, java.lang.String, java.lang.String[])
      */
     public boolean onCommand(final CommandSender sender, final Command command, final String label, final String[] split) {
-	// Console commands
+	// Check for permissions
+	if (sender instanceof Player) {
+	    if (!VaultHelper.checkPerm(((Player)sender), "districts.admin")) {
+		sender.sendMessage(ChatColor.RED + Locale.errorNoPermission);
+		return true;
+	    }
+	}
 	// Check for zero parameters e.g., /dadmin
 	switch (split.length) {
 	case 0:

@@ -352,6 +352,7 @@ public class DistrictGuard implements Listener {
 	    plugin.getLogger().info("Not in a district");
 	    return;	    
 	}
+	plugin.getLogger().info("D is something " + d.getEnterMessage());
 	// Ops can do anything
 	if (e.getDamager() instanceof Player) {
 	    if (((Player)e.getDamager()).isOp()) {
@@ -384,11 +385,16 @@ public class DistrictGuard implements Listener {
 		    return;
 		} else {
 		    plugin.getLogger().info("Entity is a non-monster - check if ok to hurt"); 
-		    if (!d.getAllowHurtMobs(e.getEntity().getUniqueId())) {
+		    UUID playerUUID = e.getDamager().getUniqueId();
+		    if (playerUUID == null) {
+			plugin.getLogger().info("player ID is null");
+		    }
+		    if (!d.getAllowHurtMobs(playerUUID)) {
 			((Player)e.getDamager()).sendMessage(ChatColor.RED + Locale.districtProtected);
 			e.setCancelled(true);
 			return;
 		    }
+		    return;
 		}
 	    } else {
 		// PVP
@@ -412,6 +418,7 @@ public class DistrictGuard implements Listener {
 	    Arrow arrow = (Arrow)e.getDamager();
 	    // It really is an Arrow
 	    if (arrow.getShooter() instanceof Player) {
+		Player shooter = (Player)arrow.getShooter();
 		plugin.getLogger().info("Player arrow attack");
 		if (e.getEntity() instanceof Player) {
 		    plugin.getLogger().info("Player vs Player!");
@@ -422,9 +429,20 @@ public class DistrictGuard implements Listener {
 			e.setCancelled(true);
 			return;
 		    } 
+		} else {
+		    if (!(e.getEntity() instanceof Monster)) {
+			plugin.getLogger().info("Entity is a non-monster - check if ok to hurt"); 
+			UUID playerUUID = shooter.getUniqueId();
+			if (!d.getAllowHurtMobs(playerUUID)) {
+			    shooter.sendMessage(ChatColor.RED + Locale.districtProtected);
+			    e.setCancelled(true);
+			    return;
+			}
+			return;
+		    }
 		}
 	    }
-	} else {
+	} else if (e.getDamager() instanceof Player){
 	    plugin.getLogger().info("Player attack");
 	    // Just a player attack
 	    if (!d.getAllowPVP()) {
@@ -674,11 +692,11 @@ public class DistrictGuard implements Listener {
 	}
 	// Check for disallowed in-hand items
 	if (e.getMaterial() != null) {
-		// If the player is not in a district, forget it!
-		DistrictRegion d = plugin.getInDistrict(e.getPlayer().getLocation());
-		if (d == null) {
-		    return;
-		}
+	    // If the player is not in a district, forget it!
+	    DistrictRegion d = plugin.getInDistrict(e.getPlayer().getLocation());
+	    if (d == null) {
+		return;
+	    }
 
 	    if (e.getMaterial().equals(Material.BOAT) && (e.getClickedBlock() != null && !e.getClickedBlock().isLiquid())) {
 		// Trying to put a boat on non-liquid

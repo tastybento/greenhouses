@@ -334,7 +334,7 @@ public class DistrictRegion {
 	if (checkOwnerTenants(uuid)) {
 	    return true;
 	}
-	return (Boolean)flags.get("allowHurtMobs");
+	return (Boolean)flags.get("allowMobHarm");
     }
 
     

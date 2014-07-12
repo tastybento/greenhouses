@@ -6,10 +6,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
+
+import net.milkbowl.vault.economy.EconomyResponse;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -163,7 +167,6 @@ public class Districts extends JavaPlugin {
 	Locale.adminHelpinfo = getLocale().getString("adminHelp.info","display information for the given player.");
 	Locale.reloadconfigReloaded = getLocale().getString("reload.configurationReloaded", "Configuration reloaded from file.");	//delete
 	Locale.deleteremoving = getLocale().getString("delete.removing","District removed.");
-
 	// Assign settings
 	Settings.allowPvP = getConfig().getBoolean("districts.allowPvP",false);
 	Settings.allowBreakBlocks = getConfig().getBoolean("districts.allowbreakblocks", false);
@@ -185,7 +188,20 @@ public class Districts extends JavaPlugin {
 	Settings.allowMobHarm = getConfig().getBoolean("districts.allowmobharm", false);
 	// Other settings
 	Settings.worldName = getConfig().getString("districts.worldName","world");
+	getLogger().info("World name is: " + Settings.worldName );
 	Settings.beginningBlocks = getConfig().getInt("districts.beginningblocks",25);
+	if (Settings.beginningBlocks < 0) {
+	    Settings.beginningBlocks = 0;
+	    getLogger().warning("Beginning Blocks in config.yml was set to a negative value!");
+	}
+	Settings.checkLeases = getConfig().getInt("districts.checkleases",12);
+	if (Settings.checkLeases < 0) {
+	    Settings.checkLeases = 0;
+	    getLogger().warning("Checkleases in config.yml was set to a negative value! Setting to 0. No lease checking.");	    
+	} else if (Settings.checkLeases > 24) {
+	    Settings.checkLeases = 24;
+	    getLogger().warning("Maximum value for Checkleases in config.yml is 24 hours. Setting to 24.");	    
+	}
     }
 
     /*
@@ -242,7 +258,7 @@ public class Districts extends JavaPlugin {
 	loadMessages();
 
 	// Kick off a few tasks on the next tick
-	getServer().getScheduler().runTask(getPlugin(), new Runnable() {
+	getServer().getScheduler().runTask(plugin, new Runnable() {
 	    @Override
 	    public void run() {
 		final PluginManager manager = Bukkit.getServer().getPluginManager();
@@ -257,9 +273,69 @@ public class Districts extends JavaPlugin {
 		}
 		// Load players and check leases
 		loadDistricts();
+		checkLeases();
 	    }
 	});
+	// Kick off the check leases 
+	long duration = Settings.checkLeases * 60 * 60 * 20; // Server ticks
+	if (duration > 0) {
+	    getLogger().info("Check lease timer started. Will check leases again in " + Settings.checkLeases + " hours.");
+	    getServer().getScheduler().runTaskTimer(plugin, new Runnable() {
+		@Override
+		public void run() {
+		    getLogger().info("Checking leases. Will check leases again in " + Settings.checkLeases + " hours.");
+		    checkLeases();
+		}
+	    }, duration, duration);
+
+	} else {
+	    getLogger().warning("Leases will not be checked automatically. Make sure your server restarts regularly.");
+	}
     }
+
+
+    protected void checkLeases() {
+	// Check all the leases
+	Calendar currentDate = Calendar.getInstance();	
+	currentDate.add(Calendar.DAY_OF_MONTH, -7);
+	Date lastWeek = currentDate.getTime();
+	for (DistrictRegion d:districts) {
+	    if (d.getLastPayment() != null) {
+		if (lastWeek.equals(d.getLastPayment()) || lastWeek.after(d.getLastPayment())) {
+		    getLogger().info("Lease expired");
+		    if (d.getRenter() != null) {
+			// Try to deduct rent
+			try {
+			    EconomyResponse r = VaultHelper.econ.withdrawPlayer(getServer().getOfflinePlayer(d.getRenter()), d.getPrice());
+			    if (r.transactionSuccess()) {
+				if (getServer().getPlayer(d.getRenter()) != null) {
+				    getServer().getPlayer(d.getRenter()).sendMessage("You paid a rent of " + VaultHelper.econ.format(d.getPrice()) + " to " + getServer().getOfflinePlayer(d.getOwner()).getName() );
+
+				}
+				if (getServer().getPlayer(d.getOwner()) != null) {
+				    getServer().getPlayer(d.getOwner()).sendMessage(getServer().getOfflinePlayer(d.getRenter()).getName() + " paid you a rent of " + VaultHelper.econ.format(d.getPrice()));
+				}
+			    }
+			} catch (Exception e) {
+			}
+			// evict!
+			if (getServer().getPlayer(d.getRenter()) != null) {
+			    getServer().getPlayer(d.getRenter()).sendMessage("You could not pay a rent of " + VaultHelper.econ.format(d.getPrice()) + " so you were evicted from a propery!");
+
+			}
+			if (getServer().getPlayer(d.getOwner()) != null) {
+			    getServer().getPlayer(d.getOwner()).sendMessage(getServer().getOfflinePlayer(d.getRenter()).getName() + " could not pay you a rent of " + VaultHelper.econ.format(d.getPrice()) + " so they were evicted from a propery!");
+
+			}
+			d.setRenter(null);
+			d.setRenterTrusted(null);
+
+		    }
+		}
+	    }
+	}	
+    }
+
 
     protected void loadDistricts() {
 	// Load all known districts
@@ -289,6 +365,7 @@ public class Districts extends JavaPlugin {
 		}
 	    }
 	}
+
     }
 
 

@@ -15,8 +15,11 @@ commands:
         usage:  |
             /dadmin
 permissions:    
-  districts.*:
-    children:
-      districts.create:
-         description: Let the player create districts
-         default: true
+  districts.player:
+     description: Gives access to player commands
+     default: true
+  districts.admin:
+     description: Gives access to admin commands
+     default: op
+
+

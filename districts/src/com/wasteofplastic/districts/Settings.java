@@ -28,6 +28,7 @@ public class Settings {
     // General
     public static String worldName;
     public static int beginningBlocks;
+    public static int checkLeases;
    
     
 }
