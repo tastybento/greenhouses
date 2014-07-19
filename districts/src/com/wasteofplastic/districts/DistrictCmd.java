@@ -82,7 +82,7 @@ public class DistrictCmd implements CommandExecutor {
 		player.sendMessage(ChatColor.YELLOW + "/district rent: " + ChatColor.WHITE + "Attempts to rent the district you are in");
 		player.sendMessage(ChatColor.YELLOW + "/district rent <price>: " + ChatColor.WHITE + "Puts the district you are in up for rent for a weekly rent");
 		player.sendMessage(ChatColor.YELLOW + "/district sell <price>: " + ChatColor.WHITE + "Puts the district you are in up for sale");
-		player.sendMessage(ChatColor.YELLOW + "/district cancel: " + ChatColor.WHITE + "Cancels any For Sale or For Rent");
+		player.sendMessage(ChatColor.YELLOW + "/district cancel: " + ChatColor.WHITE + "Cancels a For Sale, For Rent or a Lease");
 		return true;
 	    } else if (split[0].equalsIgnoreCase("untrustall")) {
 		DistrictRegion d = players.getInDistrict(playerUUID);
@@ -248,6 +248,8 @@ public class DistrictCmd implements CommandExecutor {
 			if (owner.isOnline()) {
 			    plugin.devisualize((Player)owner);
 			    ((Player)owner).sendMessage("You successfully sold a district for " + VaultHelper.econ.format(d.getPrice()) + " to " + player.getDisplayName());
+			} else {
+			    plugin.setMessage(owner.getUniqueId(), "You successfully sold a district for " + VaultHelper.econ.format(d.getPrice()) + " to " + player.getDisplayName());
 			}
 			Location pos1 = d.getPos1();
 			Location pos2 = d.getPos2();
@@ -351,8 +353,21 @@ public class DistrictCmd implements CommandExecutor {
 			    return true;
 
 			}
+		    } else if (d.getRenter() != null && d.getRenter().equals(player.getUniqueId())) {
+			// Renter wanting to cancel the lease
+			    player.sendMessage(ChatColor.GOLD + "Lease renewal cancelled. Lease term finishes in " + plugin.daysToEndOfLease(d) + " days.");
+				if (plugin.getServer().getPlayer(d.getOwner()) != null) {
+				    plugin.getServer().getPlayer(d.getOwner()).sendMessage( player.getDisplayName() + " canceled a lease with you. It will end in " + plugin.daysToEndOfLease(d) + " days.");
+				} else {
+				    plugin.setMessage(d.getOwner(), player.getDisplayName() + " canceled a lease with you. It will end in " + plugin.daysToEndOfLease(d) + " days.");
+				}
+			    d.setForSale(false);
+			    d.setForRent(false);
+			    d.setPrice(0D);
+			    return true;
+		    } else {
+			player.sendMessage(ChatColor.RED + "This is not your district!");
 		    }
-		    player.sendMessage(ChatColor.RED + "This is not your district!");
 		} else {
 		    player.sendMessage(ChatColor.RED + "You are not in a district!"); 
 		}
