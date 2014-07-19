@@ -770,6 +770,33 @@ public class Districts extends JavaPlugin {
 	return null;
     }
 
+    public Location getClosestDistrict(Player player) {
+	// Find closest district
+	Location closest = null;
+	Double distance = 0D;
+	for (DistrictRegion d : districts) {
+	    UUID owner = d.getOwner();
+	    UUID renter = d.getRenter();
+	    if ((owner !=null && owner == player.getUniqueId()) || (renter !=null && renter == player.getUniqueId())) {
+		if (closest == null) {
+		
+		    closest = d.getPos1();
+		    distance = player.getLocation().distanceSquared(closest);
+		    //getLogger().info("DEBUG: first district found at " + d.getPos1().toString() + " distance " + distance);
+		} else {
+		    // Find out if this location is closer to player
+		    Double newDist = player.getLocation().distanceSquared(d.getPos1());
+		    if (newDist < distance) {
+			closest = d.getPos1();
+			distance = player.getLocation().distanceSquared(closest);
+			//getLogger().info("DEBUG: closer district found at " + d.getPos1().toString() + " distance " + distance);
+		    }
+		}
+	    }
+	}
+	//getLogger().info("DEBUG: District " + closest.getBlockX() + "," + closest.getBlockY() + "," + closest.getBlockZ() + " distance " + distance);
+	return closest;
 
+    }
 
 }

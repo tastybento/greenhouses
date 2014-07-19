@@ -53,6 +53,16 @@ public class DistrictGuard implements Listener {
 	if (player.getVehicle() != null) {
 	    return; // handled in vehicle listener
 	}
+	// Check if the player has a compass in their hand
+	ItemStack holding = player.getItemInHand();
+	if (holding != null) {
+	    if (holding.getType().equals(Material.COMPASS)) {
+		Location closest = plugin.getClosestDistrict(player);
+		if (closest != null) {
+		    player.setCompassTarget(closest);
+		}
+	    }
+	}
 	// Did we move a block?
 	if (event.getFrom().getBlockX() != event.getTo().getBlockX()
 		|| event.getFrom().getBlockY() != event.getTo().getBlockY()

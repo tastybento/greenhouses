@@ -131,9 +131,9 @@ public class PlayerCache {
     }
 
     /**
-     * Checks if player has island from cache if available
+     * Checks if player has a district from cache if available
      * @param playerUUID - string name of player
-     * @return true if player has island
+     * @return true if player has a district
      */
     public boolean hasADistrict(final UUID playerUUID) {
 	addPlayer(playerUUID);
