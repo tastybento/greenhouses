@@ -299,6 +299,8 @@ public class DistrictCmd implements CommandExecutor {
 			if (owner != null) {
 			    plugin.devisualize(owner);
 			    owner.sendMessage("You successfully rented a district for " + VaultHelper.econ.format(d.getPrice()) + " to " + player.getDisplayName());
+			} else {
+			    plugin.setMessage(d.getOwner(), "You successfully rented a district for " + VaultHelper.econ.format(d.getPrice()) + " to " + player.getDisplayName());
 			}
 			// It will stay for rent until the landlord cancels the lease
 			//d.setForRent(false);
@@ -337,6 +339,12 @@ public class DistrictCmd implements CommandExecutor {
 			    player.sendMessage(ChatColor.GOLD + "District is currently leased by " + players.getName(d.getRenter()) + ".");
 			    player.sendMessage(ChatColor.GOLD + "Lease will not renew and will terminate in " + plugin.daysToEndOfLease(d) + " days.");
 			    player.sendMessage(ChatColor.GOLD + "You can put it up for rent again after that date.");
+				if (plugin.getServer().getPlayer(d.getRenter()) != null) {
+				    plugin.getServer().getPlayer(d.getRenter()).sendMessage( players.getName(d.getOwner()) + " ended a lease you have on a district. It will end in " + plugin.daysToEndOfLease(d) + " days.");
+				} else {
+				    plugin.setMessage(d.getRenter(), players.getName(d.getOwner()) + " ended a lease you have on a district!");
+				}
+
 			    d.setForSale(false);
 			    d.setForRent(false);
 			    d.setPrice(0D);
