@@ -38,14 +38,14 @@ public class PlayerCache {
      */
         
     public void addPlayer(final UUID playerUUID) {
-	if (!plugin.getServer().getOfflinePlayer(playerUUID).hasPlayedBefore()) {
-	    plugin.getLogger().severe("Asked to create a player that does not exist!");
-	} else {
+	//if (!plugin.getServer().getOfflinePlayer(playerUUID).hasPlayedBefore()) {
+	//    plugin.getLogger().severe("Asked to create a player that does not exist!");
+	//} else {
 	if (!playerCache.containsKey(playerUUID)) {
 	    final Players player = new Players(plugin, playerUUID);
 	    playerCache.put(playerUUID,player);
 	}
-	}
+	//}
     }
     
     /**

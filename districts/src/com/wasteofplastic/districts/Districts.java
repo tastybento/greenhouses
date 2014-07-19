@@ -273,63 +273,128 @@ public class Districts extends JavaPlugin {
 		}
 		// Load players and check leases
 		loadDistricts();
-		checkLeases();
 	    }
 	});
 	// Kick off the check leases 
 	long duration = Settings.checkLeases * 60 * 60 * 20; // Server ticks
 	if (duration > 0) {
-	    getLogger().info("Check lease timer started. Will check leases again in " + Settings.checkLeases + " hours.");
+	    getLogger().info("Check lease timer started. Will check leases every " + Settings.checkLeases + " hours.");
 	    getServer().getScheduler().runTaskTimer(plugin, new Runnable() {
 		@Override
 		public void run() {
 		    getLogger().info("Checking leases. Will check leases again in " + Settings.checkLeases + " hours.");
 		    checkLeases();
 		}
-	    }, duration, duration);
+	    }, 0L, duration);
 
 	} else {
 	    getLogger().warning("Leases will not be checked automatically. Make sure your server restarts regularly.");
 	}
     }
 
+    public int daysToEndOfLease(DistrictRegion d) {
+	// Basic checking
+	if (d.getLastPayment() == null) {
+	    return 0;
+	}
+	if (d.getRenter() == null) {
+	    return 0;
+	}
+	// Check the lease date
+	Calendar lastWeek = Calendar.getInstance();	
+	lastWeek.add(Calendar.DAY_OF_MONTH, -7);
+	// Only work in days
+	lastWeek.set(Calendar.HOUR_OF_DAY, 0);            // set hour to midnight
+	lastWeek.set(Calendar.MINUTE, 0);                 // set minute in hour
+	lastWeek.set(Calendar.SECOND, 0);                 // set second in minute
+	lastWeek.set(Calendar.MILLISECOND, 0);            // set millisecond in second	
+
+	Calendar lease = Calendar.getInstance();
+	lease.setTime(d.getLastPayment());
+	lease.set(Calendar.HOUR_OF_DAY, 0);            // set hour to midnight
+	lease.set(Calendar.MINUTE, 0);                 // set minute in hour
+	lease.set(Calendar.SECOND, 0);                 // set second in minute
+	lease.set(Calendar.MILLISECOND, 0);            // set millisecond in second
+
+	getLogger().info("DEBUG: Last week = " + lastWeek.getTime().toString());
+	getLogger().info("DEBUG: Last payment = " + lease.getTime().toString());
+	int daysBetween = 0;
+	while (lastWeek.before(lease)) {
+	    lastWeek.add(Calendar.DAY_OF_MONTH, 1);
+	    daysBetween++;
+	}
+	getLogger().info("DEBUG: days left on lease = " + daysBetween);
+	if (daysBetween < 1) {
+	    getLogger().info("Lease expired");
+	    return 0;
+	}
+	return daysBetween;
+    }
 
     protected void checkLeases() {
 	// Check all the leases
-	Calendar currentDate = Calendar.getInstance();	
-	currentDate.add(Calendar.DAY_OF_MONTH, -7);
-	Date lastWeek = currentDate.getTime();
 	for (DistrictRegion d:districts) {
-	    if (d.getLastPayment() != null) {
-		if (lastWeek.equals(d.getLastPayment()) || lastWeek.after(d.getLastPayment())) {
-		    getLogger().info("Lease expired");
-		    if (d.getRenter() != null) {
+	    // Only check rented properties
+	    if (d.getLastPayment() != null && d.getRenter() != null) {
+		if (daysToEndOfLease(d) == 0) {
+		    getLogger().info("Debug: Check to see if the lease is renewable");
+		    // Check to see if the lease is renewable
+		    if (d.isForRent()) {
+			getLogger().info("Debug: District is still for rent");
 			// Try to deduct rent
-			try {
-			    EconomyResponse r = VaultHelper.econ.withdrawPlayer(getServer().getOfflinePlayer(d.getRenter()), d.getPrice());
-			    if (r.transactionSuccess()) {
-				if (getServer().getPlayer(d.getRenter()) != null) {
-				    getServer().getPlayer(d.getRenter()).sendMessage("You paid a rent of " + VaultHelper.econ.format(d.getPrice()) + " to " + getServer().getOfflinePlayer(d.getOwner()).getName() );
+			getLogger().info("Debug: Withdrawing rent from renters account");
+			EconomyResponse r = VaultHelper.econ.withdrawPlayer(getServer().getOfflinePlayer(d.getRenter()), d.getPrice());
+			if (r.transactionSuccess()) {
+			    getLogger().info("Successfully withdrew rent of " + VaultHelper.econ.format(d.getPrice()) + " from " + getServer().getOfflinePlayer(d.getRenter()).getName() + " account.");
+			    Calendar currentDate = Calendar.getInstance();
+			    // Only work in days
+			    currentDate.set(Calendar.HOUR_OF_DAY, 0);            // set hour to midnight
+			    currentDate.set(Calendar.MINUTE, 0);                 // set minute in hour
+			    currentDate.set(Calendar.SECOND, 0);                 // set second in minute
+			    currentDate.set(Calendar.MILLISECOND, 0);            // set millisecond in second
+			    d.setLastPayment(currentDate.getTime());
 
-				}
-				if (getServer().getPlayer(d.getOwner()) != null) {
-				    getServer().getPlayer(d.getOwner()).sendMessage(getServer().getOfflinePlayer(d.getRenter()).getName() + " paid you a rent of " + VaultHelper.econ.format(d.getPrice()));
-				}
+			    if (getServer().getPlayer(d.getRenter()) != null) {
+				getServer().getPlayer(d.getRenter()).sendMessage("You paid a rent of " + VaultHelper.econ.format(d.getPrice()) + " to " + getServer().getOfflinePlayer(d.getOwner()).getName() );
+
 			    }
-			} catch (Exception e) {
+			    if (getServer().getPlayer(d.getOwner()) != null) {
+				getServer().getPlayer(d.getOwner()).sendMessage(getServer().getOfflinePlayer(d.getRenter()).getName() + " paid you a rent of " + VaultHelper.econ.format(d.getPrice()));
+			    }
+			} else {
+			    // evict!
+			    getLogger().info("Could not withdraw rent of " + VaultHelper.econ.format(d.getPrice()) + " from " + getServer().getOfflinePlayer(d.getRenter()).getName() + " account.");
+
+			    if (getServer().getPlayer(d.getRenter()) != null) {
+				getServer().getPlayer(d.getRenter()).sendMessage("You could not pay a rent of " + VaultHelper.econ.format(d.getPrice()) + " so you were evicted from a propery!");
+
+			    }
+			    if (getServer().getPlayer(d.getOwner()) != null) {
+				getServer().getPlayer(d.getOwner()).sendMessage(getServer().getOfflinePlayer(d.getRenter()).getName() + " could not pay you a rent of " + VaultHelper.econ.format(d.getPrice()) + " so they were evicted from a propery!");
+
+			    }
+			    d.setRenter(null);
+			    d.setRenterTrusted(new ArrayList<UUID>());
+			    d.setEnterMessage("Entering " + players.getName(d.getOwner()) + "'s district!");
+			    d.setFarewellMessage("Now leaving " + players.getName(d.getOwner()) + "'s district.");
 			}
+		    } else {
+			// No longer for rent
+			getLogger().info("District is no longer for rent - evicting " + getServer().getOfflinePlayer(d.getRenter()).getName());
+
 			// evict!
 			if (getServer().getPlayer(d.getRenter()) != null) {
-			    getServer().getPlayer(d.getRenter()).sendMessage("You could not pay a rent of " + VaultHelper.econ.format(d.getPrice()) + " so you were evicted from a propery!");
+			    getServer().getPlayer(d.getRenter()).sendMessage("The lease on a district you were renting from " + players.getName(d.getOwner()) + " ended.");
 
 			}
 			if (getServer().getPlayer(d.getOwner()) != null) {
-			    getServer().getPlayer(d.getOwner()).sendMessage(getServer().getOfflinePlayer(d.getRenter()).getName() + " could not pay you a rent of " + VaultHelper.econ.format(d.getPrice()) + " so they were evicted from a propery!");
+			    getServer().getPlayer(d.getOwner()).sendMessage(getServer().getOfflinePlayer(d.getRenter()).getName() + " lease ended.");
 
 			}
 			d.setRenter(null);
-			d.setRenterTrusted(null);
-
+			d.setRenterTrusted(new ArrayList<UUID>());
+			d.setEnterMessage("Entering " + players.getName(d.getOwner()) + "'s district!");
+			d.setFarewellMessage("Now leaving " + players.getName(d.getOwner()) + "'s district.");	
 		    }
 		}
 	    }

@@ -120,7 +120,7 @@ public class Players {
 				}
 			    }
 			    d.setOwnerTrusted(ownerTrustedUUID);
-			}
+			} 
 			List<UUID> renterTrustedUUID = new ArrayList<UUID>();
 			List<String> renterTrusted = playerInfo.getStringList("districts." + key + ".renterTrusted");
 			if (renterTrusted != null) {

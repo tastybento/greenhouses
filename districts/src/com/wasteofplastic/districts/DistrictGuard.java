@@ -181,9 +181,9 @@ public class DistrictGuard implements Listener {
 	    }
 	    if (toDistrict.isForSale()) {
 		player.sendMessage("This district is for sale for " + VaultHelper.econ.format(toDistrict.getPrice()) + "!");
-	    } else if (toDistrict.isForRent()) {
+	    } else if (toDistrict.isForRent() && toDistrict.getRenter() == null) {
 		player.sendMessage("This district is for rent for " + VaultHelper.econ.format(toDistrict.getPrice()) + " per week.");
-	    }
+	    } 
 	    plugin.players.setInDistrict(player.getUniqueId(), toDistrict);	    
 
 	} else if (fromDistrict != null && toDistrict != null){

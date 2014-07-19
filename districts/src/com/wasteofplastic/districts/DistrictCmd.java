@@ -1,3 +1,4 @@
+
 package com.wasteofplastic.districts;
 
 import java.util.ArrayList;
@@ -45,6 +46,11 @@ public class DistrictCmd implements CommandExecutor {
 	    return false;
 	}
 	final Player player = (Player) sender;
+	// Check we are in the right world
+	if (!player.getWorld().getName().equalsIgnoreCase(Settings.worldName)) {
+	    player.sendMessage("Districts only available in " + Settings.worldName + " world.");
+	    return true;
+	}
 	// Basic permissions check to even use /district
 	if (!VaultHelper.checkPerm(player, "districts.player")) {
 	    player.sendMessage(ChatColor.RED + Locale.errorNoPermission);
@@ -269,12 +275,16 @@ public class DistrictCmd implements CommandExecutor {
 			return true;
 		    }
 		    if (d.getOwner() != null && d.getOwner().equals(playerUUID)) {
-			player.sendMessage(ChatColor.RED + "You already own this district!");
+			player.sendMessage(ChatColor.RED + "You own this district!");
 			return true;
 		    }
 		    if (d.getRenter() != null && d.getRenter().equals(playerUUID)) {
 			player.sendMessage(ChatColor.RED + "You are already renting this district!");
 			return true;			
+		    }
+		    if (d.isForRent() && d.getRenter() != null) {
+			player.sendMessage(ChatColor.RED + "This district is already being leased.");
+			return true;						
 		    }
 		    // See if the player can afford it
 		    if (!VaultHelper.econ.has(player, d.getPrice())) {
@@ -290,9 +300,15 @@ public class DistrictCmd implements CommandExecutor {
 			    plugin.devisualize(owner);
 			    owner.sendMessage("You successfully rented a district for " + VaultHelper.econ.format(d.getPrice()) + " to " + player.getDisplayName());
 			}
-			d.setForRent(false);
+			// It will stay for rent until the landlord cancels the lease
+			//d.setForRent(false);
 			d.setRenter(playerUUID);
-			Calendar currentDate = Calendar.getInstance();			
+			Calendar currentDate = Calendar.getInstance();
+			// Only work in days
+			currentDate.set(Calendar.HOUR_OF_DAY, 0);            // set hour to midnight
+			currentDate.set(Calendar.MINUTE, 0);                 // set minute in hour
+			currentDate.set(Calendar.SECOND, 0);                 // set second in minute
+			currentDate.set(Calendar.MILLISECOND, 0);            // set millisecond in second
 			d.setLastPayment(currentDate.getTime());
 			player.sendMessage("You rented the district for "+ VaultHelper.econ.format(d.getPrice()) + " 1 week!");
 			d.setEnterMessage("Welcome to " + player.getDisplayName() + "'s rented district!");
@@ -310,11 +326,23 @@ public class DistrictCmd implements CommandExecutor {
 		DistrictRegion d = players.getInDistrict(playerUUID);
 		if (d != null) {
 		    if (d.getOwner().equals(playerUUID)) {
-			player.sendMessage(ChatColor.GOLD + "District is no longer for sale or rent.");
-			d.setForSale(false);
-			d.setForRent(false);
-			d.setPrice(0D);
-			return true;
+			// If no one has rented the district yet
+			if (d.getRenter() == null) {
+			    player.sendMessage(ChatColor.GOLD + "District is no longer for sale or rent.");
+			    d.setForSale(false);
+			    d.setForRent(false);
+			    d.setPrice(0D);
+			    return true;
+			} else {
+			    player.sendMessage(ChatColor.GOLD + "District is currently leased by " + players.getName(d.getRenter()) + ".");
+			    player.sendMessage(ChatColor.GOLD + "Lease will not renew and will terminate in " + plugin.daysToEndOfLease(d) + " days.");
+			    player.sendMessage(ChatColor.GOLD + "You can put it up for rent again after that date.");
+			    d.setForSale(false);
+			    d.setForRent(false);
+			    d.setPrice(0D);
+			    return true;
+
+			}
 		    }
 		    player.sendMessage(ChatColor.RED + "This is not your district!");
 		} else {
@@ -345,6 +373,11 @@ public class DistrictCmd implements CommandExecutor {
 		    }
 		}
 		if (d.getRenter() != null) {
+		    if (d.isForRent()) {
+			player.sendMessage(ChatColor.YELLOW + "Next rent of " + VaultHelper.econ.format(d.getPrice()) + " due in " + plugin.daysToEndOfLease(d) + " days.");
+		    } else {
+			player.sendMessage(ChatColor.RED + "Lease will end in " + plugin.daysToEndOfLease(d) + " days!");
+		    }
 		    Player renter = plugin.getServer().getPlayer(d.getRenter());
 		    if (renter != null) {
 			player.sendMessage(ChatColor.YELLOW + "Renter: " + renter.getDisplayName() + " (" + renter.getName() + ")");
@@ -356,6 +389,10 @@ public class DistrictCmd implements CommandExecutor {
 			player.sendMessage("None");
 		    } else for (String name : d.getRenterTrusted()) {
 			player.sendMessage(name);
+		    }
+		} else {
+		    if (d.isForRent()) {
+			player.sendMessage(ChatColor.YELLOW + "This district can be leased for " + VaultHelper.econ.format(d.getPrice()));
 		    }
 		}
 		return true;
@@ -558,7 +595,8 @@ public class DistrictCmd implements CommandExecutor {
 		    if (d.getOwner().equals(playerUUID)) {
 			// Check to see if it is being rented right now
 			if (d.getRenter() != null) {
-			    player.sendMessage(ChatColor.RED+"The district is already being rented at this time. Wait until the lease expires.");
+			    player.sendMessage(ChatColor.RED+"The district is currently rented!");
+			    player.sendMessage(ChatColor.RED+"To end the renter's lease at the next due date, use /d cancel.");
 			    return true;
 			}
 			double price = 0D;

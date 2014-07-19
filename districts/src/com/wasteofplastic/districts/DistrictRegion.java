@@ -37,6 +37,8 @@ public class DistrictRegion {
 	}
 	this.owner = owner;
 	this.id = UUID.randomUUID();
+	this.ownerTrusted = new ArrayList<UUID>();
+	this.renterTrusted = new ArrayList<UUID>();
 	flags.put("allowPVP",Settings.allowPvP);
 	flags.put("allowBreakBlocks",Settings.allowBreakBlocks);
 	flags.put("allowPlaceBlocks", Settings.allowPlaceBlocks);
