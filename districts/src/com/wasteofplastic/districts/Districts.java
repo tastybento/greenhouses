@@ -26,6 +26,8 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
+import com.sun.tools.hat.internal.util.Misc;
+
 /**
  * @author ben
  */
@@ -776,17 +778,21 @@ public class Districts extends JavaPlugin {
 	for (DistrictRegion d : districts) {
 	    UUID owner = d.getOwner();
 	    UUID renter = d.getRenter();
-	    if ((owner !=null && owner == player.getUniqueId()) || (renter !=null && renter == player.getUniqueId())) {
+
+	    if ((owner !=null && owner.equals(player.getUniqueId())) || (renter !=null && renter.equals(player.getUniqueId()))) {
+		//plugin.getLogger().info(owner + "  -  " + renter);
 		if (closest == null) {
-		
-		    closest = d.getPos1();
+		    //plugin.getLogger().info(owner + "  -  " + renter);
+		    Vector mid = d.getPos1().toVector().midpoint(d.getPos2().toVector());
+		    closest = mid.toLocation(d.getPos1().getWorld());
 		    distance = player.getLocation().distanceSquared(closest);
 		    //getLogger().info("DEBUG: first district found at " + d.getPos1().toString() + " distance " + distance);
 		} else {
 		    // Find out if this location is closer to player
 		    Double newDist = player.getLocation().distanceSquared(d.getPos1());
 		    if (newDist < distance) {
-			closest = d.getPos1();
+			Vector mid = d.getPos1().toVector().midpoint(d.getPos2().toVector());
+			closest = mid.toLocation(d.getPos1().getWorld());
 			distance = player.getLocation().distanceSquared(closest);
 			//getLogger().info("DEBUG: closer district found at " + d.getPos1().toString() + " distance " + distance);
 		    }

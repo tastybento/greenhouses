@@ -60,6 +60,7 @@ public class DistrictGuard implements Listener {
 		Location closest = plugin.getClosestDistrict(player);
 		if (closest != null) {
 		    player.setCompassTarget(closest);
+		    //plugin.getLogger().info("DEBUG: Compass " + closest.getBlockX() + "," + closest.getBlockZ());
 		}
 	    }
 	}
