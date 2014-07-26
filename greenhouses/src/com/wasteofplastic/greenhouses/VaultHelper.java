@@ -1,4 +1,4 @@
-package com.wasteofplastic.districts;
+package com.wasteofplastic.greenhouses;
 
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.permission.Permission;
@@ -18,7 +18,7 @@ public class VaultHelper {
      * @return
      */
     public static boolean setupEconomy() {
-	RegisteredServiceProvider<Economy> economyProvider = Districts.getPlugin().getServer().getServicesManager()
+	RegisteredServiceProvider<Economy> economyProvider = Greenhouses.getPlugin().getServer().getServicesManager()
 		.getRegistration(net.milkbowl.vault.economy.Economy.class);
 	if (economyProvider != null) {
 	    econ = economyProvider.getProvider();
@@ -31,7 +31,7 @@ public class VaultHelper {
      * @return
      */
     public static boolean setupPermissions() {
-	RegisteredServiceProvider<Permission> permissionProvider = Districts.getPlugin().getServer().getServicesManager()
+	RegisteredServiceProvider<Permission> permissionProvider = Greenhouses.getPlugin().getServer().getServicesManager()
 		.getRegistration(net.milkbowl.vault.permission.Permission.class);
 	if (permissionProvider != null) {
 	    permission = permissionProvider.getProvider();

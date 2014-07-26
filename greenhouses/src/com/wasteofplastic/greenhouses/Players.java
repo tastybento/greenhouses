@@ -1,4 +1,4 @@
-package com.wasteofplastic.districts;
+package com.wasteofplastic.greenhouses;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -19,14 +19,14 @@ import org.bukkit.entity.Player;
  * Tracks the following info on the player
  */
 public class Players {
-    private Districts plugin;
+    private Greenhouses plugin;
     private YamlConfiguration playerInfo;
-    private boolean hasDistricts;
+    private boolean hasGreenhouses;
     private UUID uuid;
     private String playerName;
-    private DistrictRegion inDistrict;
+    private GreenhouseRegion inGreenhouse;
     private boolean visualize;
-    // The number of blocks I have to use on districts
+    // The number of blocks I have to use on greenhouses
     private int blocks;
 
     /**
@@ -34,13 +34,12 @@ public class Players {
      *            Constructor - initializes the state variables
      * 
      */
-    public Players(final Districts districts, final UUID uuid) {
-	this.plugin = districts;
+    public Players(final Greenhouses greenhouses, final UUID uuid) {
+	this.plugin = greenhouses;
 	this.uuid = uuid;
-	this.hasDistricts = false;
+	this.hasGreenhouses = false;
 	this.playerName = "";
-	this.inDistrict = null;
-	this.blocks = Settings.beginningBlocks;
+	this.inGreenhouse = null;
 	this.visualize = true;
 	load(uuid);
     }
@@ -50,7 +49,7 @@ public class Players {
      * @param uuid
      */
     public void load(UUID uuid) {
-	playerInfo = Districts.loadYamlFile("players/" + uuid.toString() + ".yml");
+	playerInfo = Greenhouses.loadYamlFile("players/" + uuid.toString() + ".yml");
 	// Load in from YAML file
 	this.playerName = playerInfo.getString("playerName", "");
 	if (playerName.isEmpty()) {
@@ -66,40 +65,38 @@ public class Players {
 	    }
 	}
 	//plugin.getLogger().info("Loading player..." + playerName);
-	this.hasDistricts = playerInfo.getBoolean("hasDistricts", false);
+	this.hasGreenhouses = playerInfo.getBoolean("hasGreenhouses", false);
 	this.visualize = playerInfo.getBoolean("visualize",true);
-	// Get how many blocks I have to use
-	this.blocks = playerInfo.getInt("blocks",Settings.beginningBlocks);
-	ConfigurationSection myDists = playerInfo.getConfigurationSection("districts");
-	if (myDists != null) {
-	    // Get a list of all the districts
-	    for (String key : myDists.getKeys(false)) {
+	ConfigurationSection myHouses = playerInfo.getConfigurationSection("greenhouses");
+	if (myHouses != null) {
+	    // Get a list of all the greenhouses
+	    for (String key : myHouses.getKeys(false)) {
 		try {
 		    // Load all the values
-		    Location pos1 = getLocationString(playerInfo.getString("districts." + key + ".pos-one"));
-		    Location pos2 = getLocationString(playerInfo.getString("districts." + key + ".pos-two"));
-		    // Check if this district already exists
-		    if (plugin.checkDistrictIntersection(pos1, pos2)) {
-			plugin.getLogger().info("DEBUG: District already exists or overlaps - ignoring");
+		    Location pos1 = getLocationString(playerInfo.getString("greenhouses." + key + ".pos-one"));
+		    Location pos2 = getLocationString(playerInfo.getString("greenhouses." + key + ".pos-two"));
+		    // Check if this greenhouse already exists
+		    if (plugin.checkGreenhouseIntersection(pos1, pos2)) {
+			plugin.getLogger().info("DEBUG: Greenhouse already exists or overlaps - ignoring");
 
 		    } else {
-			DistrictRegion d = new DistrictRegion(plugin, pos1, pos2, uuid);
-			d.setId(UUID.fromString(playerInfo.getString("districts." + key + ".id")));
+			GreenhouseRegion d = new GreenhouseRegion(plugin, pos1, pos2, uuid);
+			d.setId(UUID.fromString(playerInfo.getString("greenhouses." + key + ".id")));
 			// Load all the flags
-			HashMap<String,Object> flags = (HashMap<String, Object>) playerInfo.getConfigurationSection("districts." + key + ".flags").getValues(false);
-			//d.setEnterMessage(playerInfo.getString("districts." + key + ".entermessage",""));
-			//d.setFarewellMessage(playerInfo.getString("districts." + key + ".farewellmessage",""));
+			HashMap<String,Object> flags = (HashMap<String, Object>) playerInfo.getConfigurationSection("greenhouses." + key + ".flags").getValues(false);
+			//d.setEnterMessage(playerInfo.getString("greenhouses." + key + ".entermessage",""));
+			//d.setFarewellMessage(playerInfo.getString("greenhouses." + key + ".farewellmessage",""));
 			d.setFlags(flags);
 			// Load the various other flags here
-			String tempUUID = playerInfo.getString("districts." + key + ".renter");
+			String tempUUID = playerInfo.getString("greenhouses." + key + ".renter");
 			if (tempUUID != null) {
 			    d.setRenter(UUID.fromString(tempUUID));
 			}
-			d.setForSale(playerInfo.getBoolean("districts." + key + ".forSale", false));
-			d.setForRent(playerInfo.getBoolean("districts." + key + ".forRent", false));
-			d.setPrice(playerInfo.getDouble("districts." + key + ".price", 0D));
+			d.setForSale(playerInfo.getBoolean("greenhouses." + key + ".forSale", false));
+			d.setForRent(playerInfo.getBoolean("greenhouses." + key + ".forRent", false));
+			d.setPrice(playerInfo.getDouble("greenhouses." + key + ".price", 0D));
 			SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
-			String dateInString = playerInfo.getString("districts." + key + ".lastPayment");
+			String dateInString = playerInfo.getString("greenhouses." + key + ".lastPayment");
 			if (dateInString != null) {		 
 			    try {		 
 				Date date = formatter.parse(dateInString);
@@ -110,7 +107,7 @@ public class Players {
 			}
 			// Get the trusted players
 			List<UUID> ownerTrustedUUID = new ArrayList<UUID>();
-			List<String> ownerTrusted = playerInfo.getStringList("districts." + key + ".ownerTrusted");
+			List<String> ownerTrusted = playerInfo.getStringList("greenhouses." + key + ".ownerTrusted");
 			if (ownerTrusted != null) {
 			    for (String temp : ownerTrusted) {
 				try {
@@ -122,7 +119,7 @@ public class Players {
 			    d.setOwnerTrusted(ownerTrustedUUID);
 			} 
 			List<UUID> renterTrustedUUID = new ArrayList<UUID>();
-			List<String> renterTrusted = playerInfo.getStringList("districts." + key + ".renterTrusted");
+			List<String> renterTrusted = playerInfo.getStringList("greenhouses." + key + ".renterTrusted");
 			if (renterTrusted != null) {
 			    for (String temp : renterTrusted) {
 				try {
@@ -133,7 +130,7 @@ public class Players {
 			    }
 			    d.setRenterTrusted(renterTrustedUUID);
 			}	    
-			plugin.getDistricts().add(d);
+			plugin.getGreenhouses().add(d);
 		    }
 		} catch (Exception e) {
 		    plugin.getLogger().severe("Problem loading player files");
@@ -141,7 +138,7 @@ public class Players {
 		}
 		
 	    }
-	    plugin.getLogger().info("Loaded " + plugin.getDistricts().size() + " districts.");
+	    plugin.getLogger().info("Loaded " + plugin.getGreenhouses().size() + " greenhouses.");
 	}
     }
     /**
@@ -151,20 +148,20 @@ public class Players {
 	plugin.getLogger().info("Saving player..." + playerName);
 	// Save the variables
 	playerInfo.set("playerName", playerName);
-	playerInfo.set("hasDistricts", hasDistricts);
+	playerInfo.set("hasGreenhouses", hasGreenhouses);
 	playerInfo.set("blocks", blocks);
 	playerInfo.set("visualize", isVisualize());
-	// Wipe out any old districts in the file
-	playerInfo.createSection("districts");
-	if (!plugin.getDistricts().isEmpty()) {
-	    // Get a list of all my districts
+	// Wipe out any old greenhouses in the file
+	playerInfo.createSection("greenhouses");
+	if (!plugin.getGreenhouses().isEmpty()) {
+	    // Get a list of all my greenhouses
 	    int index = 0;
-	    for (DistrictRegion district : plugin.getDistricts()) {
-		if (district.getOwner().equals(uuid)) {
+	    for (GreenhouseRegion greenhouse : plugin.getGreenhouses()) {
+		if (greenhouse.getOwner().equals(uuid)) {
 		    // Save all the values
-		    playerInfo.set("districts." + index + ".id", district.getId().toString());
-		    playerInfo.set("districts." + index + ".pos-one", getStringLocation(district.getPos1()));
-		    playerInfo.set("districts." + index + ".pos-two", getStringLocation(district.getPos2()));
+		    playerInfo.set("greenhouses." + index + ".id", greenhouse.getId().toString());
+		    playerInfo.set("greenhouses." + index + ".pos-one", getStringLocation(greenhouse.getPos1()));
+		    playerInfo.set("greenhouses." + index + ".pos-two", getStringLocation(greenhouse.getPos2()));
 		    /*
 		    private World world;
 		    private UUID owner;
@@ -176,32 +173,28 @@ public class Players {
 		    private Double price = 0D;
 		    private Date lastPayment;
 		     */
-		    if (district.getRenter() != null)
-			playerInfo.set("districts." + index + ".renter", district.getRenter().toString());
-		    playerInfo.set("districts." + index + ".forSale", district.isForSale());
-		    playerInfo.set("districts." + index + ".forRent", district.isForRent());
-		    playerInfo.set("districts." + index + ".price",  district.getPrice());
-		    if (district.getLastPayment() != null) {
+		    if (greenhouse.getRenter() != null)
+			playerInfo.set("greenhouses." + index + ".renter", greenhouse.getRenter().toString());
+		    playerInfo.set("greenhouses." + index + ".forSale", greenhouse.isForSale());
+		    playerInfo.set("greenhouses." + index + ".forRent", greenhouse.isForRent());
+		    playerInfo.set("greenhouses." + index + ".price",  greenhouse.getPrice());
+		    if (greenhouse.getLastPayment() != null) {
 			SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");		    
-			playerInfo.set("districts." + index + ".lastPayment",  formatter.format(district.getLastPayment()));
+			playerInfo.set("greenhouses." + index + ".lastPayment",  formatter.format(greenhouse.getLastPayment()));
 		    }
 		    // Get the trusted players
-		    playerInfo.set("districts." + index + ".ownerTrusted", district.getOwnerTrustedUUIDString());
-		    playerInfo.set("districts." + index + ".renterTrusted", district.getRenterTrustedUUIDString());		   		    
+		    playerInfo.set("greenhouses." + index + ".ownerTrusted", greenhouse.getOwnerTrustedUUIDString());
+		    playerInfo.set("greenhouses." + index + ".renterTrusted", greenhouse.getRenterTrustedUUIDString());		   		    
 		    // Save the various other flags here
-		    playerInfo.createSection("districts." + index + ".flags", district.getFlags());		    
+		    playerInfo.createSection("greenhouses." + index + ".flags", greenhouse.getFlags());		    
 		    // TODO
 		    index++;
 		}
 	    }
 	}
-	Districts.saveYamlFile(playerInfo, "players/" + uuid.toString() + ".yml");
+	Greenhouses.saveYamlFile(playerInfo, "players/" + uuid.toString() + ".yml");
     }
 
-
-    public boolean hasADistrict() {
-	return hasDistricts;
-    }
 
     /**
      * Converts a serialized location string to a Bukkit Location
@@ -256,11 +249,6 @@ public class Players {
 	return l.getWorld().getName() + ":" + l.getBlockX() + ":" + l.getBlockY() + ":" + l.getBlockZ();
     }
 
-    public void setHasDistricts(final boolean b) {
-	hasDistricts = b;
-    }
-
-
     /**
      * @param s
      *            a String name of the player
@@ -270,17 +258,17 @@ public class Players {
     }
 
     /**
-     * @return the inDistrict
+     * @return the inGreenhouse
      */
-    public DistrictRegion getInDistrict() {
-	return inDistrict;
+    public GreenhouseRegion getInGreenhouse() {
+	return inGreenhouse;
     }
 
     /**
-     * @param inDistrict the inDistrict to set
+     * @param inGreenhouse the inGreenhouse to set
      */
-    public void setInDistrict(DistrictRegion inDistrict) {
-	this.inDistrict = inDistrict;
+    public void setInGreenhouse(GreenhouseRegion inGreenhouse) {
+	this.inGreenhouse = inGreenhouse;
     }
 
     /**

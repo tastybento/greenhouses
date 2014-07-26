@@ -1,4 +1,4 @@
-package com.wasteofplastic.districts;
+package com.wasteofplastic.greenhouses;
 
 
 
@@ -14,7 +14,7 @@ public class Locale {
     public static String errorCommandNotReady;
     public static String errorOfflinePlayer;
     public static String errorUnknownCommand;
-    public static String districtProtected;
+    public static String greenhouseProtected;
 
     public static String newsHeadline;
     ////////////////////////////////////////////////////////////////

@@ -1,4 +1,4 @@
-package com.wasteofplastic.districts;
+package com.wasteofplastic.greenhouses;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -11,8 +11,8 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
-public class DistrictRegion {
-    private Districts plugin;
+public class GreenhouseRegion {
+    private Greenhouses plugin;
     private UUID id;
     private Vector pos1;
     private Vector pos2;
@@ -27,7 +27,7 @@ public class DistrictRegion {
     private Date lastPayment;
     private HashMap<String,Object> flags = new HashMap<String,Object>();
 
-    public DistrictRegion(Districts plugin, Location pos1, Location pos2, UUID owner) {
+    public GreenhouseRegion(Greenhouses plugin, Location pos1, Location pos2, UUID owner) {
 	this.plugin = plugin;
 	this.pos1 = new Vector(pos1.getBlockX(),0,pos1.getBlockZ());
 	this.pos2 = new Vector(pos2.getBlockX(),0,pos2.getBlockZ());
@@ -63,7 +63,7 @@ public class DistrictRegion {
     }
 
 
-    public boolean intersectsDistrict(Location loc) {
+    public boolean intersectsGreenhouse(Location loc) {
 	//plugin.getLogger().info("Checking intersection");
 	Vector v = new Vector(loc.getBlockX(),0,loc.getBlockZ());
 	//plugin.getLogger().info("Pos 1 = " + pos1.toString());

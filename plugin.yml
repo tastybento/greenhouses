@@ -1,24 +1,24 @@
-name: Districts
-main: com.wasteofplastic.districts.Districts
+name: Greenhouses
+main: com.wasteofplastic.greenhouses.Greenhouses
 version: 0.4
-description: Districts
+description: Enables players to create biome greenhouses
 author: Tastybento
 depend: [Vault]
 commands:
-    district:
+    greenhouse:
         description: Main player command
-        aliases: [dist, d]
+        aliases: [greenhouses, g]
         usage:  |
-             /district help
-    dadmin:
+             /greenhouse help
+    gadmin:
         description: Admin commands
         usage:  |
-            /dadmin
+            /gadmin
 permissions:    
-  districts.player:
+  greenhouses.player:
      description: Gives access to player commands
      default: true
-  districts.admin:
+  greenhouses.admin:
      description: Gives access to admin commands
      default: op
 

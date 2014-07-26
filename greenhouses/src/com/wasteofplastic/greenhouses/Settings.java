@@ -1,4 +1,4 @@
-package com.wasteofplastic.districts;
+package com.wasteofplastic.greenhouses;
 
 
 /**
@@ -6,7 +6,7 @@ package com.wasteofplastic.districts;
  * Where all the settings are
  */
 public class Settings {
-    // DistrictGuard settings
+    // GreenhouseGuard settings
     public static boolean allowPvP;
     public static boolean allowBreakBlocks;
     public static boolean allowPlaceBlocks;
@@ -27,7 +27,6 @@ public class Settings {
     public static boolean allowMobHarm;
     // General
     public static String worldName;
-    public static int beginningBlocks;
     public static int checkLeases;
    
     

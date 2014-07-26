@@ -1,4 +1,4 @@
-package com.wasteofplastic.districts;
+package com.wasteofplastic.greenhouses;
 
 import java.util.Date;
 import java.util.UUID;
@@ -14,10 +14,10 @@ import org.bukkit.entity.Player;
  * 
  */
 public class AdminCmd implements CommandExecutor {
-    private Districts plugin;
+    private Greenhouses plugin;
     private PlayerCache players;
-    public AdminCmd(Districts districts, PlayerCache players) {
-	this.plugin = districts;
+    public AdminCmd(Greenhouses greenhouses, PlayerCache players) {
+	this.plugin = greenhouses;
 	this.players = players;
     }
 
@@ -32,22 +32,17 @@ public class AdminCmd implements CommandExecutor {
     public boolean onCommand(final CommandSender sender, final Command command, final String label, final String[] split) {
 	// Check for permissions
 	if (sender instanceof Player) {
-	    if (!VaultHelper.checkPerm(((Player)sender), "districts.admin")) {
+	    if (!VaultHelper.checkPerm(((Player)sender), "greenhouses.admin")) {
 		sender.sendMessage(ChatColor.RED + Locale.errorNoPermission);
 		return true;
 	    }
 	}
-	// Check for zero parameters e.g., /dadmin
+	// Check for zero parameters e.g., /gadmin
 	switch (split.length) {
 	case 0:
-	    sender.sendMessage(ChatColor.YELLOW + "/dadmin reload:" + ChatColor.WHITE + " " + Locale.adminHelpreload);
-	    sender.sendMessage(ChatColor.YELLOW + "/dadmin balance <player>:" + ChatColor.WHITE + " show how many blocks player has");
-	    sender.sendMessage(ChatColor.YELLOW + "/dadmin info <player>:" + ChatColor.WHITE + " " + Locale.adminHelpinfo);
-	    sender.sendMessage(ChatColor.YELLOW + "/dadmin info:" + ChatColor.WHITE + " provides info on the district you are in");
-	    sender.sendMessage(ChatColor.YELLOW + "/dadmin delete <player>:" + ChatColor.WHITE + " " + Locale.adminHelpdelete);
-	    sender.sendMessage(ChatColor.YELLOW + "/dadmin give <player> <blocks>:" + ChatColor.WHITE + " give player some blocks");
-	    sender.sendMessage(ChatColor.YELLOW + "/dadmin take <player> <blocks>:" + ChatColor.WHITE + " remove blocks from player");
-	    sender.sendMessage(ChatColor.YELLOW + "/dadmin set <player> <blocks>:" + ChatColor.WHITE + " set the number of blocks a player has");
+	    sender.sendMessage(ChatColor.YELLOW + "/gadmin reload:" + ChatColor.WHITE + " " + Locale.adminHelpreload);
+	    sender.sendMessage(ChatColor.YELLOW + "/gadmin info <player>:" + ChatColor.WHITE + " " + Locale.adminHelpinfo);
+	    sender.sendMessage(ChatColor.YELLOW + "/gadmin info:" + ChatColor.WHITE + " provides info on the greenhouse you are in");
 	    return true;
 	case 1:
 	    if (split[0].equalsIgnoreCase("reload")) {
@@ -57,16 +52,16 @@ public class AdminCmd implements CommandExecutor {
 		return true;
 	    } else if (split[0].equalsIgnoreCase("info")) {
 		if (!(sender instanceof Player)) {
-		    sender.sendMessage(ChatColor.RED + "District info only available in-game");
+		    sender.sendMessage(ChatColor.RED + "Greenhouse info only available in-game");
 		    return true;
 		}
 		Player player = (Player)sender;
-		DistrictRegion d = players.getInDistrict(player.getUniqueId());
+		GreenhouseRegion d = players.getInGreenhouse(player.getUniqueId());
 		if (d == null) {
-		    sender.sendMessage(ChatColor.RED + "Put yourself in a district to see its info.");
+		    sender.sendMessage(ChatColor.RED + "Put yourself in a greenhouse to see info.");
 		    return true;
 		}
-		sender.sendMessage(ChatColor.GREEN + "[District Info]");
+		sender.sendMessage(ChatColor.GREEN + "[Greenhouse Info]");
 		sender.sendMessage(ChatColor.GREEN + "Owner:" + players.getName(d.getOwner()));
 		String trusted = "";
 		for (String name : d.getOwnerTrusted()) {
@@ -84,7 +79,7 @@ public class AdminCmd implements CommandExecutor {
 		if (!trusted.isEmpty()) {
 		    sender.sendMessage(ChatColor.GREEN + "Renter trustees: " + ChatColor.WHITE + trusted.substring(0, trusted.length() - 1));
 		}
-		sender.sendMessage(ChatColor.GREEN + "District Flags:");
+		sender.sendMessage(ChatColor.GREEN + "Greenhouse Flags:");
 		for (String flag : d.getFlags().keySet()) {
 		    sender.sendMessage(flag + ": " + d.getFlags().get(flag));
 		}

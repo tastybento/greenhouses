@@ -1,14 +1,13 @@
 /**
  * 
  */
-package com.wasteofplastic.districts;
+package com.wasteofplastic.greenhouses;
 
 import java.io.File;
 import java.util.HashMap;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 /**
@@ -19,9 +18,9 @@ import org.bukkit.entity.Player;
  */
 public class PlayerCache {
     private HashMap<UUID, Players> playerCache = new HashMap<UUID, Players>();
-    private final Districts plugin;
+    private final Greenhouses plugin;
 
-    public PlayerCache(Districts plugin) {
+    public PlayerCache(Greenhouses plugin) {
 	this.plugin = plugin;
 	final Player[] serverPlayers = Bukkit.getServer().getOnlinePlayers();
 	for (Player p : serverPlayers) {
@@ -77,12 +76,12 @@ public class PlayerCache {
      * Player info query methods
      */
     /**
-     * Returns location of player's districts from cache if available
+     * Returns location of player's greenhouses from cache if available
      * @param playerUUID
-     * @return List of districts
+     * @return List of greenhouses
      */
     /*
-    public List<DistrictRegion> getPlayersDistricts(final UUID playerUUID) {
+    public List<GreenhouseRegion> getPlayersGreenhouses(final UUID playerUUID) {
 	if (playerCache.containsKey(playerUUID)) {
 	    return playerCache.get(playerUUID).get;
 	}
@@ -129,36 +128,7 @@ public class PlayerCache {
 	addPlayer(playerUUID);
 	return playerCache.get(playerUUID);
     }
-
-    /**
-     * Checks if player has a district from cache if available
-     * @param playerUUID - string name of player
-     * @return true if player has a district
-     */
-    public boolean hasADistrict(final UUID playerUUID) {
-	addPlayer(playerUUID);
-	return playerCache.get(playerUUID).hasADistrict();
-    }
-
     
-    public void removeDistrict(UUID playerUUID) {
-	addPlayer(playerUUID);
-	// TODO Remove a district
-	playerCache.get(playerUUID).save(); // Needed?
-    }
-
-    public void setHasDistricts(UUID playerUUID, boolean b) {
-	addPlayer(playerUUID);
-	playerCache.get(playerUUID).setHasDistricts(b);
-   }
-
-    public void newDistrict(UUID playerUUID, Location islandLocation) {
-	addPlayer(playerUUID);
-	// TODO Add a district here	playerCache.get(playerUUID).setIslandLocation(islandLocation);	
-    }
-
-
-
     /**
      * Saves the player's info to the file system
      * @param playerUUID
@@ -214,18 +184,18 @@ public class PlayerCache {
 	return playerCache.get(playerUUID).getPlayerName();
     }
 
-    public void setInDistrict(UUID playerUUID, DistrictRegion inDistrict) {
+    public void setInGreenhouse(UUID playerUUID, GreenhouseRegion inGreenhouse) {
 	addPlayer(playerUUID);
-	playerCache.get(playerUUID).setInDistrict(inDistrict);
+	playerCache.get(playerUUID).setInGreenhouse(inGreenhouse);
     }
     
     /**
      * @param playerUUID
-     * @return the district the player is in or null if no district
+     * @return the greenhouse the player is in or null if no greenhouse
      */
-    public DistrictRegion getInDistrict(UUID playerUUID) {
+    public GreenhouseRegion getInGreenhouse(UUID playerUUID) {
 	addPlayer(playerUUID);
-	return playerCache.get(playerUUID).getInDistrict();
+	return playerCache.get(playerUUID).getInGreenhouse();
     }
     /**
      * @return how many blocks a player has

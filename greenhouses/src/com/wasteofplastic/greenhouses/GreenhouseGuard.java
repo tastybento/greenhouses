@@ -1,4 +1,4 @@
-package com.wasteofplastic.districts;
+package com.wasteofplastic.greenhouses;
 
 import java.util.UUID;
 
@@ -33,9 +33,9 @@ import org.bukkit.potion.Potion;
  * @author ben
  * Provides protection to islands
  */
-public class DistrictGuard implements Listener {
-    private final Districts plugin;
-    public DistrictGuard(final Districts plugin) {
+public class GreenhouseGuard implements Listener {
+    private final Greenhouses plugin;
+    public GreenhouseGuard(final Greenhouses plugin) {
 	this.plugin = plugin;
 
     }
@@ -57,7 +57,7 @@ public class DistrictGuard implements Listener {
 	ItemStack holding = player.getItemInHand();
 	if (holding != null) {
 	    if (holding.getType().equals(Material.COMPASS)) {
-		Location closest = plugin.getClosestDistrict(player);
+		Location closest = plugin.getClosestGreenhouse(player);
 		if (closest != null) {
 		    player.setCompassTarget(closest);
 		    //plugin.getLogger().info("DEBUG: Compass " + closest.getBlockX() + "," + closest.getBlockZ());
@@ -80,11 +80,11 @@ public class DistrictGuard implements Listener {
 	if (!plugin.getPos1s().containsKey(player.getUniqueId())) {
 	    // Check if visualizations are turned on for this player
 	    if (plugin.players.getVisualize(player.getUniqueId())) {
-		// Check if they are in a district
+		// Check if they are in a greenhouse
 		if (plugin.getVisualizations().containsKey(player.getUniqueId())) {
 		    return;
 		}
-		DistrictRegion d = plugin.players.getInDistrict(player.getUniqueId());
+		GreenhouseRegion d = plugin.players.getInGreenhouse(player.getUniqueId());
 		if (d != null) {
 		    plugin.visualize(d,player);
 		} else {
@@ -104,7 +104,7 @@ public class DistrictGuard implements Listener {
 		//plugin.getLogger().info("No longer holding hoe");
 		if (plugin.getPos1s().containsKey(player.getUniqueId())) {
 		    // Remove the point
-		    player.sendMessage(ChatColor.GOLD + "Cancelling district mark");
+		    player.sendMessage(ChatColor.GOLD + "Cancelling greenhouse mark");
 		    plugin.getPos1s().remove(player.getUniqueId());
 		}
 	    }
@@ -112,7 +112,7 @@ public class DistrictGuard implements Listener {
 	    // Empty hand
 	    if (plugin.getPos1s().containsKey(player.getUniqueId())) {
 		// Remove the point
-		player.sendMessage(ChatColor.GOLD + "Cancelling district mark");
+		player.sendMessage(ChatColor.GOLD + "Cancelling greenhouse mark");
 		plugin.getPos1s().remove(player.getUniqueId());
 	    }
 	}
@@ -126,39 +126,39 @@ public class DistrictGuard implements Listener {
      * @return false if the player can move into that area, true if not allowed
      */
     private boolean checkMove(Player player, Location from, Location to) {
-	DistrictRegion fromDistrict = null;
-	DistrictRegion toDistrict = null;
-	if (plugin.getDistricts().isEmpty()) {
-	    // No districts yet
+	GreenhouseRegion fromGreenhouse = null;
+	GreenhouseRegion toGreenhouse= null;
+	if (plugin.getGreenhouses().isEmpty()) {
+	    // No greenhouses yet
 	    return false;
 	}
-	//plugin.getLogger().info("Checking districts");
+	//plugin.getLogger().info("Checking greenhouses");
 	//plugin.getLogger().info("From : " + from.toString());
 	//plugin.getLogger().info("From: " + from.getBlockX() + "," + from.getBlockZ());
 	//plugin.getLogger().info("To: " + to.getBlockX() + "," + to.getBlockZ());
-	for (DistrictRegion d: plugin.getDistricts()) {
-	    //plugin.getLogger().info("District (" + d.getPos1().getBlockX() + "," + d.getPos1().getBlockZ() + " : " + d.getPos2().getBlockX() + "," + d.getPos2().getBlockZ() + ")");
-	    if (d.intersectsDistrict(to)) {
+	for (GreenhouseRegion d: plugin.getGreenhouses()) {
+	    //plugin.getLogger().info("Greenhouse (" + d.getPos1().getBlockX() + "," + d.getPos1().getBlockZ() + " : " + d.getPos2().getBlockX() + "," + d.getPos2().getBlockZ() + ")");
+	    if (d.intersectsGreenhouse(to)) {
 		//plugin.getLogger().info("To intersects d!");
-		toDistrict = d;
+		toGreenhouse = d;
 	    }
-	    if (d.intersectsDistrict(from)) {
+	    if (d.intersectsGreenhouse(from)) {
 		//plugin.getLogger().info("From intersects d!");
-		fromDistrict = d;
+		fromGreenhouse = d;
 	    }
-	    // If player is trying to make a district, then we need to check if the proposed district overlaps with any others
+	    // If player is trying to make a greenhouse, then we need to check if the proposed greenhouse overlaps with any others
 	    if (plugin.getPos1s().containsKey(player.getUniqueId())) {
 		Location origin = plugin.getPos1s().get(player.getUniqueId());
 		// Check the advancing lines
 		for (int x = Math.min(to.getBlockX(),origin.getBlockX()); x <= Math.max(to.getBlockX(),origin.getBlockX()); x++) {
-		    if (d.intersectsDistrict(new Location(to.getWorld(),x,0,to.getBlockZ()))) {
-			player.sendMessage(ChatColor.RED + "Districts cannot overlap!");
+		    if (d.intersectsGreenhouse(new Location(to.getWorld(),x,0,to.getBlockZ()))) {
+			player.sendMessage(ChatColor.RED + "Greenhouses cannot overlap!");
 			return true;	
 		    }
 		}
 		for (int z = Math.min(to.getBlockZ(),origin.getBlockZ()); z <= Math.max(to.getBlockZ(),origin.getBlockZ()); z++) {
-		    if (d.intersectsDistrict(new Location(to.getWorld(),to.getBlockX(),0,z))) {
-			player.sendMessage(ChatColor.RED + "Districts cannot overlap!");
+		    if (d.intersectsGreenhouse(new Location(to.getWorld(),to.getBlockX(),0,z))) {
+			player.sendMessage(ChatColor.RED + "Greenhouses cannot overlap!");
 			return true;	
 		    }
 		}
@@ -167,50 +167,50 @@ public class DistrictGuard implements Listener {
 
 
 	}
-	// No district interaction
-	if (fromDistrict == null && toDistrict == null) {
-	    // Clear the district flag (the district may have been deleted while they were offline)
-	    plugin.players.setInDistrict(player.getUniqueId(), null);
+	// No greenhouse interaction
+	if (fromGreenhouse == null && toGreenhouse == null) {
+	    // Clear the greenhouse flag (the greenhouse may have been deleted while they were offline)
+	    plugin.players.setInGreenhouse(player.getUniqueId(), null);
 	    return false;	    
-	} else if (fromDistrict == toDistrict) {
-	    // Set the district - needs to be done if the player teleports too (should be done on a teleport event)
-	    plugin.players.setInDistrict(player.getUniqueId(), toDistrict);
+	} else if (fromGreenhouse == toGreenhouse) {
+	    // Set the greenhouse - needs to be done if the player teleports too (should be done on a teleport event)
+	    plugin.players.setInGreenhouse(player.getUniqueId(), toGreenhouse);
 	    return false;
 	}
-	if (fromDistrict != null && toDistrict == null) {
-	    // leaving a district
-	    if (!fromDistrict.getFarewellMessage().isEmpty()) {
-		player.sendMessage(fromDistrict.getFarewellMessage());
+	if (fromGreenhouse != null && toGreenhouse == null) {
+	    // leaving a greenhouse
+	    if (!fromGreenhouse.getFarewellMessage().isEmpty()) {
+		player.sendMessage(fromGreenhouse.getFarewellMessage());
 		// Stop visualization
 		plugin.devisualize(player);
 	    }
-	    plugin.players.setInDistrict(player.getUniqueId(), null);
-	} else if (fromDistrict == null && toDistrict != null){
-	    // Going into a district
-	    if (!toDistrict.getEnterMessage().isEmpty()) {
-		player.sendMessage(toDistrict.getEnterMessage());
+	    plugin.players.setInGreenhouse(player.getUniqueId(), null);
+	} else if (fromGreenhouse == null && toGreenhouse != null){
+	    // Going into a greenhouse
+	    if (!toGreenhouse.getEnterMessage().isEmpty()) {
+		player.sendMessage(toGreenhouse.getEnterMessage());
 	    }
-	    if (toDistrict.isForSale()) {
-		player.sendMessage("This district is for sale for " + VaultHelper.econ.format(toDistrict.getPrice()) + "!");
-	    } else if (toDistrict.isForRent() && toDistrict.getRenter() == null) {
-		player.sendMessage("This district is for rent for " + VaultHelper.econ.format(toDistrict.getPrice()) + " per week.");
+	    if (toGreenhouse.isForSale()) {
+		player.sendMessage("This greenhouse is for sale for " + VaultHelper.econ.format(toGreenhouse.getPrice()) + "!");
+	    } else if (toGreenhouse.isForRent() && toGreenhouse.getRenter() == null) {
+		player.sendMessage("This greenhouse is for rent for " + VaultHelper.econ.format(toGreenhouse.getPrice()) + " per week.");
 	    } 
-	    plugin.players.setInDistrict(player.getUniqueId(), toDistrict);	    
+	    plugin.players.setInGreenhouse(player.getUniqueId(), toGreenhouse);	    
 
-	} else if (fromDistrict != null && toDistrict != null){
-	    // Leaving one district and entering another district
-	    if (!fromDistrict.getFarewellMessage().isEmpty()) {
-		player.sendMessage(fromDistrict.getFarewellMessage());
+	} else if (fromGreenhouse != null && toGreenhouse != null){
+	    // Leaving one greenhouse and entering another greenhouse
+	    if (!fromGreenhouse.getFarewellMessage().isEmpty()) {
+		player.sendMessage(fromGreenhouse.getFarewellMessage());
 	    }
-	    if (!toDistrict.getEnterMessage().isEmpty()) {
-		player.sendMessage(toDistrict.getEnterMessage());
+	    if (!toGreenhouse.getEnterMessage().isEmpty()) {
+		player.sendMessage(toGreenhouse.getEnterMessage());
 	    }
-	    if (toDistrict.isForSale()) {
-		player.sendMessage("This district is for sale for " + VaultHelper.econ.format(toDistrict.getPrice()) + "!");
-	    } else if (toDistrict.isForRent()) {
-		player.sendMessage("This district is for rent for " + VaultHelper.econ.format(toDistrict.getPrice()) + "!");
+	    if (toGreenhouse.isForSale()) {
+		player.sendMessage("This greenhouse is for sale for " + VaultHelper.econ.format(toGreenhouse.getPrice()) + "!");
+	    } else if (toGreenhouse.isForRent()) {
+		player.sendMessage("This greenhouse is for rent for " + VaultHelper.econ.format(toGreenhouse.getPrice()) + "!");
 	    }
-	    plugin.players.setInDistrict(player.getUniqueId(), toDistrict);	    
+	    plugin.players.setInGreenhouse(player.getUniqueId(), toGreenhouse);	    
 	}  
 	return false;
     }
@@ -251,9 +251,9 @@ public class DistrictGuard implements Listener {
 	    //plugin.getLogger().info("No block");
 	    return;
 	}
-	if (plugin.players.getInDistrict(playerUUID) != null) {
-	    p.sendMessage(ChatColor.RED + "You are already in a district!");
-	    p.sendMessage(ChatColor.RED + "To remove this district type /d remove");
+	if (plugin.players.getInGreenhouse(playerUUID) != null) {
+	    p.sendMessage(ChatColor.RED + "You are already in a greenhouse!");
+	    p.sendMessage(ChatColor.RED + "To remove this greenhouse type /d remove");
 	    e.setCancelled(true);
 	    return;
 	}
@@ -261,19 +261,19 @@ public class DistrictGuard implements Listener {
 	if (plugin.getPos1s().containsKey(playerUUID)) {
 	    Location origin = plugin.getPos1s().get(playerUUID);
 	    Location to = b.getLocation();
-	    // Check for overlapping districts (you can reach with the hoe)
-	    for (DistrictRegion d : plugin.getDistricts()) {
+	    // Check for overlapping greenhouses (you can reach with the hoe)
+	    for (GreenhouseRegion d : plugin.getGreenhouses()) {
 		// Check the advancing lines
 		for (int x = Math.min(to.getBlockX(),origin.getBlockX()); x <= Math.max(to.getBlockX(),origin.getBlockX()); x++) {
-		    if (d.intersectsDistrict(new Location(to.getWorld(),x,0,to.getBlockZ()))) {
-			p.sendMessage(ChatColor.RED + "Districts cannot overlap!");
+		    if (d.intersectsGreenhouse(new Location(to.getWorld(),x,0,to.getBlockZ()))) {
+			p.sendMessage(ChatColor.RED + "Greenhouses cannot overlap!");
 			e.setCancelled(true);
 			return;	
 		    }
 		}
 		for (int z = Math.min(to.getBlockZ(),origin.getBlockZ()); z <= Math.max(to.getBlockZ(),origin.getBlockZ()); z++) {
-		    if (d.intersectsDistrict(new Location(to.getWorld(),to.getBlockX(),0,z))) {
-			p.sendMessage(ChatColor.RED + "Districts cannot overlap!");
+		    if (d.intersectsGreenhouse(new Location(to.getWorld(),to.getBlockX(),0,z))) {
+			p.sendMessage(ChatColor.RED + "Greenhouses cannot overlap!");
 			e.setCancelled(true);
 			return;	
 		    }
@@ -282,7 +282,7 @@ public class DistrictGuard implements Listener {
 	    // If they hit the same place twice
 	    if (to.getBlockX() == origin.getBlockX() && to.getBlockZ()==origin.getBlockZ()) {
 		p.sendMessage("Setting position 1 : " + b.getLocation().getBlockX() + ", " + b.getLocation().getBlockZ());
-		p.sendMessage("Click on the opposite corner of the district");
+		p.sendMessage("Click on the opposite corner of the greenhouse");
 		plugin.visualize(b.getLocation(),p);
 		e.setCancelled(true);
 		return;
@@ -295,23 +295,23 @@ public class DistrictGuard implements Listener {
 	    int side2 = Math.abs(b.getLocation().getBlockZ()-pos.getBlockZ());
 	    int balance = plugin.players.removeBlocks(playerUUID, (side1*side2));
 	    if (balance < 0) {
-		p.sendMessage(ChatColor.RED + "You need " + Math.abs(balance) + " more blocks to make that district.");
+		p.sendMessage(ChatColor.RED + "You need " + Math.abs(balance) + " more blocks to make that greenhouse.");
 		e.setCancelled(true);
 		return;		
 	    }
 	    if (side1 < 5 || side2 < 5) {
-		p.sendMessage("Minimum district size is 5 x 5");
+		p.sendMessage("Minimum greenhouse size is 5 x 5");
 		return;		
 	    }
 	    p.sendMessage("Position 1 : " + pos.getBlockX() + ", " + pos.getBlockZ());
 	    p.sendMessage("Position 2 : " + b.getLocation().getBlockX() + ", " + b.getLocation().getBlockZ());
-	    p.sendMessage("Creating district!");
-	    plugin.createNewDistrict(pos, b.getLocation(), p);
+	    p.sendMessage("Creating greenhouse!");
+	    plugin.createNewGreenhouse(pos, b.getLocation(), p);
 	    e.setCancelled(true);
 	} else {
 	    plugin.getPos1s().put(playerUUID, b.getLocation());
 	    p.sendMessage("Setting position 1 : " + b.getLocation().getBlockX() + ", " + b.getLocation().getBlockZ());
-	    p.sendMessage("Click on the opposite corner of the district");
+	    p.sendMessage("Click on the opposite corner of the greenhouse");
 	    // Start the visualization in a bit
 	    plugin.getServer().getScheduler().runTaskLater(plugin, new Runnable() {
 		@Override
@@ -334,15 +334,15 @@ public class DistrictGuard implements Listener {
 	if (!e.getPlayer().getWorld().getName().equalsIgnoreCase(Settings.worldName)) {
 	    return;
 	}
-	// Get the district that this block is in (if any)
-	DistrictRegion d = plugin.getInDistrict(e.getBlock().getLocation());
-	//DistrictRegion d = plugin.players.getInDistrict(e.getPlayer().getUniqueId());
+	// Get the greenhouse that this block is in (if any)
+	GreenhouseRegion d = plugin.getInGreenhouse(e.getBlock().getLocation());
+	//GreenhouseRegion d = plugin.players.getInGreenhouse(e.getPlayer().getUniqueId());
 	if (d == null || e.getPlayer().isOp()) {
-	    // Not in a district
+	    // Not in a greenhouse
 	    return;
 	}
 	if (!d.getAllowBreakBlocks(e.getPlayer().getUniqueId())) {
-	    e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
+	    e.getPlayer().sendMessage(ChatColor.RED + Locale.greenhouseProtected);
 	    e.setCancelled(true);
 	}
     }
@@ -357,10 +357,10 @@ public class DistrictGuard implements Listener {
 	    plugin.getLogger().info("Not in world");
 	    return;
 	}
-	// Get the district that this block is in (if any)
-	DistrictRegion d = plugin.getInDistrict(e.getEntity().getLocation());
+	// Get the greenhouse that this block is in (if any)
+	GreenhouseRegion d = plugin.getInGreenhouse(e.getEntity().getLocation());
 	if (d == null) {
-	    plugin.getLogger().info("Not in a district");
+	    plugin.getLogger().info("Not in a greenhouse");
 	    return;	    
 	}
 	plugin.getLogger().info("D is something " + d.getEnterMessage());
@@ -374,7 +374,7 @@ public class DistrictGuard implements Listener {
 	if (e.getEntity() instanceof ItemFrame) {
 	    if (e.getDamager() instanceof Player) {
 		if (!d.getAllowBreakBlocks(e.getDamager().getUniqueId())) {
-		    ((Player)e.getDamager()).sendMessage(ChatColor.RED + Locale.districtProtected);
+		    ((Player)e.getDamager()).sendMessage(ChatColor.RED + Locale.greenhouseProtected);
 		    e.setCancelled(true);
 		    return;
 		}
@@ -401,7 +401,7 @@ public class DistrictGuard implements Listener {
 			plugin.getLogger().info("player ID is null");
 		    }
 		    if (!d.getAllowHurtMobs(playerUUID)) {
-			((Player)e.getDamager()).sendMessage(ChatColor.RED + Locale.districtProtected);
+			((Player)e.getDamager()).sendMessage(ChatColor.RED + Locale.greenhouseProtected);
 			e.setCancelled(true);
 			return;
 		    }
@@ -410,7 +410,7 @@ public class DistrictGuard implements Listener {
 	    } else {
 		// PVP
 		// If PVP is okay then return
-		// Target is in a district
+		// Target is in a greenhouse
 		if (d.getAllowPVP()) {
 		    plugin.getLogger().info("PVP allowed");
 		    return;
@@ -435,8 +435,8 @@ public class DistrictGuard implements Listener {
 		    plugin.getLogger().info("Player vs Player!");
 		    // Arrow shot by a player at another player
 		    if (!d.getAllowPVP()) {
-			plugin.getLogger().info("Target player is in a no-PVP district!");
-			((Player)arrow.getShooter()).sendMessage("Target is in a no-PVP district!");
+			plugin.getLogger().info("Target player is in a no-PVP greenhouse!");
+			((Player)arrow.getShooter()).sendMessage("Target is in a no-PVP greenhouse!");
 			e.setCancelled(true);
 			return;
 		    } 
@@ -445,7 +445,7 @@ public class DistrictGuard implements Listener {
 			plugin.getLogger().info("Entity is a non-monster - check if ok to hurt"); 
 			UUID playerUUID = shooter.getUniqueId();
 			if (!d.getAllowHurtMobs(playerUUID)) {
-			    shooter.sendMessage(ChatColor.RED + Locale.districtProtected);
+			    shooter.sendMessage(ChatColor.RED + Locale.greenhouseProtected);
 			    e.setCancelled(true);
 			    return;
 			}
@@ -457,7 +457,7 @@ public class DistrictGuard implements Listener {
 	    plugin.getLogger().info("Player attack");
 	    // Just a player attack
 	    if (!d.getAllowPVP()) {
-		((Player)e.getDamager()).sendMessage("Target is in a no-PVP district!");
+		((Player)e.getDamager()).sendMessage("Target is in a no-PVP greenhouse!");
 		e.setCancelled(true);
 		return;
 	    } 
@@ -475,13 +475,13 @@ public class DistrictGuard implements Listener {
 	if (!e.getPlayer().getWorld().getName().equalsIgnoreCase(Settings.worldName)) {
 	    return;
 	}
-	// If the offending block is not in a district, forget it!
-	DistrictRegion d = plugin.getInDistrict(e.getBlock().getLocation());
+	// If the offending block is not in a greenhouse, forget it!
+	GreenhouseRegion d = plugin.getInGreenhouse(e.getBlock().getLocation());
 	if (d == null) {
 	    return;
 	}
 	if (!d.getAllowPlaceBlocks(e.getPlayer().getUniqueId()) && !e.getPlayer().isOp()) {
-	    e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
+	    e.getPlayer().sendMessage(ChatColor.RED + Locale.greenhouseProtected);
 	    e.setCancelled(true);
 	}
 
@@ -493,13 +493,13 @@ public class DistrictGuard implements Listener {
 	if (!e.getPlayer().getWorld().getName().equalsIgnoreCase(Settings.worldName)) {
 	    return;
 	}
-	// If the offending bed is not in a district, forget it!
-	DistrictRegion d = plugin.getInDistrict(e.getBed().getLocation());
+	// If the offending bed is not in a greenhouse, forget it!
+	GreenhouseRegion d = plugin.getInGreenhouse(e.getBed().getLocation());
 	if (d == null) {
 	    return;
 	}
 	if (!d.getAllowBedUse(e.getPlayer().getUniqueId()) && !e.getPlayer().isOp()) {
-	    e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
+	    e.getPlayer().sendMessage(ChatColor.RED + Locale.greenhouseProtected);
 	    e.setCancelled(true);
 	}
     }
@@ -516,14 +516,14 @@ public class DistrictGuard implements Listener {
 	    // Enderman?
 	    return;
 	}
-	// If the offending item is not in a district, forget it!
-	DistrictRegion d = plugin.getInDistrict(e.getEntity().getLocation());
+	// If the offending item is not in a greenhouse, forget it!
+	GreenhouseRegion d = plugin.getInGreenhouse(e.getEntity().getLocation());
 	if (d == null) {
 	    return;
 	}
 	Player p = (Player)e.getRemover();
 	if (!d.getAllowBreakBlocks(e.getRemover().getUniqueId()) && !p.isOp()) {
-	    p.sendMessage(ChatColor.RED + Locale.districtProtected);
+	    p.sendMessage(ChatColor.RED + Locale.greenhouseProtected);
 	    e.setCancelled(true);
 	}
     }
@@ -534,13 +534,13 @@ public class DistrictGuard implements Listener {
 	if (!e.getPlayer().getWorld().getName().equalsIgnoreCase(Settings.worldName)) {
 	    return;
 	}
-	// If the offending item is not in a district, forget it!
-	DistrictRegion d = plugin.getInDistrict(e.getBlockClicked().getLocation());
+	// If the offending item is not in a greenhouse, forget it!
+	GreenhouseRegion d = plugin.getInGreenhouse(e.getBlockClicked().getLocation());
 	if (d == null) {
 	    return;
 	}
 	if (!d.getAllowBucketUse(e.getPlayer().getUniqueId()) && !e.getPlayer().isOp()) {
-	    e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
+	    e.getPlayer().sendMessage(ChatColor.RED + Locale.greenhouseProtected);
 	    e.setCancelled(true);
 	}
     }
@@ -549,14 +549,14 @@ public class DistrictGuard implements Listener {
 	if (!e.getPlayer().getWorld().getName().equalsIgnoreCase(Settings.worldName)) {
 	    return;
 	}
-	// If the offending item is not in a district, forget it!
-	DistrictRegion d = plugin.getInDistrict(e.getBlockClicked().getLocation());
+	// If the offending item is not in a greenhouse, forget it!
+	GreenhouseRegion d = plugin.getInGreenhouse(e.getBlockClicked().getLocation());
 	if (d == null) {
 	    return;
 	}
 
 	if (!d.getAllowBucketUse(e.getPlayer().getUniqueId()) && !e.getPlayer().isOp()) {
-	    e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
+	    e.getPlayer().sendMessage(ChatColor.RED + Locale.greenhouseProtected);
 	    e.setCancelled(true);
 	}
     }
@@ -567,13 +567,13 @@ public class DistrictGuard implements Listener {
 	if (!e.getPlayer().getWorld().getName().equalsIgnoreCase(Settings.worldName)) {
 	    return;
 	}
-	// If the offending item is not in a district, forget it!
-	DistrictRegion d = plugin.getInDistrict(e.getEntity().getLocation());
+	// If the offending item is not in a greenhouse, forget it!
+	GreenhouseRegion d = plugin.getInGreenhouse(e.getEntity().getLocation());
 	if (d == null) {
 	    return;
 	}
 	if (!d.getAllowShearing(e.getPlayer().getUniqueId())) {
-	    e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
+	    e.getPlayer().sendMessage(ChatColor.RED + Locale.greenhouseProtected);
 	    e.setCancelled(true);
 	}
     }
@@ -588,8 +588,8 @@ public class DistrictGuard implements Listener {
 	// Player is off island
 	// Check for disallowed clicked blocks
 	if (e.getClickedBlock() != null) {
-	    // If the offending item is not in a district, forget it!
-	    DistrictRegion d = plugin.getInDistrict(e.getClickedBlock().getLocation());
+	    // If the offending item is not in a greenhouse, forget it!
+	    GreenhouseRegion d = plugin.getInGreenhouse(e.getClickedBlock().getLocation());
 	    if (d == null) {
 		return;
 	    }
@@ -601,14 +601,14 @@ public class DistrictGuard implements Listener {
 	    case WOODEN_DOOR:
 	    case TRAP_DOOR:
 		if (!d.getAllowDoorUse(e.getPlayer().getUniqueId())) {
-		    e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
+		    e.getPlayer().sendMessage(ChatColor.RED + Locale.greenhouseProtected);
 		    e.setCancelled(true);
 		    return; 
 		}
 		break;
 	    case FENCE_GATE:
 		if (!d.getAllowGateUse(e.getPlayer().getUniqueId())) {
-		    e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
+		    e.getPlayer().sendMessage(ChatColor.RED + Locale.greenhouseProtected);
 		    e.setCancelled(true);
 		    return;  
 		}
@@ -622,14 +622,14 @@ public class DistrictGuard implements Listener {
 	    case HOPPER_MINECART:
 	    case STORAGE_MINECART:
 		if (!d.getAllowChestAccess(e.getPlayer().getUniqueId())) {
-		    e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
+		    e.getPlayer().sendMessage(ChatColor.RED + Locale.greenhouseProtected);
 		    e.setCancelled(true);
 		    return; 
 		}
 		break;
 	    case SOIL:
 		if (!d.getAllowCropTrample(e.getPlayer().getUniqueId())) {
-		    e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
+		    e.getPlayer().sendMessage(ChatColor.RED + Locale.greenhouseProtected);
 		    e.setCancelled(true);
 		    return; 
 		}
@@ -637,7 +637,7 @@ public class DistrictGuard implements Listener {
 	    case BREWING_STAND:
 	    case CAULDRON:
 		if (!d.getAllowBrewing(e.getPlayer().getUniqueId())) {
-		    e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
+		    e.getPlayer().sendMessage(ChatColor.RED + Locale.greenhouseProtected);
 		    e.setCancelled(true);
 		    return; 
 		}
@@ -650,7 +650,7 @@ public class DistrictGuard implements Listener {
 	    case REDSTONE_COMPARATOR_ON:
 	    case REDSTONE_COMPARATOR_OFF:
 		if (!d.getAllowRedStone(e.getPlayer().getUniqueId())) {
-		    e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
+		    e.getPlayer().sendMessage(ChatColor.RED + Locale.greenhouseProtected);
 		    e.setCancelled(true);
 		    return; 
 		}
@@ -660,7 +660,7 @@ public class DistrictGuard implements Listener {
 	    case FURNACE:
 	    case BURNING_FURNACE:
 		if (!d.getAllowFurnaceUse(e.getPlayer().getUniqueId())) {
-		    e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
+		    e.getPlayer().sendMessage(ChatColor.RED + Locale.greenhouseProtected);
 		    e.setCancelled(true);
 		    return; 
 		}
@@ -672,7 +672,7 @@ public class DistrictGuard implements Listener {
 	    case JUKEBOX:
 	    case NOTE_BLOCK:
 		if (!d.getAllowMusic(e.getPlayer().getUniqueId())) {
-		    e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
+		    e.getPlayer().sendMessage(ChatColor.RED + Locale.greenhouseProtected);
 		    e.setCancelled(true);
 		    return; 
 		}
@@ -683,7 +683,7 @@ public class DistrictGuard implements Listener {
 	    case WOOD_BUTTON:
 	    case LEVER:
 		if (!d.getAllowLeverButtonUse(e.getPlayer().getUniqueId())) {
-		    e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
+		    e.getPlayer().sendMessage(ChatColor.RED + Locale.greenhouseProtected);
 		    e.setCancelled(true);
 		    return; 
 		}	
@@ -692,7 +692,7 @@ public class DistrictGuard implements Listener {
 		break;
 	    case WORKBENCH:
 		if (!d.getAllowCrafting(e.getPlayer().getUniqueId())) {
-		    e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
+		    e.getPlayer().sendMessage(ChatColor.RED + Locale.greenhouseProtected);
 		    e.setCancelled(true);
 		    return; 
 		}
@@ -703,21 +703,21 @@ public class DistrictGuard implements Listener {
 	}
 	// Check for disallowed in-hand items
 	if (e.getMaterial() != null) {
-	    // If the player is not in a district, forget it!
-	    DistrictRegion d = plugin.getInDistrict(e.getPlayer().getLocation());
+	    // If the player is not in a greenhouse, forget it!
+	    GreenhouseRegion d = plugin.getInGreenhouse(e.getPlayer().getLocation());
 	    if (d == null) {
 		return;
 	    }
 
 	    if (e.getMaterial().equals(Material.BOAT) && (e.getClickedBlock() != null && !e.getClickedBlock().isLiquid())) {
 		// Trying to put a boat on non-liquid
-		e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
+		e.getPlayer().sendMessage(ChatColor.RED + Locale.greenhouseProtected);
 		e.setCancelled(true);
 		return;
 	    }
 	    if (e.getMaterial().equals(Material.ENDER_PEARL)) {
 		if (!d.getAllowEnderPearls(e.getPlayer().getUniqueId())) {
-		    e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
+		    e.getPlayer().sendMessage(ChatColor.RED + Locale.greenhouseProtected);
 		    e.setCancelled(true);
 		}
 		return;
@@ -732,7 +732,7 @@ public class DistrictGuard implements Listener {
 		    } else {
 			// Splash potions are allowed only if PVP is allowed
 			if (!d.getAllowPVP()) {
-			    e.getPlayer().sendMessage(ChatColor.RED + Locale.districtProtected);
+			    e.getPlayer().sendMessage(ChatColor.RED + Locale.greenhouseProtected);
 			    e.setCancelled(true);
 			}
 		    }

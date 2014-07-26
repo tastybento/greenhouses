@@ -1,4 +1,4 @@
-package com.wasteofplastic.districts;
+package com.wasteofplastic.greenhouses;
 
 import java.awt.geom.Rectangle2D;
 import java.io.File;
@@ -26,16 +26,14 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
-import com.sun.tools.hat.internal.util.Misc;
-
 /**
  * @author ben
  */
-public class Districts extends JavaPlugin {
+public class Greenhouses extends JavaPlugin {
     // This plugin
-    private static Districts plugin;
-    // The AcidIsland world
-    public static World acidWorld = null;
+    private static Greenhouses plugin;
+    // The world
+    public static World pluginWorld = null;
     // Player YAMLs
     public YamlConfiguration playerFile;
     public File playersFolder;
@@ -44,8 +42,8 @@ public class Districts extends JavaPlugin {
     private File localeFile = null;
     // Players object
     public PlayerCache players;
-    // Districts
-    private HashSet<DistrictRegion> districts = new HashSet<DistrictRegion>();
+    // Greenhouses
+    private HashSet<GreenhouseRegion> greenhouses = new HashSet<GreenhouseRegion>();
     // Offline Messages
     private HashMap<UUID, List<String>> messages = new HashMap<UUID, List<String>>();
     private YamlConfiguration messageStore;
@@ -58,7 +56,7 @@ public class Districts extends JavaPlugin {
     /**
      * @return plugin object instance
      */
-    public static Districts getPlugin() {
+    public static Greenhouses getPlugin() {
 	return plugin;
     }
 
@@ -155,47 +153,42 @@ public class Districts extends JavaPlugin {
 	}
 	// Get the localization strings
 	getLocale();
-	Locale.adminHelpdelete = getLocale().getString("adminHelp.delete", "deletes the district you are standing in.");
+	Locale.adminHelpdelete = getLocale().getString("adminHelp.delete", "deletes the greenhouse you are standing in.");
 	Locale.errorUnknownPlayer = getLocale().getString("error.unknownPlayer","That player is unknown.");
 	Locale.errorNoPermission = getLocale().getString("error.noPermission", "You don't have permission to use that command!");
 	Locale.errorCommandNotReady = getLocale().getString("error.commandNotReady", "You can't use that command right now.");
 	Locale.errorOfflinePlayer = getLocale().getString("error.offlinePlayer", "That player is offline or doesn't exist.");
 	Locale.errorUnknownCommand = getLocale().getString("error.unknownCommand","Unknown command.");
-	Locale.districtProtected = getLocale().getString("error.districtProtected", "District protected");
-	Locale.newsHeadline = getLocale().getString("news.headline", "[District News]");
+	Locale.greenhouseProtected = getLocale().getString("error.greenhouseProtected", "Greenhouse protected");
+	Locale.newsHeadline = getLocale().getString("news.headline", "[Greenhouse News]");
 	Locale.adminHelpreload = getLocale().getString("adminHelp.reload","reload configuration from file.");
-	Locale.adminHelpdelete = getLocale().getString("adminHelp.delete","deletes the district you are standing in.");
+	Locale.adminHelpdelete = getLocale().getString("adminHelp.delete","deletes the greenhouse you are standing in.");
 	Locale.adminHelpinfo = getLocale().getString("adminHelp.info","display information for the given player.");
 	Locale.reloadconfigReloaded = getLocale().getString("reload.configurationReloaded", "Configuration reloaded from file.");	//delete
-	Locale.deleteremoving = getLocale().getString("delete.removing","District removed.");
+	Locale.deleteremoving = getLocale().getString("delete.removing","Greenhouse removed.");
 	// Assign settings
-	Settings.allowPvP = getConfig().getBoolean("districts.allowPvP",false);
-	Settings.allowBreakBlocks = getConfig().getBoolean("districts.allowbreakblocks", false);
-	Settings.allowPlaceBlocks= getConfig().getBoolean("districts.allowplaceblocks", false);
-	Settings.allowBedUse= getConfig().getBoolean("districts.allowbeduse", false);
-	Settings.allowBucketUse = getConfig().getBoolean("districts.allowbucketuse", false);
-	Settings.allowShearing = getConfig().getBoolean("districts.allowshearing", false);
-	Settings.allowEnderPearls = getConfig().getBoolean("districts.allowenderpearls", false);
-	Settings.allowDoorUse = getConfig().getBoolean("districts.allowdooruse", false);
-	Settings.allowLeverButtonUse = getConfig().getBoolean("districts.allowleverbuttonuse", false);
-	Settings.allowCropTrample = getConfig().getBoolean("districts.allowcroptrample", false);
-	Settings.allowChestAccess = getConfig().getBoolean("districts.allowchestaccess", false);
-	Settings.allowFurnaceUse = getConfig().getBoolean("districts.allowfurnaceuse", false);
-	Settings.allowRedStone = getConfig().getBoolean("districts.allowredstone", false);
-	Settings.allowMusic = getConfig().getBoolean("districts.allowmusic", false);
-	Settings.allowCrafting = getConfig().getBoolean("districts.allowcrafting", false);
-	Settings.allowBrewing = getConfig().getBoolean("districts.allowbrewing", false);
-	Settings.allowGateUse = getConfig().getBoolean("districts.allowgateuse", false);
-	Settings.allowMobHarm = getConfig().getBoolean("districts.allowmobharm", false);
+	Settings.allowPvP = getConfig().getBoolean("greenhouses.allowPvP",false);
+	Settings.allowBreakBlocks = getConfig().getBoolean("greenhouses.allowbreakblocks", false);
+	Settings.allowPlaceBlocks= getConfig().getBoolean("greenhouses.allowplaceblocks", false);
+	Settings.allowBedUse= getConfig().getBoolean("greenhouses.allowbeduse", false);
+	Settings.allowBucketUse = getConfig().getBoolean("greenhouses.allowbucketuse", false);
+	Settings.allowShearing = getConfig().getBoolean("greenhouses.allowshearing", false);
+	Settings.allowEnderPearls = getConfig().getBoolean("greenhouses.allowenderpearls", false);
+	Settings.allowDoorUse = getConfig().getBoolean("greenhouses.allowdooruse", false);
+	Settings.allowLeverButtonUse = getConfig().getBoolean("greenhouses.allowleverbuttonuse", false);
+	Settings.allowCropTrample = getConfig().getBoolean("greenhouses.allowcroptrample", false);
+	Settings.allowChestAccess = getConfig().getBoolean("greenhouses.allowchestaccess", false);
+	Settings.allowFurnaceUse = getConfig().getBoolean("greenhouses.allowfurnaceuse", false);
+	Settings.allowRedStone = getConfig().getBoolean("greenhouses.allowredstone", false);
+	Settings.allowMusic = getConfig().getBoolean("greenhouses.allowmusic", false);
+	Settings.allowCrafting = getConfig().getBoolean("greenhouses.allowcrafting", false);
+	Settings.allowBrewing = getConfig().getBoolean("greenhouses.allowbrewing", false);
+	Settings.allowGateUse = getConfig().getBoolean("greenhouses.allowgateuse", false);
+	Settings.allowMobHarm = getConfig().getBoolean("greenhouses.allowmobharm", false);
 	// Other settings
-	Settings.worldName = getConfig().getString("districts.worldName","world");
+	Settings.worldName = getConfig().getString("greenhouses.worldName","world");
 	getLogger().info("World name is: " + Settings.worldName );
-	Settings.beginningBlocks = getConfig().getInt("districts.beginningblocks",25);
-	if (Settings.beginningBlocks < 0) {
-	    Settings.beginningBlocks = 0;
-	    getLogger().warning("Beginning Blocks in config.yml was set to a negative value!");
-	}
-	Settings.checkLeases = getConfig().getInt("districts.checkleases",12);
+	Settings.checkLeases = getConfig().getInt("greenhouses.checkleases",12);
 	if (Settings.checkLeases < 0) {
 	    Settings.checkLeases = 0;
 	    getLogger().warning("Checkleases in config.yml was set to a negative value! Setting to 0. No lease checking.");	    
@@ -251,7 +244,7 @@ public class Districts extends JavaPlugin {
 	}
 	players = new PlayerCache(this);
 	// Set up commands for this plugin
-	getCommand("district").setExecutor(new DistrictCmd(this,players));
+	getCommand("greenhouse").setExecutor(new GreenhouseCmd(this,players));
 	getCommand("dadmin").setExecutor(new AdminCmd(this,players));
 	// Register events that this plugin uses
 	registerEvents();
@@ -264,16 +257,16 @@ public class Districts extends JavaPlugin {
 	    public void run() {
 		final PluginManager manager = Bukkit.getServer().getPluginManager();
 		if (manager.isPluginEnabled("Vault")) {
-		    Districts.getPlugin().getLogger().info("Trying to use Vault for permissions...");
+		    Greenhouses.getPlugin().getLogger().info("Trying to use Vault for permissions...");
 		    if (!VaultHelper.setupPermissions()) {
 			getLogger().severe("Cannot link with Vault for permissions! Disabling plugin!");
-			manager.disablePlugin(Districts.getPlugin());
+			manager.disablePlugin(Greenhouses.getPlugin());
 		    } else {
 			getLogger().info("Success!");
 		    };
 		}
 		// Load players and check leases
-		loadDistricts();
+		loadGreenhouses();
 	    }
 	});
 	// Kick off the check leases 
@@ -293,7 +286,7 @@ public class Districts extends JavaPlugin {
 	}
     }
 
-    public int daysToEndOfLease(DistrictRegion d) {
+    public int daysToEndOfLease(GreenhouseRegion d) {
 	// Basic checking
 	if (d.getLastPayment() == null) {
 	    return 0;
@@ -334,14 +327,14 @@ public class Districts extends JavaPlugin {
 
     protected void checkLeases() {
 	// Check all the leases
-	for (DistrictRegion d:districts) {
+	for (GreenhouseRegion d:greenhouses) {
 	    // Only check rented properties
 	    if (d.getLastPayment() != null && d.getRenter() != null) {
 		if (daysToEndOfLease(d) == 0) {
 		    getLogger().info("Debug: Check to see if the lease is renewable");
 		    // Check to see if the lease is renewable
 		    if (d.isForRent()) {
-			getLogger().info("Debug: District is still for rent");
+			getLogger().info("Debug: Greenhouse is still for rent");
 			// Try to deduct rent
 			getLogger().info("Debug: Withdrawing rent from renters account");
 			EconomyResponse r = VaultHelper.econ.withdrawPlayer(getServer().getOfflinePlayer(d.getRenter()), d.getPrice());
@@ -371,9 +364,9 @@ public class Districts extends JavaPlugin {
 			    getLogger().info("Could not withdraw rent of " + VaultHelper.econ.format(d.getPrice()) + " from " + getServer().getOfflinePlayer(d.getRenter()).getName() + " account.");
 
 			    if (getServer().getPlayer(d.getRenter()) != null) {
-				getServer().getPlayer(d.getRenter()).sendMessage("You could not pay a rent of " + VaultHelper.econ.format(d.getPrice()) + " so you were evicted from " + getServer().getOfflinePlayer(d.getOwner()).getName() + "'s district!");
+				getServer().getPlayer(d.getRenter()).sendMessage("You could not pay a rent of " + VaultHelper.econ.format(d.getPrice()) + " so you were evicted from " + getServer().getOfflinePlayer(d.getOwner()).getName() + "'s greenhouse!");
 			    } else {
-				plugin.setMessage(d.getRenter(),"You could not pay a rent of " + VaultHelper.econ.format(d.getPrice()) + " so you were evicted from " + getServer().getOfflinePlayer(d.getOwner()).getName() + "'s district!");
+				plugin.setMessage(d.getRenter(),"You could not pay a rent of " + VaultHelper.econ.format(d.getPrice()) + " so you were evicted from " + getServer().getOfflinePlayer(d.getOwner()).getName() + "'s greenhouse!");
 			    }
 			    if (getServer().getPlayer(d.getOwner()) != null) {
 				getServer().getPlayer(d.getOwner()).sendMessage(getServer().getOfflinePlayer(d.getRenter()).getName() + " could not pay you a rent of " + VaultHelper.econ.format(d.getPrice()) + " so they were evicted from a propery!");
@@ -382,18 +375,18 @@ public class Districts extends JavaPlugin {
 			    }
 			    d.setRenter(null);
 			    d.setRenterTrusted(new ArrayList<UUID>());
-			    d.setEnterMessage("Entering " + players.getName(d.getOwner()) + "'s district!");
-			    d.setFarewellMessage("Now leaving " + players.getName(d.getOwner()) + "'s district.");
+			    d.setEnterMessage("Entering " + players.getName(d.getOwner()) + "'s greenhouse!");
+			    d.setFarewellMessage("Now leaving " + players.getName(d.getOwner()) + "'s greenhouse.");
 			}
 		    } else {
 			// No longer for rent
-			getLogger().info("District is no longer for rent - evicting " + getServer().getOfflinePlayer(d.getRenter()).getName());
+			getLogger().info("Greenhouse is no longer for rent - evicting " + getServer().getOfflinePlayer(d.getRenter()).getName());
 
 			// evict!
 			if (getServer().getPlayer(d.getRenter()) != null) {
-			    getServer().getPlayer(d.getRenter()).sendMessage("The lease on a district you were renting from " + players.getName(d.getOwner()) + " ended.");
+			    getServer().getPlayer(d.getRenter()).sendMessage("The lease on a greenhouse you were renting from " + players.getName(d.getOwner()) + " ended.");
 			} else {
-			    plugin.setMessage(d.getRenter(),"The lease on a district you were renting from " + players.getName(d.getOwner()) + " ended.");
+			    plugin.setMessage(d.getRenter(),"The lease on a greenhouse you were renting from " + players.getName(d.getOwner()) + " ended.");
 			}
 			if (getServer().getPlayer(d.getOwner()) != null) {
 			    getServer().getPlayer(d.getOwner()).sendMessage(getServer().getOfflinePlayer(d.getRenter()).getName() + "'s lease ended.");
@@ -402,8 +395,8 @@ public class Districts extends JavaPlugin {
 			}
 			d.setRenter(null);
 			d.setRenterTrusted(new ArrayList<UUID>());
-			d.setEnterMessage("Entering " + players.getName(d.getOwner()) + "'s district!");
-			d.setFarewellMessage("Now leaving " + players.getName(d.getOwner()) + "'s district.");	
+			d.setEnterMessage("Entering " + players.getName(d.getOwner()) + "'s greenhouse!");
+			d.setFarewellMessage("Now leaving " + players.getName(d.getOwner()) + "'s greenhouse.");	
 		    }
 		}
 	    }
@@ -411,8 +404,8 @@ public class Districts extends JavaPlugin {
     }
 
 
-    protected void loadDistricts() {
-	// Load all known districts
+    protected void loadGreenhouses() {
+	// Load all known greenhouses
 	// Load all the players
 	for (final File f : playersFolder.listFiles()) {
 	    // Need to remove the .yml suffix
@@ -430,11 +423,11 @@ public class Districts extends JavaPlugin {
 		}
 	    }
 	}
-	// Put all online players in districts
+	// Put all online players in greenhouses
 	for (Player p : getServer().getOnlinePlayers()) {
-	    for (DistrictRegion d: districts) {
-		if (d.intersectsDistrict(p.getLocation())) {
-		    players.setInDistrict(p.getUniqueId(), d);
+	    for (GreenhouseRegion d: greenhouses) {
+		if (d.intersectsGreenhouse(p.getLocation())) {
+		    players.setInGreenhouse(p.getUniqueId(), d);
 		    break;
 		}
 	    }
@@ -450,7 +443,7 @@ public class Districts extends JavaPlugin {
 	final PluginManager manager = getServer().getPluginManager();
 	// Nether portal events
 	// Island Protection events
-	manager.registerEvents(new DistrictGuard(this), this);
+	manager.registerEvents(new GreenhouseGuard(this), this);
 	// Events for when a player joins or leaves the server
 	manager.registerEvents(new JoinLeaveEvents(this, players), this);
     }
@@ -604,33 +597,33 @@ public class Districts extends JavaPlugin {
 
 
     /**
-     * @return the districts
+     * @return the greenhouses
      */
-    public HashSet<DistrictRegion> getDistricts() {
-	return districts;
+    public HashSet<GreenhouseRegion> getGreenhouses() {
+	return greenhouses;
     }
 
 
     /**
-     * @param districts the districts to set
+     * @param greenhouses the greenhouses to set
      */
-    public void setDistricts(HashSet<DistrictRegion> districts) {
-	this.districts = districts;
+    public void setGreenhouses(HashSet<GreenhouseRegion> greenhouses) {
+	this.greenhouses = greenhouses;
     }
 
     /**
-     * Checks if a district defined by the corner points pos1 and pos2 overlaps any known districts
+     * Checks if a greenhouse defined by the corner points pos1 and pos2 overlaps any known greenhouses
      * @param pos1
      * @param pos2
      * @return
      */
-    public boolean checkDistrictIntersection(Location pos1, Location pos2) {
+    public boolean checkGreenhouseIntersection(Location pos1, Location pos2) {
 	// Create a 2D rectangle of this
 	Rectangle2D.Double rect = new Rectangle2D.Double();
 	rect.setFrameFromDiagonal(pos1.getX(), pos1.getZ(), pos2.getX(), pos2.getZ());
 	Rectangle2D.Double testRect = new Rectangle2D.Double();
-	// Create a set of rectangles of current districts
-	for (DistrictRegion d: districts) {
+	// Create a set of rectangles of current greenhouses
+	for (GreenhouseRegion d: greenhouses) {
 	    testRect.setFrameFromDiagonal(d.getPos1().getX(), d.getPos1().getZ(),d.getPos2().getX(),d.getPos2().getZ());
 	    if (rect.intersects(testRect)) {
 		return true;
@@ -640,33 +633,33 @@ public class Districts extends JavaPlugin {
     }
 
     /**
-     * Creates a new district
+     * Creates a new greenhouse
      * @param pos1
      * @param pos2
      * @param owner
-     * @return the district region
+     * @return the greenhouse region
      */
-    public DistrictRegion createNewDistrict(Location pos1, Location pos2, Player owner) {
-	DistrictRegion d = new DistrictRegion(plugin, pos1, pos2, owner.getUniqueId());
-	d.setEnterMessage("Entering " + owner.getDisplayName() + "'s district!");
-	d.setFarewellMessage("Now leaving " + owner.getDisplayName() + "'s district.");
-	getDistricts().add(d);
+    public GreenhouseRegion createNewGreenhouse(Location pos1, Location pos2, Player owner) {
+	GreenhouseRegion d = new GreenhouseRegion(plugin, pos1, pos2, owner.getUniqueId());
+	d.setEnterMessage("Entering " + owner.getDisplayName() + "'s greenhouse!");
+	d.setFarewellMessage("Now leaving " + owner.getDisplayName() + "'s greenhouse.");
+	getGreenhouses().add(d);
 	getPos1s().remove(owner.getUniqueId());
 	players.save(owner.getUniqueId());
-	// Find everyone who is in this district and visualize them
+	// Find everyone who is in this greenhouse and visualize them
 	for (Player p : getServer().getOnlinePlayers()) {
-	    if (d.intersectsDistrict(p.getLocation())) {
+	    if (d.intersectsGreenhouse(p.getLocation())) {
 		if (!p.equals(owner)) {
-		    p.sendMessage("You are now in " + owner.getDisplayName() + "'s district!");
+		    p.sendMessage("You are now in " + owner.getDisplayName() + "'s greenhouse!");
 		}
-		players.setInDistrict(p.getUniqueId(), d);
+		players.setInGreenhouse(p.getUniqueId(), d);
 		visualize(d,p);
 	    }
 	}
 	return d;
     }
 
-    @SuppressWarnings("deprecation") void visualize(DistrictRegion d, Player player) {
+    @SuppressWarnings("deprecation") void visualize(GreenhouseRegion d, Player player) {
 	// Deactivate any previous visualization
 	if (visualizations.containsKey(player.getUniqueId())) {
 	    devisualize(player);
@@ -733,7 +726,7 @@ public class Districts extends JavaPlugin {
 
     @SuppressWarnings("deprecation")
     public void devisualize(Player player) {
-	//Districts.getPlugin().getLogger().info("Removing visualization");
+	//Greenhouses.getPlugin().getLogger().info("Removing visualization");
 	if (!visualizations.containsKey(player.getUniqueId())) {
 	    return;
 	}
@@ -757,25 +750,25 @@ public class Districts extends JavaPlugin {
      * @param visualizations the visualizations to set
      */
     public void setVisualizations(HashMap<UUID, List<Location>> visualizations) {
-	Districts.visualizations = visualizations;
+	Greenhouses.visualizations = visualizations;
     }
 
 
-    public DistrictRegion getInDistrict(Location location) {
-	for (DistrictRegion d : districts) {
-	    if (d.intersectsDistrict(location)) {
+    public GreenhouseRegion getInGreenhouse(Location location) {
+	for (GreenhouseRegion d : greenhouses) {
+	    if (d.intersectsGreenhouse(location)) {
 		return d;
 	    }
 	}
-	// This location is not in a district
+	// This location is not in a greenhouse
 	return null;
     }
 
-    public Location getClosestDistrict(Player player) {
-	// Find closest district
+    public Location getClosestGreenhouse(Player player) {
+	// Find closest greenhouse
 	Location closest = null;
 	Double distance = 0D;
-	for (DistrictRegion d : districts) {
+	for (GreenhouseRegion d : greenhouses) {
 	    UUID owner = d.getOwner();
 	    UUID renter = d.getRenter();
 
@@ -786,7 +779,7 @@ public class Districts extends JavaPlugin {
 		    Vector mid = d.getPos1().toVector().midpoint(d.getPos2().toVector());
 		    closest = mid.toLocation(d.getPos1().getWorld());
 		    distance = player.getLocation().distanceSquared(closest);
-		    //getLogger().info("DEBUG: first district found at " + d.getPos1().toString() + " distance " + distance);
+		    //getLogger().info("DEBUG: first greenhouse found at " + d.getPos1().toString() + " distance " + distance);
 		} else {
 		    // Find out if this location is closer to player
 		    Double newDist = player.getLocation().distanceSquared(d.getPos1());
@@ -794,12 +787,12 @@ public class Districts extends JavaPlugin {
 			Vector mid = d.getPos1().toVector().midpoint(d.getPos2().toVector());
 			closest = mid.toLocation(d.getPos1().getWorld());
 			distance = player.getLocation().distanceSquared(closest);
-			//getLogger().info("DEBUG: closer district found at " + d.getPos1().toString() + " distance " + distance);
+			//getLogger().info("DEBUG: closer greenhouse found at " + d.getPos1().toString() + " distance " + distance);
 		    }
 		}
 	    }
 	}
-	//getLogger().info("DEBUG: District " + closest.getBlockX() + "," + closest.getBlockY() + "," + closest.getBlockZ() + " distance " + distance);
+	//getLogger().info("DEBUG: Greenhouse " + closest.getBlockX() + "," + closest.getBlockY() + "," + closest.getBlockZ() + " distance " + distance);
 	return closest;
 
     }
