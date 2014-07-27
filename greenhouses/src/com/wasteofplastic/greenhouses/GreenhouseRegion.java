@@ -8,6 +8,7 @@ import java.util.UUID;
 
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.block.Biome;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
@@ -26,15 +27,19 @@ public class GreenhouseRegion {
     private Double price = 0D;
     private Date lastPayment;
     private HashMap<String,Object> flags = new HashMap<String,Object>();
+    private Biome originalBiome;
+    private Biome greenhouseBiome;
 
     public GreenhouseRegion(Greenhouses plugin, Location pos1, Location pos2, UUID owner) {
 	this.plugin = plugin;
-	this.pos1 = new Vector(pos1.getBlockX(),0,pos1.getBlockZ());
-	this.pos2 = new Vector(pos2.getBlockX(),0,pos2.getBlockZ());
+	this.pos1 = new Vector(pos1.getBlockX(),pos1.getBlockY(),pos1.getBlockZ());
+	this.pos2 = new Vector(pos2.getBlockX(),pos2.getBlockY(),pos2.getBlockZ());
 	this.world = pos1.getWorld();
 	if (!pos1.getWorld().equals(pos2.getWorld())) {
 	    plugin.getLogger().severe("Pos 1 and Pos 2 are not in the same world!");
 	}
+	this.originalBiome = pos1.getBlock().getBiome();
+	this.greenhouseBiome = pos2.getBlock().getBiome();
 	this.owner = owner;
 	this.id = UUID.randomUUID();
 	this.ownerTrusted = new ArrayList<UUID>();
@@ -59,17 +64,56 @@ public class GreenhouseRegion {
 	flags.put("allowMobHarm", Settings.allowMobHarm);
 	flags.put("enterMessage", "");
 	flags.put("farewellMessage", "");
-	
+
+    }
+
+
+    /**
+     * @return the originalBiome
+     */
+    public Biome getOriginalBiome() {
+	return originalBiome;
+    }
+
+
+    /**
+     * @return the greenhouseBiome
+     */
+    public Biome getGreenhouseBiome() {
+	return greenhouseBiome;
+    }
+
+
+    /**
+     * @param greenhouseBiome the greenhouseBiome to set
+     */
+    public void setGreenhouseBiome(Biome greenhouseBiome) {
+	this.greenhouseBiome = greenhouseBiome;
     }
 
 
     public boolean intersectsGreenhouse(Location loc) {
 	//plugin.getLogger().info("Checking intersection");
-	Vector v = new Vector(loc.getBlockX(),0,loc.getBlockZ());
+	Vector v = new Vector(loc.getBlockX(),loc.getBlockY(),loc.getBlockZ());
 	//plugin.getLogger().info("Pos 1 = " + pos1.toString());
 	//plugin.getLogger().info("Pos 2 = " + pos2.toString());
 	//plugin.getLogger().info("V = " + v.toString());
-	return v.isInAABB(Vector.getMinimum(pos1,  pos2), Vector.getMaximum(pos1, pos2));
+	boolean i = v.isInAABB(Vector.getMinimum(pos1,  pos2), Vector.getMaximum(pos1, pos2));
+	return i;
+    }
+
+    /**
+     * Returns true if this location is in a greenhouse wall
+     * @param loc
+     * @return
+     */
+    public boolean isAWall(Location loc) {
+	plugin.getLogger().info("Debug: wall check");
+	if (loc.getBlockX() == pos1.getBlockX() || loc.getBlockX() == pos2.getBlockX()
+		|| loc.getBlockZ() == pos1.getBlockZ() || loc.getBlockZ() == pos2.getBlockZ()) {
+	    return true;
+	}
+	return false;
     }
 
     /**
@@ -129,12 +173,12 @@ public class GreenhouseRegion {
 	return lastPayment;
     }
 
-    
+
     /**
      * @return the flags
      */
     public HashMap<String, Object> getFlags() {
-        return flags;
+	return flags;
     }
 
 
@@ -142,7 +186,7 @@ public class GreenhouseRegion {
      * @param flags the flags to set
      */
     public void setFlags(HashMap<String, Object> flags) {
-        this.flags = flags;
+	this.flags = flags;
     }
 
 
@@ -180,7 +224,7 @@ public class GreenhouseRegion {
 	}
 	return false;
     }
-    
+
     /**
      * @return the allowPlaceBlocks
      */
@@ -339,7 +383,7 @@ public class GreenhouseRegion {
 	return (Boolean)flags.get("allowMobHarm");
     }
 
-    
+
     /**
      * @param pos1 the pos1 to set
      */
@@ -561,7 +605,7 @@ public class GreenhouseRegion {
 	}
 	return trustedByOwner;
     }
- 
+
     public List<UUID> getOwnerTrustedUUID() {
 	return ownerTrusted;
     }
@@ -649,7 +693,7 @@ public class GreenhouseRegion {
      * @param ownerTrusted the ownerTrusted to set
      */
     public void setOwnerTrusted(List<UUID> ownerTrusted) {
-        this.ownerTrusted = ownerTrusted;
+	this.ownerTrusted = ownerTrusted;
     }
 
 
@@ -657,10 +701,12 @@ public class GreenhouseRegion {
      * @param renterTrusted the renterTrusted to set
      */
     public void setRenterTrusted(List<UUID> renterTrusted) {
-        this.renterTrusted = renterTrusted;
+	this.renterTrusted = renterTrusted;
     }
 
 
-
+    public void setOriginalBiome(Biome originalBiome) {
+	this.originalBiome = originalBiome;
+    }
 
 }

@@ -36,7 +36,7 @@ public class JoinLeaveEvents implements Listener {
 	// Check to see if the player is in a greenhouse - one may have cropped up around them while they were logged off
 	for (GreenhouseRegion d: plugin.getGreenhouses()) {
 	    if (d.intersectsGreenhouse(p.getLocation())) {
-		plugin.getLogger().info(p.getName() + " is in a known greenhouse");
+		plugin.getLogger().info(p.getName() + " is in a greenhouse");
 		if (players.getInGreenhouse(playerUUID) == null || !players.getInGreenhouse(playerUUID).equals(d)) {
 		    players.setInGreenhouse(playerUUID, d);
 		    p.sendMessage(d.getEnterMessage());

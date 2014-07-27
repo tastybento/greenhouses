@@ -11,6 +11,7 @@ import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.block.Biome;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -82,6 +83,20 @@ public class Players {
 		    } else {
 			GreenhouseRegion d = new GreenhouseRegion(plugin, pos1, pos2, uuid);
 			d.setId(UUID.fromString(playerInfo.getString("greenhouses." + key + ".id")));
+			// Set biome
+			String oBiome = playerInfo.getString("greenhouses." + key + ".originalBiome", "SUNFLOWER_PLAINS");
+			Biome originalBiome = Biome.valueOf(oBiome);
+			if (originalBiome == null) {
+			    originalBiome = Biome.SUNFLOWER_PLAINS;
+			}
+			d.setOriginalBiome(originalBiome);
+			String gBiome = playerInfo.getString("greenhouses." + key + ".greenhouseBiome", "SUNFLOWER_PLAINS");
+			Biome greenhouseBiome = Biome.valueOf(oBiome);
+			if (greenhouseBiome == null) {
+			    greenhouseBiome = Biome.SUNFLOWER_PLAINS;
+			}
+			d.setGreenhouseBiome(greenhouseBiome);
+
 			// Load all the flags
 			HashMap<String,Object> flags = (HashMap<String, Object>) playerInfo.getConfigurationSection("greenhouses." + key + ".flags").getValues(false);
 			//d.setEnterMessage(playerInfo.getString("greenhouses." + key + ".entermessage",""));
@@ -136,7 +151,7 @@ public class Players {
 		    plugin.getLogger().severe("Problem loading player files");
 		    e.printStackTrace();
 		}
-		
+
 	    }
 	    plugin.getLogger().info("Loaded " + plugin.getGreenhouses().size() + " greenhouses.");
 	}
@@ -162,6 +177,8 @@ public class Players {
 		    playerInfo.set("greenhouses." + index + ".id", greenhouse.getId().toString());
 		    playerInfo.set("greenhouses." + index + ".pos-one", getStringLocation(greenhouse.getPos1()));
 		    playerInfo.set("greenhouses." + index + ".pos-two", getStringLocation(greenhouse.getPos2()));
+		    playerInfo.set("greenhouses." + index + ".originalBiome", greenhouse.getOriginalBiome().toString());
+		    playerInfo.set("greenhouses." + index + ".greenhouseBiome", greenhouse.getGreenhouseBiome().toString());
 		    /*
 		    private World world;
 		    private UUID owner;

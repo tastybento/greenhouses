@@ -215,7 +215,7 @@ public class GreenhouseGuard implements Listener {
 	return false;
     }
 
-
+/*
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onClick(PlayerInteractEvent e) {
 	//plugin.getLogger().info("On click");
@@ -323,7 +323,7 @@ public class GreenhouseGuard implements Listener {
 	}
 
     }
-
+*/
 
     /**
      * Prevents blocks from being broken
@@ -334,16 +334,26 @@ public class GreenhouseGuard implements Listener {
 	if (!e.getPlayer().getWorld().getName().equalsIgnoreCase(Settings.worldName)) {
 	    return;
 	}
+	//plugin.getLogger().info("Debug: block break");
 	// Get the greenhouse that this block is in (if any)
 	GreenhouseRegion d = plugin.getInGreenhouse(e.getBlock().getLocation());
-	//GreenhouseRegion d = plugin.players.getInGreenhouse(e.getPlayer().getUniqueId());
+	
 	if (d == null || e.getPlayer().isOp()) {
 	    // Not in a greenhouse
+	    //plugin.getLogger().info("Debug: not in greenhouse");
 	    return;
 	}
 	if (!d.getAllowBreakBlocks(e.getPlayer().getUniqueId())) {
+	    //plugin.getLogger().info("Debug: not allowed");
 	    e.getPlayer().sendMessage(ChatColor.RED + Locale.greenhouseProtected);
 	    e.setCancelled(true);
+	    return;
+	}
+	// Check to see if this causes the greenhouse to break
+	if (d.isAWall(e.getBlock().getLocation())) {
+	    e.getPlayer().sendMessage(ChatColor.RED + "You broke this greenhouse! Reverting biome to " + Greenhouses.prettifyText(d.getOriginalBiome().toString()) + "!");
+	    e.getPlayer().sendMessage(ChatColor.RED + "Fix your greenhouse and then claim it again.");
+	    plugin.removeGreenhouse(d);
 	}
     }
 
@@ -354,16 +364,16 @@ public class GreenhouseGuard implements Listener {
     @EventHandler(priority = EventPriority.HIGH)
     public void onEntityDamage(final EntityDamageByEntityEvent e) {
 	if (!e.getEntity().getWorld().getName().equalsIgnoreCase(Settings.worldName)) {
-	    plugin.getLogger().info("Not in world");
+	    //plugin.getLogger().info("Not in world");
 	    return;
 	}
 	// Get the greenhouse that this block is in (if any)
 	GreenhouseRegion d = plugin.getInGreenhouse(e.getEntity().getLocation());
 	if (d == null) {
-	    plugin.getLogger().info("Not in a greenhouse");
+	    //plugin.getLogger().info("Not in a greenhouse");
 	    return;	    
 	}
-	plugin.getLogger().info("D is something " + d.getEnterMessage());
+	//plugin.getLogger().info("D is something " + d.getEnterMessage());
 	// Ops can do anything
 	if (e.getDamager() instanceof Player) {
 	    if (((Player)e.getDamager()).isOp()) {
@@ -385,20 +395,20 @@ public class GreenhouseGuard implements Listener {
 	if (!(e.getDamager() instanceof Player) && !(e.getDamager() instanceof Projectile)) {
 	    return;
 	}
-	plugin.getLogger().info("Entity is " + e.getEntity().toString());
+	//plugin.getLogger().info("Entity is " + e.getEntity().toString());
 	// Check for player initiated damage
 	if (e.getDamager() instanceof Player) {
-	    plugin.getLogger().info("Damager is " + ((Player)e.getDamager()).getName());
+	    //plugin.getLogger().info("Damager is " + ((Player)e.getDamager()).getName());
 	    // If the target is not a player check if mobs can be hurt
 	    if (!(e.getEntity() instanceof Player)) {
 		if (e.getEntity() instanceof Monster) {
-		    plugin.getLogger().info("Entity is a monster - ok to hurt"); 
+		    //plugin.getLogger().info("Entity is a monster - ok to hurt"); 
 		    return;
 		} else {
-		    plugin.getLogger().info("Entity is a non-monster - check if ok to hurt"); 
+		    //plugin.getLogger().info("Entity is a non-monster - check if ok to hurt"); 
 		    UUID playerUUID = e.getDamager().getUniqueId();
 		    if (playerUUID == null) {
-			plugin.getLogger().info("player ID is null");
+			//plugin.getLogger().info("player ID is null");
 		    }
 		    if (!d.getAllowHurtMobs(playerUUID)) {
 			((Player)e.getDamager()).sendMessage(ChatColor.RED + Locale.greenhouseProtected);
@@ -412,37 +422,37 @@ public class GreenhouseGuard implements Listener {
 		// If PVP is okay then return
 		// Target is in a greenhouse
 		if (d.getAllowPVP()) {
-		    plugin.getLogger().info("PVP allowed");
+		    //plugin.getLogger().info("PVP allowed");
 		    return;
 		}
-		plugin.getLogger().info("PVP not allowed");
+		//plugin.getLogger().info("PVP not allowed");
 
 	    }
 	}
 
-	plugin.getLogger().info("Player attack (or arrow)");
+	//plugin.getLogger().info("Player attack (or arrow)");
 	// Only damagers who are players or arrows are left
 	// If the projectile is anything else than an arrow don't worry about it in this listener
 	// Handle splash potions separately.
 	if (e.getDamager() instanceof Arrow) {
-	    plugin.getLogger().info("Arrow attack");
+	    //plugin.getLogger().info("Arrow attack");
 	    Arrow arrow = (Arrow)e.getDamager();
 	    // It really is an Arrow
 	    if (arrow.getShooter() instanceof Player) {
 		Player shooter = (Player)arrow.getShooter();
-		plugin.getLogger().info("Player arrow attack");
+		//plugin.getLogger().info("Player arrow attack");
 		if (e.getEntity() instanceof Player) {
-		    plugin.getLogger().info("Player vs Player!");
+		    //plugin.getLogger().info("Player vs Player!");
 		    // Arrow shot by a player at another player
 		    if (!d.getAllowPVP()) {
-			plugin.getLogger().info("Target player is in a no-PVP greenhouse!");
+			//plugin.getLogger().info("Target player is in a no-PVP greenhouse!");
 			((Player)arrow.getShooter()).sendMessage("Target is in a no-PVP greenhouse!");
 			e.setCancelled(true);
 			return;
 		    } 
 		} else {
 		    if (!(e.getEntity() instanceof Monster)) {
-			plugin.getLogger().info("Entity is a non-monster - check if ok to hurt"); 
+			//plugin.getLogger().info("Entity is a non-monster - check if ok to hurt"); 
 			UUID playerUUID = shooter.getUniqueId();
 			if (!d.getAllowHurtMobs(playerUUID)) {
 			    shooter.sendMessage(ChatColor.RED + Locale.greenhouseProtected);
@@ -454,7 +464,7 @@ public class GreenhouseGuard implements Listener {
 		}
 	    }
 	} else if (e.getDamager() instanceof Player){
-	    plugin.getLogger().info("Player attack");
+	    //plugin.getLogger().info("Player attack");
 	    // Just a player attack
 	    if (!d.getAllowPVP()) {
 		((Player)e.getDamager()).sendMessage("Target is in a no-PVP greenhouse!");

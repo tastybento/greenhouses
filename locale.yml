@@ -14,10 +14,10 @@ error:
    commandNotReady: "You can't use that command right now."
    offlinePlayer: "That player is offline or doesn't exist."
    unknownCommand: "Unknown command."
-   districtProtected: "District protected"
+   greenhouseProtected: "Greenhouse protected"
 
 ##################################
-#Admin commands that use /dadmin #
+#Admin commands that use /gadmin #
 ##################################
 
 #Help
@@ -35,9 +35,9 @@ reload:
 
 #delete
 delete:
-   removing: "District removed."
+   removing: "Greenhouse removed."
 
 news:
-   headline: "[District News]"
+   headline: "[Greenhouse News]"
 
 

@@ -15,6 +15,7 @@ import java.util.UUID;
 import net.milkbowl.vault.economy.EconomyResponse;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -245,7 +246,7 @@ public class Greenhouses extends JavaPlugin {
 	players = new PlayerCache(this);
 	// Set up commands for this plugin
 	getCommand("greenhouse").setExecutor(new GreenhouseCmd(this,players));
-	getCommand("dadmin").setExecutor(new AdminCmd(this,players));
+	getCommand("gadmin").setExecutor(new AdminCmd(this,players));
 	// Register events that this plugin uses
 	registerEvents();
 	// Load messages
@@ -375,7 +376,7 @@ public class Greenhouses extends JavaPlugin {
 			    }
 			    d.setRenter(null);
 			    d.setRenterTrusted(new ArrayList<UUID>());
-			    d.setEnterMessage("Entering " + players.getName(d.getOwner()) + "'s greenhouse!");
+			    d.setEnterMessage("Entering " + players.getName(d.getOwner()) + "'s " + prettifyText(d.getGreenhouseBiome().toString()) + " greenhouse!");
 			    d.setFarewellMessage("Now leaving " + players.getName(d.getOwner()) + "'s greenhouse.");
 			}
 		    } else {
@@ -395,7 +396,7 @@ public class Greenhouses extends JavaPlugin {
 			}
 			d.setRenter(null);
 			d.setRenterTrusted(new ArrayList<UUID>());
-			d.setEnterMessage("Entering " + players.getName(d.getOwner()) + "'s greenhouse!");
+			d.setEnterMessage("Entering " + players.getName(d.getOwner()) + "'s " + prettifyText(d.getGreenhouseBiome().toString()) +" greenhouse!");
 			d.setFarewellMessage("Now leaving " + players.getName(d.getOwner()) + "'s greenhouse.");	
 		    }
 		}
@@ -641,7 +642,7 @@ public class Greenhouses extends JavaPlugin {
      */
     public GreenhouseRegion createNewGreenhouse(Location pos1, Location pos2, Player owner) {
 	GreenhouseRegion d = new GreenhouseRegion(plugin, pos1, pos2, owner.getUniqueId());
-	d.setEnterMessage("Entering " + owner.getDisplayName() + "'s greenhouse!");
+	d.setEnterMessage("Entering " + owner.getDisplayName() + "'s " + prettifyText(d.getGreenhouseBiome().toString()) +" greenhouse!");
 	d.setFarewellMessage("Now leaving " + owner.getDisplayName() + "'s greenhouse.");
 	getGreenhouses().add(d);
 	getPos1s().remove(owner.getUniqueId());
@@ -660,6 +661,9 @@ public class Greenhouses extends JavaPlugin {
     }
 
     @SuppressWarnings("deprecation") void visualize(GreenhouseRegion d, Player player) {
+	return;
+    }
+    /*
 	// Deactivate any previous visualization
 	if (visualizations.containsKey(player.getUniqueId())) {
 	    devisualize(player);
@@ -672,6 +676,7 @@ public class Greenhouses extends JavaPlugin {
 
 	// Draw the lines - we do not care in what order
 	List<Location> positions = new ArrayList<Location>();
+	*/
 	/*
 	for (int x = minx; x<= maxx; x++) {
 	    for (int z = minz; z<= maxz; z++) {
@@ -681,6 +686,7 @@ public class Greenhouses extends JavaPlugin {
 		positions.add(v);
 	    }
 	}*/
+    /*
 	for (int x = minx; x<= maxx; x++) {
 	    Location v = new Location(player.getWorld(),x,0,minz);
 	    v = player.getWorld().getHighestBlockAt(v).getLocation().subtract(new Vector(0,1,0));
@@ -709,9 +715,11 @@ public class Greenhouses extends JavaPlugin {
 
 	// Save these locations
 	visualizations.put(player.getUniqueId(), positions);
-    }
+    }*/
 
     @SuppressWarnings("deprecation") void visualize(Location l, Player player) {
+	return;
+	/*
 	plugin.getLogger().info("Visualize location");
 	// Deactivate any previous visualization
 	if (visualizations.containsKey(player.getUniqueId())) {
@@ -721,11 +729,13 @@ public class Greenhouses extends JavaPlugin {
 	// Save these locations
 	List<Location> pos = new ArrayList<Location>();
 	pos.add(l);
-	visualizations.put(player.getUniqueId(), pos);
+	visualizations.put(player.getUniqueId(), pos);*/
     }
 
     @SuppressWarnings("deprecation")
     public void devisualize(Player player) {
+	return;
+	/*
 	//Greenhouses.getPlugin().getLogger().info("Removing visualization");
 	if (!visualizations.containsKey(player.getUniqueId())) {
 	    return;
@@ -734,7 +744,7 @@ public class Greenhouses extends JavaPlugin {
 	    Block b = pos.getBlock();	    
 	    player.sendBlockChange(pos, b.getType(), b.getData());
 	}
-	visualizations.remove(player.getUniqueId());
+	visualizations.remove(player.getUniqueId());*/
     }
 
 
@@ -756,6 +766,7 @@ public class Greenhouses extends JavaPlugin {
 
     public GreenhouseRegion getInGreenhouse(Location location) {
 	for (GreenhouseRegion d : greenhouses) {
+	    //plugin.getLogger().info("Debug: greenhouse check");
 	    if (d.intersectsGreenhouse(location)) {
 		return d;
 	    }
@@ -764,6 +775,31 @@ public class Greenhouses extends JavaPlugin {
 	return null;
     }
 
+    public void removeGreenhouse(GreenhouseRegion d) {
+	// Remove the greenhouse
+	HashSet<GreenhouseRegion> ds = getGreenhouses();
+	ds.remove(d);
+	setGreenhouses(ds);
+	// Find everyone who is in this greenhouse and remove them
+	for (Player p : getServer().getOnlinePlayers()) {
+	    if (d.intersectsGreenhouse(p.getLocation())) {
+		players.setInGreenhouse(p.getUniqueId(), null);
+		devisualize(p);
+	    }
+	}
+	getLogger().info("Returning biome to original state: " + d.getOriginalBiome().toString());
+	// Set the biome
+	for (int y = d.getPos1().getBlockY(); y< d.getPos2().getBlockY();y++) {
+	    for (int x = d.getPos1().getBlockX()+1;x<d.getPos2().getBlockX();x++) {
+		for (int z = d.getPos1().getBlockZ()+1;z<d.getPos2().getBlockZ();z++) {
+		    d.getPos1().getWorld().getBlockAt(x, y, z).setBiome(d.getOriginalBiome());
+		}
+	    }
+	}
+
+    }
+    
+    
     public Location getClosestGreenhouse(Player player) {
 	// Find closest greenhouse
 	Location closest = null;
@@ -795,6 +831,35 @@ public class Greenhouses extends JavaPlugin {
 	//getLogger().info("DEBUG: Greenhouse " + closest.getBlockX() + "," + closest.getBlockY() + "," + closest.getBlockZ() + " distance " + distance);
 	return closest;
 
+    }
+    
+    /**
+     * Converts a name like IRON_INGOT into Iron Ingot to improve readability
+     * 
+     * @param ugly
+     *            The string such as IRON_INGOT
+     * @return A nicer version, such as Iron Ingot
+     * 
+     *         Credits to mikenon on GitHub!
+     */
+    public static String prettifyText(String ugly) {
+	if (!ugly.contains("_") && (!ugly.equals(ugly.toUpperCase())))
+	    return ugly;
+	String fin = "";
+	ugly = ugly.toLowerCase();
+	if (ugly.contains("_")) {
+	    String[] splt = ugly.split("_");
+	    int i = 0;
+	    for (String s : splt) {
+		i += 1;
+		fin += Character.toUpperCase(s.charAt(0)) + s.substring(1);
+		if (i < splt.length)
+		    fin += " ";
+	    }
+	} else {
+	    fin += Character.toUpperCase(ugly.charAt(0)) + ugly.substring(1);
+	}
+	return fin;
     }
 
 }
