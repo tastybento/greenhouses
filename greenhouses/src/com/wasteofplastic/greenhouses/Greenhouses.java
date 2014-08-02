@@ -10,6 +10,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 
 import net.milkbowl.vault.economy.EconomyResponse;
@@ -19,13 +20,20 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
+import org.bukkit.block.Hopper;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
+
+import com.wasteofplastic.particles.ParticleEffect;
 
 /**
  * @author ben
@@ -44,7 +52,7 @@ public class Greenhouses extends JavaPlugin {
     // Players object
     public PlayerCache players;
     // Greenhouses
-    private HashSet<GreenhouseRegion> greenhouses = new HashSet<GreenhouseRegion>();
+    private HashSet<Greenhouse> greenhouses = new HashSet<Greenhouse>();
     // Offline Messages
     private HashMap<UUID, List<String>> messages = new HashMap<UUID, List<String>>();
     private YamlConfiguration messageStore;
@@ -52,8 +60,10 @@ public class Greenhouses extends JavaPlugin {
     private HashMap<UUID,Location> pos1s = new HashMap<UUID,Location>();
     // Where visualization blocks are kept
     private static HashMap<UUID, List<Location>> visualizations = new HashMap<UUID, List<Location>>();
-
-
+    // Ecosystem object and random number generator
+    private Ecosystem eco = new Ecosystem(this);
+    // Eco check task object
+    private BukkitTask ecoCheck = null;
     /**
      * @return plugin object instance
      */
@@ -189,6 +199,20 @@ public class Greenhouses extends JavaPlugin {
 	// Other settings
 	Settings.worldName = getConfig().getString("greenhouses.worldName","world");
 	getLogger().info("World name is: " + Settings.worldName );
+	Settings.useProtection = getConfig().getBoolean("greenhouses.useProtection", false);
+	Settings.snowChanceGlobal = getConfig().getDouble("greenhouses.snowchance", 0.5D);
+	Settings.snowDensity = getConfig().getDouble("greenhouses.snowdensity", 0.1D);
+	Settings.snowSpeed = getConfig().getLong("greenhouses.snowspeed", 30L);
+	Settings.iceInfluence = getConfig().getInt("greenhouses.iceinfluence", 125);
+	Settings.ecoTick = getConfig().getInt("greenhouses.ecotick", 30);
+	Settings.flowerChance = getConfig().getDouble("greenhouses.flowerchance", 1D);
+	Settings.mobSpawnChance = getConfig().getDouble("greenhouses.mobspawnchance", 0.1D);
+
+	//getLogger().info("Debug: Snowchance " + Settings.snowChanceGlobal);
+	//getLogger().info("Debug: Snowdensity " + Settings.snowDensity);
+	//getLogger().info("Debug: Snowspeed " + Settings.snowSpeed);
+
+
 	Settings.checkLeases = getConfig().getInt("greenhouses.checkleases",12);
 	if (Settings.checkLeases < 0) {
 	    Settings.checkLeases = 0;
@@ -206,10 +230,13 @@ public class Greenhouses extends JavaPlugin {
      */
     @Override
     public void onDisable() {
+	// Reset biomes back
+	for (Greenhouse g: plugin.getGreenhouses()) {
+	    g.endBiome();
+	}
 	try {
 	    // Remove players from memory
 	    players.removeAllPlayers();
-	    saveConfig();
 	    saveMessages();
 	} catch (final Exception e) {
 	    plugin.getLogger().severe("Something went wrong saving files!");
@@ -232,8 +259,7 @@ public class Greenhouses extends JavaPlugin {
 	try {
 	    final Metrics metrics = new Metrics(this);
 	    metrics.start();
-	} catch (final IOException localIOException) {
-	}
+	} catch (final IOException localIOException) {}
 	if (!VaultHelper.setupEconomy()) {
 	    getLogger().severe("Could not set up economy!");
 	}
@@ -285,9 +311,63 @@ public class Greenhouses extends JavaPlugin {
 	} else {
 	    getLogger().warning("Leases will not be checked automatically. Make sure your server restarts regularly.");
 	}
+	ecoTick();
+
+
     }
 
-    public int daysToEndOfLease(GreenhouseRegion d) {
+
+    public void ecoTick() {
+	// Cancel any old schedulers
+	if (ecoCheck != null)
+	    ecoCheck.cancel();
+	// Kick off flower growingetc.
+	long ecoTick = Settings.ecoTick * 60 * 20; // In minutes
+	
+	if (ecoTick > 0) {
+	    ecoCheck = getServer().getScheduler().runTaskTimer(plugin, new Runnable() {
+		@Override
+		public void run() {
+		    getLogger().info("Kicking off flower growing and eco check scheduler every " + Settings.ecoTick + " minutes");
+		    getLogger().info("Flower chance is " + Settings.flowerChance);
+		    getLogger().info("Mob spawn chance is " + Settings.mobSpawnChance);
+		    for (Greenhouse g : getGreenhouses()) {
+			getLogger().info("DEBUG: Servicing greenhouse biome : " + g.getBiome().toString());
+			checkEco();
+			g.growFlowers();
+			if (Math.random()<Settings.mobSpawnChance)
+			   g.populateGreenhouse();
+		    }
+		}
+	    }, 0L, ecoTick);
+
+	} else {
+	    getLogger().info("Flower growth disabled.");
+	}
+	
+    }
+
+
+    /**
+     * Returns a pseudo-random number between min and max, inclusive.
+     * The difference between min and max can be at most
+     * <code>Integer.MAX_VALUE - 1</code>.
+     *
+     * @param min Minimum value
+     * @param max Maximum value.  Must be greater than min.
+     * @return Integer between min and max, inclusive.
+     * @see java.util.Random#nextInt(int)
+     */
+    public static int randInt(int min, int max) {
+	// nextInt is normally exclusive of the top value,
+	// so add 1 to make it inclusive
+	Random rand = new Random();
+	int randomNum = rand.nextInt((max - min) + 1) + min;
+	//Bukkit.getLogger().info("Random number = " + randomNum);
+	return randomNum;
+    }
+
+    public int daysToEndOfLease(Greenhouse d) {
 	// Basic checking
 	if (d.getLastPayment() == null) {
 	    return 0;
@@ -328,7 +408,7 @@ public class Greenhouses extends JavaPlugin {
 
     protected void checkLeases() {
 	// Check all the leases
-	for (GreenhouseRegion d:greenhouses) {
+	for (Greenhouse d:greenhouses) {
 	    // Only check rented properties
 	    if (d.getLastPayment() != null && d.getRenter() != null) {
 		if (daysToEndOfLease(d) == 0) {
@@ -376,7 +456,7 @@ public class Greenhouses extends JavaPlugin {
 			    }
 			    d.setRenter(null);
 			    d.setRenterTrusted(new ArrayList<UUID>());
-			    d.setEnterMessage("Entering " + players.getName(d.getOwner()) + "'s " + prettifyText(d.getGreenhouseBiome().toString()) + " greenhouse!");
+			    d.setEnterMessage("Entering " + players.getName(d.getOwner()) + "'s " + prettifyText(d.getBiome().toString()) + " greenhouse!");
 			    d.setFarewellMessage("Now leaving " + players.getName(d.getOwner()) + "'s greenhouse.");
 			}
 		    } else {
@@ -396,7 +476,7 @@ public class Greenhouses extends JavaPlugin {
 			}
 			d.setRenter(null);
 			d.setRenterTrusted(new ArrayList<UUID>());
-			d.setEnterMessage("Entering " + players.getName(d.getOwner()) + "'s " + prettifyText(d.getGreenhouseBiome().toString()) +" greenhouse!");
+			d.setEnterMessage("Entering " + players.getName(d.getOwner()) + "'s " + prettifyText(d.getBiome().toString()) +" greenhouse!");
 			d.setFarewellMessage("Now leaving " + players.getName(d.getOwner()) + "'s greenhouse.");	
 		    }
 		}
@@ -407,6 +487,8 @@ public class Greenhouses extends JavaPlugin {
 
     protected void loadGreenhouses() {
 	// Load all known greenhouses
+	// Clear them first
+	greenhouses.clear();
 	// Load all the players
 	for (final File f : playersFolder.listFiles()) {
 	    // Need to remove the .yml suffix
@@ -426,8 +508,8 @@ public class Greenhouses extends JavaPlugin {
 	}
 	// Put all online players in greenhouses
 	for (Player p : getServer().getOnlinePlayers()) {
-	    for (GreenhouseRegion d: greenhouses) {
-		if (d.intersectsGreenhouse(p.getLocation())) {
+	    for (Greenhouse d: greenhouses) {
+		if (d.insideGreenhouse(p.getLocation())) {
 		    players.setInGreenhouse(p.getUniqueId(), d);
 		    break;
 		}
@@ -442,11 +524,15 @@ public class Greenhouses extends JavaPlugin {
      */
     public void registerEvents() {
 	final PluginManager manager = getServer().getPluginManager();
-	// Nether portal events
-	// Island Protection events
-	manager.registerEvents(new GreenhouseGuard(this), this);
+	// Greenhouse Protection events
+	if (Settings.useProtection)
+	    manager.registerEvents(new GreenhouseGuard(this), this);
+	// Listen to greenhouse change events
+	manager.registerEvents(new GreenhouseCheck(this), this);
 	// Events for when a player joins or leaves the server
 	manager.registerEvents(new JoinLeaveEvents(this, players), this);
+	// Weather event
+	manager.registerEvents(eco, this);
     }
 
 
@@ -600,7 +686,7 @@ public class Greenhouses extends JavaPlugin {
     /**
      * @return the greenhouses
      */
-    public HashSet<GreenhouseRegion> getGreenhouses() {
+    public HashSet<Greenhouse> getGreenhouses() {
 	return greenhouses;
     }
 
@@ -608,8 +694,15 @@ public class Greenhouses extends JavaPlugin {
     /**
      * @param greenhouses the greenhouses to set
      */
-    public void setGreenhouses(HashSet<GreenhouseRegion> greenhouses) {
+    public void setGreenhouses(HashSet<Greenhouse> greenhouses) {
 	this.greenhouses = greenhouses;
+    }
+
+    /**
+     * Clears the greenhouses list
+     */
+    public void clearGreenhouses() {
+	this.greenhouses.clear();
     }
 
     /**
@@ -624,7 +717,7 @@ public class Greenhouses extends JavaPlugin {
 	rect.setFrameFromDiagonal(pos1.getX(), pos1.getZ(), pos2.getX(), pos2.getZ());
 	Rectangle2D.Double testRect = new Rectangle2D.Double();
 	// Create a set of rectangles of current greenhouses
-	for (GreenhouseRegion d: greenhouses) {
+	for (Greenhouse d: greenhouses) {
 	    testRect.setFrameFromDiagonal(d.getPos1().getX(), d.getPos1().getZ(),d.getPos2().getX(),d.getPos2().getZ());
 	    if (rect.intersects(testRect)) {
 		return true;
@@ -640,16 +733,16 @@ public class Greenhouses extends JavaPlugin {
      * @param owner
      * @return the greenhouse region
      */
-    public GreenhouseRegion createNewGreenhouse(Location pos1, Location pos2, Player owner) {
-	GreenhouseRegion d = new GreenhouseRegion(plugin, pos1, pos2, owner.getUniqueId());
-	d.setEnterMessage("Entering " + owner.getDisplayName() + "'s " + prettifyText(d.getGreenhouseBiome().toString()) +" greenhouse!");
+    public Greenhouse createNewGreenhouse(Location pos1, Location pos2, Player owner) {
+	Greenhouse d = new Greenhouse(plugin, pos1, pos2, owner.getUniqueId());
+	d.setEnterMessage("Entering " + owner.getDisplayName() + "'s " + prettifyText(d.getBiome().toString()) +" greenhouse!");
 	d.setFarewellMessage("Now leaving " + owner.getDisplayName() + "'s greenhouse.");
 	getGreenhouses().add(d);
 	getPos1s().remove(owner.getUniqueId());
 	players.save(owner.getUniqueId());
 	// Find everyone who is in this greenhouse and visualize them
 	for (Player p : getServer().getOnlinePlayers()) {
-	    if (d.intersectsGreenhouse(p.getLocation())) {
+	    if (d.insideGreenhouse(p.getLocation())) {
 		if (!p.equals(owner)) {
 		    p.sendMessage("You are now in " + owner.getDisplayName() + "'s greenhouse!");
 		}
@@ -660,14 +753,17 @@ public class Greenhouses extends JavaPlugin {
 	return d;
     }
 
-    @SuppressWarnings("deprecation") void visualize(GreenhouseRegion d, Player player) {
+    // TODO: Ann snow particle visualization
+    //@SuppressWarnings("deprecation") 
+    void visualize(Greenhouse d, Player player) {
 	return;
     }
     /*
 	// Deactivate any previous visualization
-	if (visualizations.containsKey(player.getUniqueId())) {
-	    devisualize(player);
-	}
+	getLogger().info("DEBUG: visualize");
+	//if (visualizations.containsKey(player.getUniqueId())) {
+	//    devisualize(player);
+	//}
 	// Get the four corners
 	int minx = Math.min(d.getPos1().getBlockX(), d.getPos2().getBlockX());
 	int maxx = Math.max(d.getPos1().getBlockX(), d.getPos2().getBlockX());
@@ -676,16 +772,16 @@ public class Greenhouses extends JavaPlugin {
 
 	// Draw the lines - we do not care in what order
 	List<Location> positions = new ArrayList<Location>();
-	*/
-	/*
+
+
 	for (int x = minx; x<= maxx; x++) {
 	    for (int z = minz; z<= maxz; z++) {
-		Location v = new Location(player.getWorld(),x,0,z);
-		v = player.getWorld().getHighestBlockAt(v).getLocation().subtract(new Vector(0,1,0));
-		player.sendBlockChange(v, Material.REDSTONE_BLOCK, (byte)0);
+		Location v = new Location(player.getWorld(),x,d.getPos2().getBlockY(),z);
+		//v = player.getWorld().getHighestBlockAt(v).getLocation().subtract(new Vector(0,1,0));
+		player.sendBlockChange(v, Material.GLASS, (byte)0);
 		positions.add(v);
 	    }
-	}*/
+	}
     /*
 	for (int x = minx; x<= maxx; x++) {
 	    Location v = new Location(player.getWorld(),x,0,minz);
@@ -711,13 +807,14 @@ public class Greenhouses extends JavaPlugin {
 	    player.sendBlockChange(v, Material.REDSTONE_BLOCK, (byte)0);
 	    positions.add(v);
 	}
+     */
 
+    // Save these locations
+    //visualizations.put(player.getUniqueId(), positions);
+    //}
 
-	// Save these locations
-	visualizations.put(player.getUniqueId(), positions);
-    }*/
-
-    @SuppressWarnings("deprecation") void visualize(Location l, Player player) {
+    //@SuppressWarnings("deprecation") 
+    void visualize(Location l, Player player) {
 	return;
 	/*
 	plugin.getLogger().info("Visualize location");
@@ -732,7 +829,7 @@ public class Greenhouses extends JavaPlugin {
 	visualizations.put(player.getUniqueId(), pos);*/
     }
 
-    @SuppressWarnings("deprecation")
+    //@SuppressWarnings("deprecation")
     public void devisualize(Player player) {
 	return;
 	/*
@@ -764,47 +861,91 @@ public class Greenhouses extends JavaPlugin {
     }
 
 
-    public GreenhouseRegion getInGreenhouse(Location location) {
-	for (GreenhouseRegion d : greenhouses) {
+    /**
+     * Checks if a location is inside a greenhouse (3D space)
+     * @param location
+     * @return
+     */
+    public Greenhouse getInGreenhouse(Location location) {
+	for (Greenhouse g : greenhouses) {
 	    //plugin.getLogger().info("Debug: greenhouse check");
-	    if (d.intersectsGreenhouse(location)) {
-		return d;
+	    if (g.insideGreenhouse(location)) {
+		return g;
 	    }
 	}
 	// This location is not in a greenhouse
 	return null;
     }
 
-    public void removeGreenhouse(GreenhouseRegion d) {
+    /**
+     * Checks if the location is on the greenhouse
+     * @param location
+     * @return the greenhouse that this is above
+     */
+    public Greenhouse aboveAGreenhouse(Location location) {
+	for (Greenhouse g : greenhouses) {
+	    //plugin.getLogger().info("Debug: greenhouse check");
+	    if (g.aboveGreenhouse(location)) {
+		return g;
+	    }
+	}
+	// This location is above in a greenhouse
+	return null;
+    }
+
+    public void removeGreenhouse(Greenhouse g) {
 	// Remove the greenhouse
-	HashSet<GreenhouseRegion> ds = getGreenhouses();
-	ds.remove(d);
+	HashSet<Greenhouse> ds = getGreenhouses();
+	ds.remove(g);
 	setGreenhouses(ds);
+	// Stop any eco action
+	eco.remove(g);
+	boolean ownerOnline = false;
 	// Find everyone who is in this greenhouse and remove them
 	for (Player p : getServer().getOnlinePlayers()) {
-	    if (d.intersectsGreenhouse(p.getLocation())) {
+	    if (p.getUniqueId().equals(g.getOwner()))
+		ownerOnline=true;
+	    if (g.insideGreenhouse(p.getLocation())) {
 		players.setInGreenhouse(p.getUniqueId(), null);
+		p.sendMessage(ChatColor.RED + "This greenhouse is no more...");
 		devisualize(p);
 	    }
 	}
-	getLogger().info("Returning biome to original state: " + d.getOriginalBiome().toString());
+	if (!ownerOnline)
+	    plugin.setMessage(g.getOwner(), "A " + g.getBiome() + " greenhouse of yours is no more!");
+	World world = g.getPos1().getWorld();
+	getLogger().info("DEBUG: Returning biome to original state: " + g.getOriginalBiome().toString());
+	g.setBiome(g.getOriginalBiome()); // just in case
+	g.endBiome();
+	/*
 	// Set the biome
-	for (int y = d.getPos1().getBlockY(); y< d.getPos2().getBlockY();y++) {
-	    for (int x = d.getPos1().getBlockX()+1;x<d.getPos2().getBlockX();x++) {
-		for (int z = d.getPos1().getBlockZ()+1;z<d.getPos2().getBlockZ();z++) {
-		    d.getPos1().getWorld().getBlockAt(x, y, z).setBiome(d.getOriginalBiome());
+	for (int y = g.getPos1().getBlockY(); y< g.getPos2().getBlockY();y++) {
+
+	    for (int x = g.getPos1().getBlockX()+1;x<g.getPos2().getBlockX();x++) {
+		for (int z = g.getPos1().getBlockZ()+1;z<g.getPos2().getBlockZ();z++) {
+		    g.getPos1().getWorld().getBlockAt(x, y, z).setBiome(g.getOriginalBiome());
 		}
 	    }
 	}
+	int minx = Math.min(g.getPos1().getChunk().getX(), g.getPos2().getChunk().getX());
+	int maxx = Math.max(g.getPos1().getChunk().getX(), g.getPos2().getChunk().getX());
+	int minz = Math.min(g.getPos1().getChunk().getZ(), g.getPos2().getChunk().getZ());
+	int maxz = Math.max(g.getPos1().getChunk().getZ(), g.getPos2().getChunk().getZ());
+	for (int x = minx; x < maxx + 1; x++) {
+	    for (int z = minz; z < maxz+1;z++) {
+		world.refreshChunk(x,z);
+	    }
+	}
+	 */
 
     }
-    
-    
+
+
     public Location getClosestGreenhouse(Player player) {
 	// Find closest greenhouse
 	Location closest = null;
 	Double distance = 0D;
-	for (GreenhouseRegion d : greenhouses) {
+	for (Greenhouse d : greenhouses) {
 	    UUID owner = d.getOwner();
 	    UUID renter = d.getRenter();
 
@@ -832,7 +973,32 @@ public class Greenhouses extends JavaPlugin {
 	return closest;
 
     }
-    
+
+    /**
+     * Checks that each greenhouse is still viable
+     */
+    public void checkEco() {
+	// Run through each greenhouse
+	plugin.getLogger().info("DEBUG: started eco check");
+	// Check all the greenhouses to see if they have the minimum number of key blocks		
+	for (Greenhouse g : plugin.getGreenhouses()) {
+	    plugin.getLogger().info("DEBUG: Testing greenhouse owned by " + g.getOwner().toString());
+	    if (!g.checkEco()) {
+		// The greenhouse failed an eco check - remove it
+		// Check if player is online
+		Player owner = plugin.getServer().getPlayer(g.getOwner());
+		if (owner == null)  {
+		    plugin.setMessage(g.getOwner(), "Your greenhouse at " + Greenhouses.getStringLocation(g.getPos1()) + " lost its eco system and was removed.");
+		} else {
+		    owner.sendMessage(ChatColor.RED + "Your greenhouse at " + Greenhouses.getStringLocation(g.getPos1()) + " lost its eco system and was removed.");
+		}
+		plugin.removeGreenhouse(g);
+		plugin.getLogger().info("Greenhouse at " + Greenhouses.getStringLocation(g.getPos1()) + " lost its eco system and was removed.");
+		
+	    }
+	}
+    }
+
     /**
      * Converts a name like IRON_INGOT into Iron Ingot to improve readability
      * 

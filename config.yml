@@ -2,6 +2,31 @@ greenhouses:
    # World Name where Greenhouses will operate
    worldName: world
 
+   # Use built-in protection? Not needed if other protection plugins are available
+   useProtection: false
+
+   # Weather and ecosystem
+
+   # How often it should snow when the weather is bad in seconds
+   snowspeed: 30
+   # Chance of any snow falling in a greenhouse when the snow tick occurs
+   # (1 = always, 0 = never)
+   snowchance: 1
+   # How many blocks should get snow 1 = all of them, 0 = none, 0.1 = 1 in 10
+   snowdensity: 0.1
+   # Ice influence - how many blocks one block of ice can freeze
+   # default is 5 x 5 x 5 = 125
+   iceinfluence: 125
+
+   # Biome activity
+   # How often should greenhouse biomes be checked, mobs potentially spawned and
+   # Flowers potentially grow
+   ecotick: 5
+   # Chance of double height flowers growing
+   flowerchance: 0.1
+   # Friendly mob spawn chance every ecotick
+   mobspawnchance: 0.1
+
    ### Default settings for greenhouse protection 
 
    #[true/false] PVP is allowed or denied.

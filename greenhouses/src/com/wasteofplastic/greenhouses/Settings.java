@@ -28,6 +28,14 @@ public class Settings {
     // General
     public static String worldName;
     public static int checkLeases;
+    public static boolean useProtection;
+    public static double snowChanceGlobal;
+    public static double snowDensity;
+    public static long snowSpeed;
+    public static int ecoTick;
+    public static double flowerChance;
+    public static int iceInfluence;
+    public static double mobSpawnChance;
    
     
 }

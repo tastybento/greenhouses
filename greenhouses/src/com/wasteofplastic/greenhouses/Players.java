@@ -7,9 +7,12 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Biome;
 import org.bukkit.configuration.ConfigurationSection;
@@ -25,7 +28,7 @@ public class Players {
     private boolean hasGreenhouses;
     private UUID uuid;
     private String playerName;
-    private GreenhouseRegion inGreenhouse;
+    private Greenhouse inGreenhouse;
     private boolean visualize;
     // The number of blocks I have to use on greenhouses
     private int blocks;
@@ -65,7 +68,7 @@ public class Players {
 		playerName = "";		
 	    }
 	}
-	//plugin.getLogger().info("Loading player..." + playerName);
+	plugin.getLogger().info("Loading player..." + playerName);
 	this.hasGreenhouses = playerInfo.getBoolean("hasGreenhouses", false);
 	this.visualize = playerInfo.getBoolean("visualize",true);
 	ConfigurationSection myHouses = playerInfo.getConfigurationSection("greenhouses");
@@ -74,48 +77,75 @@ public class Players {
 	    for (String key : myHouses.getKeys(false)) {
 		try {
 		    // Load all the values
-		    Location pos1 = getLocationString(playerInfo.getString("greenhouses." + key + ".pos-one"));
-		    Location pos2 = getLocationString(playerInfo.getString("greenhouses." + key + ".pos-two"));
+		    final Location pos1 = getLocationString(playerInfo.getString("greenhouses." + key + ".pos-one"));
+		    final Location pos2 = getLocationString(playerInfo.getString("greenhouses." + key + ".pos-two"));
+		    plugin.getLogger().info("DEBUG: File pos1: " + pos1.toString());
+		    plugin.getLogger().info("DEBUG: File pos1: " + pos2.toString());
 		    // Check if this greenhouse already exists
 		    if (plugin.checkGreenhouseIntersection(pos1, pos2)) {
 			plugin.getLogger().info("DEBUG: Greenhouse already exists or overlaps - ignoring");
 
 		    } else {
-			GreenhouseRegion d = new GreenhouseRegion(plugin, pos1, pos2, uuid);
-			d.setId(UUID.fromString(playerInfo.getString("greenhouses." + key + ".id")));
+			Greenhouse g = new Greenhouse(plugin, pos1, pos2, uuid);
+			g.setId(UUID.fromString(playerInfo.getString("greenhouses." + key + ".id")));
+			plugin.getLogger().info("DEBUG: Greenhouse pos1: " + g.getPos1().toString());
+			plugin.getLogger().info("DEBUG: Greenhouse pos2: " + g.getPos2().toString());
 			// Set biome
 			String oBiome = playerInfo.getString("greenhouses." + key + ".originalBiome", "SUNFLOWER_PLAINS");
 			Biome originalBiome = Biome.valueOf(oBiome);
 			if (originalBiome == null) {
 			    originalBiome = Biome.SUNFLOWER_PLAINS;
 			}
-			d.setOriginalBiome(originalBiome);
+			g.setOriginalBiome(originalBiome);
 			String gBiome = playerInfo.getString("greenhouses." + key + ".greenhouseBiome", "SUNFLOWER_PLAINS");
-			Biome greenhouseBiome = Biome.valueOf(oBiome);
+			Biome greenhouseBiome = Biome.valueOf(gBiome);
 			if (greenhouseBiome == null) {
 			    greenhouseBiome = Biome.SUNFLOWER_PLAINS;
 			}
-			d.setGreenhouseBiome(greenhouseBiome);
+			g.setBiome(greenhouseBiome);
+			Location hopperLoc = getLocationString(playerInfo.getString("greenhouses." + key + ".roofHopperLocation"));
+			if (hopperLoc != null) {
+			    g.setRoofHopperLocation(hopperLoc);
+			}
+			// Load the contents
+			// Store original contents
+			if (playerInfo.getConfigurationSection("greenhouses." + key + ".ocontents") != null) {
+			    HashMap<String,Object> oContents = (HashMap<String,Object>) playerInfo.getConfigurationSection("greenhouses." + key + ".ocontents").getValues(true);
+			    ConcurrentHashMap<Material,AtomicLong> originalBlocks = new ConcurrentHashMap<Material,AtomicLong>();
+			    // try to covert the info
+			    try {
+				for (String material: oContents.keySet()) {
+				    int qty = (Integer) oContents.get(material);
+				    originalBlocks.put(Material.valueOf(material), new AtomicLong((long)qty));
+				}
+				g.setOriginalGreenhouseContents(originalBlocks);
+			    } catch (Exception e) {
+				plugin.getLogger().severe("Error loading greenhouse.");
+				e.printStackTrace();
+			    }
+			} else {
+			    plugin.getLogger().severe("Error loading original contents of greenhouse."); 
+			}
 
 			// Load all the flags
 			HashMap<String,Object> flags = (HashMap<String, Object>) playerInfo.getConfigurationSection("greenhouses." + key + ".flags").getValues(false);
 			//d.setEnterMessage(playerInfo.getString("greenhouses." + key + ".entermessage",""));
 			//d.setFarewellMessage(playerInfo.getString("greenhouses." + key + ".farewellmessage",""));
-			d.setFlags(flags);
+			g.setFlags(flags);
 			// Load the various other flags here
 			String tempUUID = playerInfo.getString("greenhouses." + key + ".renter");
 			if (tempUUID != null) {
-			    d.setRenter(UUID.fromString(tempUUID));
+			    g.setRenter(UUID.fromString(tempUUID));
 			}
-			d.setForSale(playerInfo.getBoolean("greenhouses." + key + ".forSale", false));
-			d.setForRent(playerInfo.getBoolean("greenhouses." + key + ".forRent", false));
-			d.setPrice(playerInfo.getDouble("greenhouses." + key + ".price", 0D));
+			g.setForSale(playerInfo.getBoolean("greenhouses." + key + ".forSale", false));
+			g.setForRent(playerInfo.getBoolean("greenhouses." + key + ".forRent", false));
+			g.setPrice(playerInfo.getDouble("greenhouses." + key + ".price", 0D));
 			SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
 			String dateInString = playerInfo.getString("greenhouses." + key + ".lastPayment");
 			if (dateInString != null) {		 
 			    try {		 
 				Date date = formatter.parse(dateInString);
-				d.setLastPayment(date);
+				g.setLastPayment(date);
 			    } catch (ParseException e) {
 				e.printStackTrace();
 			    }
@@ -131,7 +161,7 @@ public class Players {
 				    e.printStackTrace();
 				}
 			    }
-			    d.setOwnerTrusted(ownerTrustedUUID);
+			    g.setOwnerTrusted(ownerTrustedUUID);
 			} 
 			List<UUID> renterTrustedUUID = new ArrayList<UUID>();
 			List<String> renterTrusted = playerInfo.getStringList("greenhouses." + key + ".renterTrusted");
@@ -143,9 +173,9 @@ public class Players {
 				    e.printStackTrace();
 				}
 			    }
-			    d.setRenterTrusted(renterTrustedUUID);
+			    g.setRenterTrusted(renterTrustedUUID);
 			}	    
-			plugin.getGreenhouses().add(d);
+			plugin.getGreenhouses().add(g);
 		    }
 		} catch (Exception e) {
 		    plugin.getLogger().severe("Problem loading player files");
@@ -171,25 +201,25 @@ public class Players {
 	if (!plugin.getGreenhouses().isEmpty()) {
 	    // Get a list of all my greenhouses
 	    int index = 0;
-	    for (GreenhouseRegion greenhouse : plugin.getGreenhouses()) {
+	    for (Greenhouse greenhouse : plugin.getGreenhouses()) {
 		if (greenhouse.getOwner().equals(uuid)) {
 		    // Save all the values
 		    playerInfo.set("greenhouses." + index + ".id", greenhouse.getId().toString());
 		    playerInfo.set("greenhouses." + index + ".pos-one", getStringLocation(greenhouse.getPos1()));
 		    playerInfo.set("greenhouses." + index + ".pos-two", getStringLocation(greenhouse.getPos2()));
 		    playerInfo.set("greenhouses." + index + ".originalBiome", greenhouse.getOriginalBiome().toString());
-		    playerInfo.set("greenhouses." + index + ".greenhouseBiome", greenhouse.getGreenhouseBiome().toString());
-		    /*
-		    private World world;
-		    private UUID owner;
-		    private UUID renter;
-		    private List<UUID> ownerTrusted;
-		    private List<UUID> renterTrusted;
-		    private boolean forSale = false;
-		    private boolean forRent = false;
-		    private Double price = 0D;
-		    private Date lastPayment;
-		     */
+		    playerInfo.set("greenhouses." + index + ".greenhouseBiome", greenhouse.getBiome().toString());
+		    playerInfo.set("greenhouses." + index + ".roofHopperLocation", getStringLocation(greenhouse.getRoofHopperLocation()));
+		    // Store original contents
+		    ConcurrentHashMap<Material,AtomicLong> oContents = greenhouse.getOriginalGreenhouseContents();
+		    if (oContents != null) {
+			HashMap<String,Long> originalBlocks = new HashMap<String,Long>();
+			// Convert to string/object for storage
+			for (Material m : oContents.keySet())
+			    originalBlocks.put(m.toString(), oContents.get(m).longValue());
+			playerInfo.createSection("greenhouses." + index + ".ocontents", originalBlocks);
+		    }
+
 		    if (greenhouse.getRenter() != null)
 			playerInfo.set("greenhouses." + index + ".renter", greenhouse.getRenter().toString());
 		    playerInfo.set("greenhouses." + index + ".forSale", greenhouse.isForSale());
@@ -277,14 +307,14 @@ public class Players {
     /**
      * @return the inGreenhouse
      */
-    public GreenhouseRegion getInGreenhouse() {
+    public Greenhouse getInGreenhouse() {
 	return inGreenhouse;
     }
 
     /**
      * @param inGreenhouse the inGreenhouse to set
      */
-    public void setInGreenhouse(GreenhouseRegion inGreenhouse) {
+    public void setInGreenhouse(Greenhouse inGreenhouse) {
 	this.inGreenhouse = inGreenhouse;
     }
 

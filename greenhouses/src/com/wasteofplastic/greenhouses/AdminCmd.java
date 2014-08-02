@@ -48,6 +48,7 @@ public class AdminCmd implements CommandExecutor {
 	    if (split[0].equalsIgnoreCase("reload")) {
 		plugin.reloadConfig();
 		plugin.loadPluginConfig();
+		plugin.ecoTick();
 		sender.sendMessage(ChatColor.YELLOW + Locale.reloadconfigReloaded);
 		return true;
 	    } else if (split[0].equalsIgnoreCase("info")) {
@@ -56,7 +57,7 @@ public class AdminCmd implements CommandExecutor {
 		    return true;
 		}
 		Player player = (Player)sender;
-		GreenhouseRegion d = players.getInGreenhouse(player.getUniqueId());
+		Greenhouse d = players.getInGreenhouse(player.getUniqueId());
 		if (d == null) {
 		    sender.sendMessage(ChatColor.RED + "Put yourself in a greenhouse to see info.");
 		    return true;

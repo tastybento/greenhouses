@@ -81,7 +81,7 @@ public class PlayerCache {
      * @return List of greenhouses
      */
     /*
-    public List<GreenhouseRegion> getPlayersGreenhouses(final UUID playerUUID) {
+    public List<Greenhouse> getPlayersGreenhouses(final UUID playerUUID) {
 	if (playerCache.containsKey(playerUUID)) {
 	    return playerCache.get(playerUUID).get;
 	}
@@ -184,7 +184,7 @@ public class PlayerCache {
 	return playerCache.get(playerUUID).getPlayerName();
     }
 
-    public void setInGreenhouse(UUID playerUUID, GreenhouseRegion inGreenhouse) {
+    public void setInGreenhouse(UUID playerUUID, Greenhouse inGreenhouse) {
 	addPlayer(playerUUID);
 	playerCache.get(playerUUID).setInGreenhouse(inGreenhouse);
     }
@@ -193,10 +193,21 @@ public class PlayerCache {
      * @param playerUUID
      * @return the greenhouse the player is in or null if no greenhouse
      */
-    public GreenhouseRegion getInGreenhouse(UUID playerUUID) {
+    public Greenhouse getInGreenhouse(UUID playerUUID) {
 	addPlayer(playerUUID);
 	return playerCache.get(playerUUID).getInGreenhouse();
     }
+    
+    public int getNumberInGreenhouse(Greenhouse g) {
+	int count = 0;
+	for (Players p : playerCache.values()) {
+	    if (p.getInGreenhouse() != null && p.getInGreenhouse().equals(g)) {
+		count++;
+	    }
+	}
+	return count;
+    }
+    
     /**
      * @return how many blocks a player has
      */
@@ -233,18 +244,7 @@ public class PlayerCache {
     public int removeBlocks(UUID playerUUID, int blocks) {
 	addPlayer(playerUUID);
        return playerCache.get(playerUUID).removeBlocks(blocks);
-    }
-
-    public boolean getVisualize(UUID playerUUID) {
-	addPlayer(playerUUID);
-	return playerCache.get(playerUUID).isVisualize();
-    }
-
-    public void setVisualize(UUID playerUUID, boolean visualize) {
-	addPlayer(playerUUID);
-	playerCache.get(playerUUID).setVisualize(visualize);
-    }
-    
+    }   
 }
 
 
