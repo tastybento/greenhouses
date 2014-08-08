@@ -41,11 +41,11 @@ public class Ecosystem implements Listener {
 	    return;
 	if (e.toWeatherState()) {
 	    // It's raining
-	    plugin.getLogger().info("DEBUG: It's raining!");
+	    //plugin.getLogger().info("DEBUG: It's raining!");
 	    startSnow();
 	} else {
 	    // It's stopped raining!
-	    plugin.getLogger().info("DEBUG: Stopped raining!");
+	    //plugin.getLogger().info("DEBUG: Stopped raining!");
 	    if (snow != null)
 		snow.cancel();
 	}
@@ -64,25 +64,25 @@ public class Ecosystem implements Listener {
 	    @Override
 	    public void run() {
 		// Run through each greenhouse - only bother with snow biomes
-		plugin.getLogger().info("DEBUG: started scheduler");
+		//plugin.getLogger().info("DEBUG: started scheduler");
 		// Check all the greenhouses and their hoppers and build a list of snow greenhouses that exist now		
 		for (Greenhouse g : plugin.getGreenhouses()) {
-		    plugin.getLogger().info("DEBUG: Testing greenhouse biome : " + g.getBiome().toString());
+		    //plugin.getLogger().info("DEBUG: Testing greenhouse biome : " + g.getBiome().toString());
 		    if (snowBiomes.contains(g.getBiome())) {
-			plugin.getLogger().info("DEBUG: Snow biome found!");
+			//plugin.getLogger().info("DEBUG: Snow biome found!");
 			// If it is already on the list, just snow, otherwise check if the hopper has water
 			if (!snowGlobes.contains(g)) {
 			    Location hopper = g.getRoofHopperLocation();
 			    if (hopper != null) {
-				plugin.getLogger().info("DEBUG: Hopper location:" + hopper.toString());
+				//plugin.getLogger().info("DEBUG: Hopper location:" + hopper.toString());
 				Block b = hopper.getBlock();
 				// Check the hopper is still there
 				if (b.getType().equals(Material.HOPPER)) {
 				    Hopper h = (Hopper)b.getState();
-				    plugin.getLogger().info("DEBUG: Hopper found!");
+				   // plugin.getLogger().info("DEBUG: Hopper found!");
 				    // Check what is in the hopper
 				    if (h.getInventory().contains(Material.WATER_BUCKET)) {
-					plugin.getLogger().info("DEBUG: Water bucket found!");
+					//plugin.getLogger().info("DEBUG: Water bucket found!");
 					// Remove the water in the bucket
 					h.getInventory().removeItem(new ItemStack(Material.WATER_BUCKET));
 					h.getInventory().addItem(new ItemStack(Material.BUCKET));
@@ -92,7 +92,7 @@ public class Ecosystem implements Listener {
 				} else {
 				    // Greenhouse is broken or no longer has a hopper when it should
 				    // TODO remove the greenhouse
-				    plugin.getLogger().info("DEBUG: Hopper is not there anymore...");
+				    plugin.getLogger().warning("Hopper is not there anymore...");
 				}
 			    }
 			}
@@ -108,7 +108,7 @@ public class Ecosystem implements Listener {
 
     protected void snowOn(List<Greenhouse> snowGlobes) {
 	for (Greenhouse g : snowGlobes) {
-	    plugin.getLogger().info("DEBUG: snowing in a greenhouse");
+	    //plugin.getLogger().info("DEBUG: snowing in a greenhouse");
 	    // Chance of snow
 	    if (Math.random()>Settings.snowChanceGlobal)
 		return;

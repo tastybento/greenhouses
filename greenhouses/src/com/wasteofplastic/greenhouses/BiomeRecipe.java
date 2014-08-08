@@ -1,0 +1,375 @@
+package com.wasteofplastic.greenhouses;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.block.Biome;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
+import org.bukkit.entity.EntityType;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.material.Leaves;
+import org.bukkit.material.Tree;
+
+public class BiomeRecipe {
+    private Greenhouses plugin;
+    private Biome type;
+    private int priority;
+    // Content requirements
+    // Material, Type, Qty. There can be more than one type of material required
+    private List<Material> blockMaterial = new ArrayList<Material>();
+    private List<Integer> blockType = new ArrayList<Integer>();
+    private List<Long> blockQty = new ArrayList<Long>();
+    private List<Long> blockQtyCheck = new ArrayList<Long>();
+    // Plants
+    // Plant Material, Sub-Type, Material on which to grow, Probability
+    private List<Material> plantMaterial = new ArrayList<Material>();
+    private List<Integer> plantType = new ArrayList<Integer>();
+    private List<Integer> plantProbability = new ArrayList<Integer>();
+    private List<Material> plantGrownOn = new ArrayList<Material>();
+    // Mobs
+    // Entity Type, Material to Spawn on, Probability
+    private List<EntityType> mobType = new ArrayList<EntityType>();
+    private List<Double> mobProbability = new ArrayList<Double>();
+    private List< Material> mobSpawnOn = new ArrayList<Material>();
+    // Conversions
+    // Original Material, Original Type, New Material, New Type, Probability
+    private List<Material> oldMaterial = new ArrayList<Material>();
+    private List<Integer> oldType = new ArrayList<Integer>();
+    private List<Integer> convChance = new ArrayList<Integer>();
+    private List<Material> newMaterial = new ArrayList<Material>();
+    private List<Integer> newType = new ArrayList<Integer>();
+    private List<Material> localMaterial = new ArrayList<Material>();
+    private List<Integer> localType = new ArrayList<Integer>();
+
+    private int mobLimit;
+    private int waterCoverage;
+    private int iceCoverage;
+    private int lavaCoverage;
+
+    /**
+     * @param type
+     * @param priority
+     */
+    public BiomeRecipe(Greenhouses plugin, Biome type, int priority) {
+	this.plugin = plugin;
+	this.type = type;
+	this.priority = priority;
+	//plugin.getLogger().info("DEBUG: " + type.toString() + " priority " + priority);
+	mobLimit = 9; // Default
+    }
+
+    public void addReqBlocks(Material blockMaterial, int blockType, long blockQty) {
+	//plugin.getLogger().info("DEBUG: adding required block " + blockMaterial.toString() + " type " + blockType + " x " + blockQty);
+	this.blockMaterial.add(blockMaterial);
+	this.blockType.add(blockType);
+	this.blockQty.add(blockQty);
+	this.blockQtyCheck.add(blockQty);
+    }
+
+
+    // Check required blocks
+    public boolean checkRecipe(Location pos1, Location pos2) {
+	//plugin.getLogger().info("DEBUG: Checking for biome " + type.toString());
+	// Calculate floor area
+	long area = (pos2.getBlockX()-pos1.getBlockX()-1) * (pos2.getBlockZ()-pos1.getBlockZ()-1);
+	//plugin.getLogger().info("DEBUG: area =" + area);
+	//plugin.getLogger().info("Pos1 = " + pos1.toString());
+	//plugin.getLogger().info("Pos1 = " + pos2.toString());
+	long water = 0;
+	long lava = 0;
+	long ice = 0;
+	boolean pass = true;
+	// Look through the greenhouse and count what is in there
+	for (int y = pos1.getBlockY(); y<pos2.getBlockY();y++) {
+	    for (int x = pos1.getBlockX()+1;x<pos2.getBlockX();x++) {
+		for (int z = pos1.getBlockZ()+1;z<pos2.getBlockZ();z++) {
+		    Block b = pos1.getWorld().getBlockAt(x, y, z);
+		    if (!b.getType().equals(Material.AIR))
+			//plugin.getLogger().info("Checking block " + b.getType() + ":" + b.getData() + "@" + x + " " + y + " " + z);
+		    // Log water, lava and ice blocks
+		    switch (b.getType()) {
+		    case WATER:
+		    case STATIONARY_WATER:
+			water++;
+			break;
+		    case LAVA:
+		    case STATIONARY_LAVA:
+			lava++;
+			break;
+		    case ICE:
+		    case PACKED_ICE:
+			ice++;
+			break;
+		    default:
+			break;
+		    }
+		    int index = indexOfReqBlocks(b.getType(),b.getData());
+		    if (index>=0) {
+			//plugin.getLogger().info("DEBUG: Found block " + b.getType().toString() + " type " + b.getData() + " at index " + index);
+			// Decrement the qty
+			this.blockQtyCheck.set(index, this.blockQtyCheck.get(index)-1L);
+		    }
+		}
+	    }
+	}
+	// Calculate % water, ice and lava ratios
+	double waterRatio = (double)water/(double)area * 100;
+	double lavaRatio = (double)lava/(double)area * 100;
+	double iceRatio = (double)ice/(double)area * 100;
+	//plugin.getLogger().info("DEBUG: water req=" + waterCoverage + " lava req=" + lavaCoverage + " ice req="+iceCoverage);
+	//plugin.getLogger().info("DEBUG: waterRatio=" + waterRatio + " lavaRatio=" + lavaRatio + " iceRatio="+iceRatio);
+
+
+	// Check required ratios - a zero means none of these are allowed, e.g.desert has no water
+	if ((waterCoverage == 0 && waterRatio > 0) ||
+		(lavaCoverage == 0 && lavaRatio > 0) ||
+		(iceCoverage == 0 && iceRatio > 0)) {
+	    //plugin.getLogger().info("DEBUG: water, lava or ice must be zero but are not");
+	    pass=false;
+	}
+	if ((waterCoverage > 0 && waterRatio < waterCoverage) ||
+		(lavaCoverage > 0 && lavaRatio < lavaCoverage) ||
+		(iceCoverage > 0 && iceRatio < iceCoverage)) {
+	    //plugin.getLogger().info("DEBUG: not enough water, lava or ice for this biome");
+	    pass=false;
+	}
+	// Every value in the blockQtyCheck list should be zero or negative
+	// Now check if the minimum block qtys are met and reset the check qtys
+	//plugin.getLogger().info("DEBUG: checking blocks - total size is " + blockQty.size());
+	for (int i = 0; i< this.blockQty.size(); i++) {
+	    if (this.blockQtyCheck.get(i) > 0L) {
+		//plugin.getLogger().info("DEBUG: missing: " + blockQtyCheck.get(i) + " x " + blockMaterial.get(i) + ":" + blockType.get(i));
+		pass = false;
+	    }
+
+	    // reset the list
+	    this.blockQtyCheck.set(i, this.blockQty.get(i));
+	}
+	if (pass)
+	    plugin.getLogger().info("DEBUG: Could be biome " + type.toString());
+	else
+	    plugin.getLogger().info("DEBUG: Cannot be biome " + type.toString());
+	return pass;
+    }
+
+    private int indexOfReqBlocks(Material blockMaterial, int blockType) {
+	// TODO: LEAVES are numbered differently to the docs - 5 6 7, odd...
+	//plugin.getLogger().info("DEBUG: looking for block " + blockMaterial.toString() + " type " + blockType);
+	if (!this.blockMaterial.contains(blockMaterial))
+	    return -1;
+	int index = 0;
+	for (Material m: this.blockMaterial) {
+	    if (m.equals(blockMaterial)) {
+		// A blocktype of -1 means any block of this material is okay
+		if (this.blockType.get(index) == -1 || this.blockType.get(index).equals(blockType)) {
+		    return index;
+		}
+	    }
+	    index++;
+	} 
+	return -1; // This should never be needed...
+    }
+
+    /**
+     * @return a list of blocks that are required for this recipe
+     */
+    public List<String> getRecipeBlocks() {
+	List<String> blocks = new ArrayList<String>();
+	int index = 0;
+	for (Material m: blockMaterial) {    
+	    blocks.add(Util.getName(new ItemStack(m,1,blockType.get(index).shortValue())) + " x " + blockQty.get(index));
+	    index++;
+	}
+	return blocks;
+    }
+
+    public void addPlants(Material plantMaterial, int plantType, int plantProbability, Material plantGrowOn) {
+	plugin.getLogger().info("Plant added to " + type.toString() + " " + plantMaterial + " probability " + plantProbability);
+	this.plantMaterial.add(plantMaterial);
+	this.plantType.add(plantType);
+	this.plantProbability.add(plantProbability);
+	this.plantGrownOn.add(plantGrowOn); 
+    }
+
+    public void addMobs(EntityType mobType, int mobProbability, Material mobSpawnOn) {
+	plugin.getLogger().info("Mob added: " + mobType.toString() + " probability " + mobProbability + " spawn on " + mobSpawnOn.toString());
+	this.mobType.add(mobType);
+	double probability = ((double)mobProbability/100);
+	//this.mobProbability.add(((double)mobProbability/100));
+	this.mobSpawnOn.add(mobSpawnOn); 
+	// Add up all the probabilities in the list so far
+	double totalProb = 0D;
+	for (double prob : this.mobProbability) {
+	    totalProb += prob;
+	}
+	if ((1D - totalProb) >= probability) {
+	    this.mobProbability.add(probability);
+	} else {
+	    plugin.getLogger().warning("Mob chances add up to >100% in " + type.toString() + " biome recipe!");
+	}
+    }
+
+    public EntityType getMob() {
+	// Return a random mob that can spawn in the biome or null
+	double rand = Math.random();
+	//plugin.getLogger().info("DEBUG: random number is " + rand);
+	double runningTotal = 0D;
+	int index = 0;
+	for (double prob : mobProbability) {
+	    runningTotal += prob;
+	    //plugin.getLogger().info("DEBUG: running total is " + runningTotal);
+	    if (rand < runningTotal) {
+		//plugin.getLogger().info("DEBUG: hit! " + mobType.get(index).toString());
+		return mobType.get(index);
+	    }
+	    index++;
+	}
+	return null;
+    }
+
+    /**
+     * @param mobType
+     * @return the Material on which this type of mob must spawn on in this biome
+     */
+    public Material getMobSpawnOn(EntityType mobType) {
+	int index = this.mobType.indexOf(mobType);
+	if (index == -1)
+	    return null;
+	return this.mobSpawnOn.get(index);
+
+    }
+
+
+    /**
+     * @return the mobLimit
+     */
+    public int getMobLimit() {
+	return mobLimit;
+    }
+
+    /**
+     * @param mobLimit the mobLimit to set
+     */
+    public void setMobLimit(int mobLimit) {
+	this.mobLimit = mobLimit;
+    }
+
+    public void addConvBlocks(Material oldMaterial, int oldType, Material newMaterial, int newType, int convChance,
+	    Material localMaterial, int localType) {
+	this.oldMaterial.add(oldMaterial);
+	this.oldType.add(oldType);
+	this.newMaterial.add(newMaterial);
+	this.newType.add(newType);
+	this.localMaterial.add(localMaterial);
+	this.localType.add(localType);
+	this.convChance.add(convChance); 
+    }
+
+    /**
+     * @return the type
+     */
+    public Biome getType() {
+	return type;
+    }
+
+    /**
+     * @return the priority
+     */
+    public int getPriority() {
+	return priority;
+    }
+
+    /**
+     * @return the waterCoverage
+     */
+    public int getWaterCoverage() {
+	return waterCoverage;
+    }
+
+    /**
+     * @return the iceCoverage
+     */
+    public int getIceCoverage() {
+	return iceCoverage;
+    }
+
+    /**
+     * @return the lavaCoverage
+     */
+    public int getLavaCoverage() {
+	return lavaCoverage;
+    }
+
+    /**
+     * @param type the type to set
+     */
+    public void setType(Biome type) {
+	this.type = type;
+    }
+
+    /**
+     * @param priority the priority to set
+     */
+    public void setPriority(int priority) {
+	this.priority = priority;
+    }
+
+    /**
+     * @param waterCoverage the waterCoverage to set
+     */
+    public void setWatercoverage(int watercoverage) {
+	this.waterCoverage = watercoverage;
+    }
+
+    /**
+     * @param icecoverage the icecoverage to set
+     */
+    public void setIcecoverage(int icecoverage) {
+	this.iceCoverage = icecoverage;
+    }
+
+    /**
+     * @param lavaCoverage the lavaCoverage to set
+     */
+    public void setLavacoverage(int lavacoverage) {
+	this.lavaCoverage = lavacoverage;
+    }
+
+    public boolean growPlant(Block bl) {	
+	// Plants a plant on block bl if it make sense
+	// Loop through the possible plants
+	boolean grewPlant = false;
+	int index = 0;
+	//plugin.getLogger().info("DEBUG: growPlant # of plants in biome = " + plantProbability.size());
+	for (int prob : plantProbability) {
+	    //plugin.getLogger().info("DEBUG: probability = " + ((double)prob/100));
+	    if (Math.random() < ((double)prob/100)) {
+		grewPlant = true;
+		//plugin.getLogger().info("DEBUG: trying to grow plant. Index is " + index);
+		// Okay worth trying to plant something
+		Material belowBl = bl.getRelative(BlockFace.DOWN).getType();
+		//plugin.getLogger().info("DEBUG: material found = " + belowBl.toString());
+		//plugin.getLogger().info("DEBUG: req material = " + plantGrownOn.get(index).toString());
+		if (belowBl.equals(plantGrownOn.get(index))) {
+		    Block aboveBl = bl.getRelative(BlockFace.UP);
+		    bl.setType(plantMaterial.get(index));
+		    bl.setData(plantType.get(index).byteValue());
+
+		    //TODO Double plant heads popping. FIX!!!
+
+		    if (plantMaterial.get(index).equals(Material.DOUBLE_PLANT)) {
+			// put the top on
+			aboveBl.setType(Material.DOUBLE_PLANT);
+			aboveBl.setData((byte)8);
+		    }
+		}
+	    }
+	    index++;
+	}
+	return grewPlant;
+    }
+
+}

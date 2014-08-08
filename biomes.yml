@@ -1,0 +1,119 @@
+# This file lists the recipes for the greenhouse biomes
+biomes:
+  BEACH:
+    priority: 0
+    contents: SAND:1
+    watercoverage: 50
+    icecoverage: 0
+    plants:
+      DEAD_BUSH: 5:SAND
+    mobs:
+      SQUID: 10:STATIONARY_WATER
+    moblimit: 9
+  COLD_BEACH:
+    priority: 21
+    contents: SAND:1
+    watercoverage: 50
+    icecoverage: 10
+  COLD_TAIGA:
+    priority: 20
+    contents: LOG:3 LEAVES:3 GRASS:3
+    icecoverage: 10
+    plants:
+      LONG_GRASS: 10:GRASS:1
+    mobs:
+      WOLF: 10:SNOW
+    moblimit: 9
+  DESERT:
+    priority: 3
+    contents: SAND:1
+    watercoverage: 0
+    icecoverage: 0
+    plants:
+      DEAD_BUSH: 10:SAND
+      CACTUS: 10:SAND
+    conversions:
+      DIRT: 10:SAND
+  FLOWER_FOREST:
+    priority: 4
+    contents: LOG:3 LEAVES:4 GRASS:4
+    icecoverage: 0
+    plants:
+      RED_ROSE: 2:GRASS:8
+      DOUBLE_PLANT: 4:GRASS:5
+      LONG_GRASS: 20:GRASS:1
+  HELL:
+    priority: 5
+    contents: NETHERRACK:1
+    lavacoverage: 21
+    icecoverage: 0
+    watercoverage: 0
+  JUNGLE:
+    priority: 6
+    contents: GRASS:4 LOG:3:3 LEAVES:7:4
+    icecoverage: 0
+    plants:
+      YELLOW_FLOWER: 20:GRASS
+      MELON_BLOCK: 10:GRASS
+      RED_ROSE: 20:GRASS
+      DOUBLE_PLANT: 20:GRASS:3
+      LONG_GRASS: 20:GRASS:2
+  MUSHROOM_ISLAND:
+    priority: 7
+    contents: MYCEL:2
+    icecoverage: 0
+    watercoverage: 30
+    plants:
+      BROWN_MUSHROOM: 10:MYCEL
+      RED_MUSHROOM: 10:MYCEL
+    mobs:
+      MUSHROOM_COW: 10:MYCEL
+    moblimit: 9
+  OCEAN:
+    priority: 8
+    watercoverage: 95
+    icecoverage: 0
+    mobs:
+      SQUID: 10:STATIONARY_WATER
+    moblimit: 9
+  PLAINS:
+    priority: 1
+    contents: GRASS:3
+    icecoverage: 0
+    plants:
+      LONG_GRASS: 10:GRASS:1
+    mobs:
+      HORSE: 10:GRASS
+    moblimit: 9
+  RIVER:
+    priority: 10
+    contents: SAND:1
+    watercoverage: 50
+    icecoverage: 0
+    conversions:
+      DIRT: CLAY:10:STATIONARY_WATER
+  SAVANNA:
+    priority: 11
+    icecoverage: 0
+    contents: LOG_2:3 LEAVES_2:4 GRASS:4
+    plants:
+      DOUBLE_PLANT: 10:GRASS:2
+  SUNFLOWER_PLAINS:
+    priority: 2
+    contents: GRASS:4
+    icecoverage: 0
+    plants:
+      DOUBLE_PLANT: 20:GRASS:0
+      LONG_GRASS: 20:GRASS:1
+  SWAMPLAND:
+    priority: 13
+    contents: GRASS:4 LOG:3 LEAVES:4
+    watercoverage: 50
+    icecoverage: 0
+    plants:
+      RED_MUSHROOM: 20:GRASS
+      BROWN_MUSHROOM: 20:GRASS
+      WATER_LILY: 5:STATIONARY_WATER
+    mobs:
+      SLIME: 5:STATIONARY_WATER
+    moblimit: 3

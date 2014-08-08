@@ -24,8 +24,10 @@ import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Hopper;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.PluginManager;
@@ -64,6 +66,8 @@ public class Greenhouses extends JavaPlugin {
     private Ecosystem eco = new Ecosystem(this);
     // Eco check task object
     private BukkitTask ecoCheck = null;
+    // Biomes
+    private List<BiomeRecipe> biomeRecipes = new ArrayList<BiomeRecipe>();
     /**
      * @return plugin object instance
      */
@@ -128,7 +132,8 @@ public class Greenhouses extends JavaPlugin {
      * @param file
      * @return
      */
-    public static YamlConfiguration loadYamlFile(String file) {
+    @SuppressWarnings("deprecation")
+    public YamlConfiguration loadYamlFile(String file) {
 	File dataFolder = plugin.getDataFolder();
 	File yamlFile = new File(dataFolder, file);
 
@@ -145,6 +150,13 @@ public class Greenhouses extends JavaPlugin {
 	    config = new YamlConfiguration();
 	    getPlugin().getLogger().info("No " + file + " found. Creating it...");
 	    try {
+		// Look for defaults in the jar
+		InputStream definJarStream = this.getResource(file);
+		if (definJarStream != null) {
+		    config = YamlConfiguration.loadConfiguration(definJarStream);
+		    //config.setDefaults(defLocale);
+		}
+
 		config.save(yamlFile);
 	    } catch (Exception e) {
 		getPlugin().getLogger().severe("Could not create the " + file + " file!");
@@ -152,6 +164,115 @@ public class Greenhouses extends JavaPlugin {
 	}
 	return config;
     }
+
+    // TODO: Load in the Biome recipes
+    public void loadBiomeRecipes() {
+	biomeRecipes.clear();
+	YamlConfiguration biomes = loadYamlFile("biomes.yml");
+	ConfigurationSection biomeSection = biomes.getConfigurationSection("biomes");
+	if (biomeSection == null) {
+	    getLogger().severe("biomes.yml file is missing, empty or corrupted. Delete and reload plugin again!");
+	    return;
+	}
+	try {
+	    // Loop through all the entries
+	    for (String type: biomeSection.getValues(false).keySet()) {
+		getLogger().info("Loading biome recipe for "+type);
+		Biome thisBiome = Biome.valueOf(type);
+		if (thisBiome != null) {
+		    int priority = biomeSection.getInt(type + ".priority", 0);
+		    BiomeRecipe b = new BiomeRecipe(this, thisBiome,priority);
+		    // A value of zero on these means that there must be NO coverage, e.g., desert. If the value is not present, then the default is -1
+		    b.setWatercoverage(biomeSection.getInt(type + ".watercoverage",-1));
+		    b.setLavacoverage(biomeSection.getInt(type + ".lavacoverage",-1));
+		    b.setIcecoverage(biomeSection.getInt(type + ".icecoverage",-1));
+		    b.setMobLimit(biomeSection.getInt(type + ".moblimit", 9));
+		    // Set the needed blocks
+		    String contents = biomeSection.getString(type + ".contents", "");
+		    getLogger().info("DEBUG: contents = '" + contents + "'");
+		    if (!contents.isEmpty()) {
+			String[] split = contents.split(" ");
+			// Format is MATERIAL: Qty or MATERIAL: Type:Quantity
+			for (String s : split) {
+			    // Split it again
+			    String[] subSplit = s.split(":");
+			    if (subSplit.length > 1) {
+				Material blockMaterial = Material.valueOf(subSplit[0]);
+				// TODO: Need to parse these inputs better. INTS and Strings
+
+				int blockType = 0;
+				int blockQty = 0;
+				if (subSplit.length == 2) {
+				    blockQty = Integer.valueOf(subSplit[1]);
+				    blockType = -1; // anything okay
+				} else if (split.length == 3) {
+				    blockType = Integer.valueOf(subSplit[1]);
+				    blockQty = Integer.valueOf(subSplit[2]);
+				}
+				b.addReqBlocks(blockMaterial, blockType, blockQty);
+			    } else {
+				getLogger().warning("Block material " + s + " has no associated qty in biomes.yml " + type);
+			    }
+			}
+		    }
+		    biomeRecipes.add(b);
+		    // TODO: Add loading of other items from the file
+		    // Load plants
+		    // # Plant Material: Probability in %:Block Material on what they grow:Plant Type(optional):Block Type(Optional) 
+		    ConfigurationSection temp = biomes.getConfigurationSection("biomes." + type + ".plants");
+		    if (temp != null) {
+			HashMap<String,Object> plants = (HashMap<String,Object>)temp.getValues(false);
+			if (plants != null) {
+			    for (String s: plants.keySet()) {
+				Material plantMaterial = Material.valueOf(s);
+				String[] split = ((String)plants.get(s)).split(":");
+				int plantProbability = Integer.valueOf(split[0]);
+				Material plantGrowOn = Material.valueOf(split[1]);
+				int plantType = 0;
+				if (split.length == 3) {
+				    plantType = Integer.valueOf(split[2]);
+				}
+				b.addPlants(plantMaterial, plantType, plantProbability, plantGrowOn);
+			    }
+			}
+		    }
+		    // Load mobs!
+		    // Mob EntityType: Probability:Spawn on Material
+		    temp = biomes.getConfigurationSection("biomes." + type + ".mobs");
+		    if (temp != null) {
+			HashMap<String,Object> mobs = (HashMap<String,Object>)temp.getValues(false);
+			if (mobs != null) {
+			    for (String s: mobs.keySet()) {
+				EntityType mobType = EntityType.valueOf(s);
+				String[] split = ((String)mobs.get(s)).split(":");
+				int mobProbability = Integer.valueOf(split[0]);
+				Material mobSpawnOn = Material.valueOf(split[1]);
+				// TODO: Currently not used
+				int mobSpawnOnType = 0;
+				if (split.length == 3) {
+				    mobSpawnOnType = Integer.valueOf(split[2]);
+				}
+				b.addMobs(mobType, mobProbability, mobSpawnOn);
+			    }
+			}
+		    }
+		    
+		}
+	    }
+	} catch (Exception e) {
+	    e.printStackTrace();
+	}
+	getLogger().info("Loaded " + biomeRecipes.size() + " biome recipes.");
+    }
+
+
+    /**
+     * @return the biomeRecipes
+     */
+    public List<BiomeRecipe> getBiomeRecipes() {
+	return biomeRecipes;
+    }
+
 
     /**
      * Loads the various settings from the config.yml file into the plugin
@@ -205,8 +326,6 @@ public class Greenhouses extends JavaPlugin {
 	Settings.snowSpeed = getConfig().getLong("greenhouses.snowspeed", 30L);
 	Settings.iceInfluence = getConfig().getInt("greenhouses.iceinfluence", 125);
 	Settings.ecoTick = getConfig().getInt("greenhouses.ecotick", 30);
-	Settings.flowerChance = getConfig().getDouble("greenhouses.flowerchance", 1D);
-	Settings.mobSpawnChance = getConfig().getDouble("greenhouses.mobspawnchance", 0.1D);
 
 	//getLogger().info("Debug: Snowchance " + Settings.snowChanceGlobal);
 	//getLogger().info("Debug: Snowdensity " + Settings.snowDensity);
@@ -264,6 +383,7 @@ public class Greenhouses extends JavaPlugin {
 	    getLogger().severe("Could not set up economy!");
 	}
 	loadPluginConfig();
+	loadBiomeRecipes();
 	// Set and make the player's directory if it does not exist and then load players into memory
 	playersFolder = new File(getDataFolder() + File.separator + "players");
 	if (!playersFolder.exists()) {
@@ -323,20 +443,17 @@ public class Greenhouses extends JavaPlugin {
 	    ecoCheck.cancel();
 	// Kick off flower growingetc.
 	long ecoTick = Settings.ecoTick * 60 * 20; // In minutes
-	
+
 	if (ecoTick > 0) {
 	    ecoCheck = getServer().getScheduler().runTaskTimer(plugin, new Runnable() {
 		@Override
 		public void run() {
 		    getLogger().info("Kicking off flower growing and eco check scheduler every " + Settings.ecoTick + " minutes");
-		    getLogger().info("Flower chance is " + Settings.flowerChance);
-		    getLogger().info("Mob spawn chance is " + Settings.mobSpawnChance);
 		    for (Greenhouse g : getGreenhouses()) {
-			getLogger().info("DEBUG: Servicing greenhouse biome : " + g.getBiome().toString());
-			checkEco();
+			//getLogger().info("DEBUG: Servicing greenhouse biome : " + g.getBiome().toString());
+			//checkEco();
 			g.growFlowers();
-			if (Math.random()<Settings.mobSpawnChance)
-			   g.populateGreenhouse();
+			g.populateGreenhouse();
 		    }
 		}
 	    }, 0L, ecoTick);
@@ -344,7 +461,7 @@ public class Greenhouses extends JavaPlugin {
 	} else {
 	    getLogger().info("Flower growth disabled.");
 	}
-	
+
     }
 
 
@@ -528,7 +645,7 @@ public class Greenhouses extends JavaPlugin {
 	if (Settings.useProtection)
 	    manager.registerEvents(new GreenhouseGuard(this), this);
 	// Listen to greenhouse change events
-	manager.registerEvents(new GreenhouseCheck(this), this);
+	manager.registerEvents(new GreenhouseEvents(this), this);
 	// Events for when a player joins or leaves the server
 	manager.registerEvents(new JoinLeaveEvents(this, players), this);
 	// Weather event
@@ -576,6 +693,9 @@ public class Greenhouses extends JavaPlugin {
 	return locale;
     }
 
+
+
+    /*
     public void saveLocale() {
 	if (locale == null || localeFile == null) {
 	    return;
@@ -586,7 +706,7 @@ public class Greenhouses extends JavaPlugin {
 	    getLogger().severe("Could not save config to " + localeFile);
 	}
     }
-
+     */
     /**
      * Sets a message for the player to receive next time they login
      * @param player
@@ -980,22 +1100,26 @@ public class Greenhouses extends JavaPlugin {
     public void checkEco() {
 	// Run through each greenhouse
 	plugin.getLogger().info("DEBUG: started eco check");
-	// Check all the greenhouses to see if they have the minimum number of key blocks		
+	// Check all the greenhouses to see if they have the minimum number of key blocks
+	List<Greenhouse> onesToRemove = new ArrayList<Greenhouse>();
 	for (Greenhouse g : plugin.getGreenhouses()) {
 	    plugin.getLogger().info("DEBUG: Testing greenhouse owned by " + g.getOwner().toString());
 	    if (!g.checkEco()) {
 		// The greenhouse failed an eco check - remove it
-		// Check if player is online
-		Player owner = plugin.getServer().getPlayer(g.getOwner());
-		if (owner == null)  {
-		    plugin.setMessage(g.getOwner(), "Your greenhouse at " + Greenhouses.getStringLocation(g.getPos1()) + " lost its eco system and was removed.");
-		} else {
-		    owner.sendMessage(ChatColor.RED + "Your greenhouse at " + Greenhouses.getStringLocation(g.getPos1()) + " lost its eco system and was removed.");
-		}
-		plugin.removeGreenhouse(g);
-		plugin.getLogger().info("Greenhouse at " + Greenhouses.getStringLocation(g.getPos1()) + " lost its eco system and was removed.");
-		
+		onesToRemove.add(g);
 	    }
+	}
+	for (Greenhouse gg : onesToRemove) {
+	    // Check if player is online
+	    Player owner = plugin.getServer().getPlayer(gg.getOwner());
+	    if (owner == null)  {
+		plugin.setMessage(gg.getOwner(), "Your greenhouse at " + Greenhouses.getStringLocation(gg.getPos1()) + " lost its eco system and was removed.");
+	    } else {
+		owner.sendMessage(ChatColor.RED + "Your greenhouse at " + Greenhouses.getStringLocation(gg.getPos1()) + " lost its eco system and was removed.");
+	    }
+	    plugin.removeGreenhouse(gg);
+	    plugin.getLogger().info("Greenhouse at " + Greenhouses.getStringLocation(gg.getPos1()) + " lost its eco system and was removed.");
+
 	}
     }
 
@@ -1028,4 +1152,7 @@ public class Greenhouses extends JavaPlugin {
 	return fin;
     }
 
+    
+
+    
 }

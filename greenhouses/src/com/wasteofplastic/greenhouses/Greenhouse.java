@@ -48,7 +48,8 @@ public class Greenhouse {
     private int heightY;
     private int height;
     private int groundY;
-    // Biome key block types
+    private BiomeRecipe biomeRecipe;
+    // BiomeRecipe key block types
     // TODO: Improve with a biome fingerprint system
     private List<Material> keyTypes = Arrays.asList(new Material[]{Material.LOG, Material.LOG_2, Material.LEAVES,
 	    Material.LEAVES_2, Material.GRASS, Material.WATER, Material.STATIONARY_WATER, Material.STATIONARY_LAVA,
@@ -117,10 +118,15 @@ public class Greenhouse {
 
 
     /**
-     * @param greenhouseBiome the greenhouseBiome to set
+     * @param winner.getType() the greenhouseBiome to set
      */
-    public void setBiome(Biome greenhouseBiome) {
-	this.greenhouseBiome = greenhouseBiome;
+    public void setBiome(BiomeRecipe winner) {
+	this.greenhouseBiome = winner.getType();
+	this.biomeRecipe = winner;
+    }
+
+    public void setBiome(Biome greenhouseBiome2) {
+	this.greenhouseBiome = greenhouseBiome2;	
     }
 
 
@@ -865,38 +871,78 @@ public class Greenhouse {
      * Spawns friendly mobs according to the type of biome
      */
     public void populateGreenhouse() {
-	//plugin.getLogger().info("DEBUG: populating mobs in greenhouse");
+	plugin.getLogger().info("DEBUG: populating mobs in greenhouse");
 	// Make sure no players are around
 	if (plugin.players.getNumberInGreenhouse(this) > 0)
 	    return;
-	/*
-	for (Player p : plugin.getServer().getOnlinePlayers()) {
-	    // Check inside
-	    if (insideGreenhouse(p.getLocation()))
-		return;
-	}*/
-
+	// Quick check - see if any animal is going to spawn
+	EntityType mob = biomeRecipe.getMob();
+	if (mob == null) {
+	    return;
+	}
+	plugin.getLogger().info("Mob ready to spawn!");
 	// Spawn a temporary snowball in center of greenhouse
 	Vector p1 = pos1.clone();
 	Entity snowball = world.spawnEntity(p1.midpoint(pos2).toLocation(world), EntityType.SNOWBALL);
 	if (snowball != null) {
-	    Double x = Math.abs(pos1.getX()-pos2.getX())/2D + 24D;
-	    Double y= Math.abs(pos1.getY()-pos2.getY())/2D + 24D;
-	    Double z = Math.abs(pos1.getZ()-pos2.getZ())/2D + 24D;
+	    Double x = (Math.abs(pos2.getX()-pos1.getX())-1)/2D;
+	    Double y= (Math.abs(pos2.getY()-pos1.getY())-1)/2D;
+	    Double z = (Math.abs(pos2.getZ()-pos1.getZ())-1)/2D;
 	    //Double distance = (pos1.distance(pos2)/2)+24D
-	    for (Entity e : snowball.getNearbyEntities(x, y, z)) {
+	    // Limit spawning
+	    plugin.getLogger().info("Mob limit is " + biomeRecipe.getMobLimit());
+	    // Find out how many of this type of mob is around
+	    
+	    int mobsInArea = snowball.getNearbyEntities(x, y, z).size();
+	    double internalArea = (x*4*z);
+	    plugin.getLogger().info("Mobs in area = " + mobsInArea);
+	    plugin.getLogger().info("Area of greenhouse = " + internalArea);
+	    if (internalArea - (mobsInArea * biomeRecipe.getMobLimit()) <= 0) {
+		plugin.getLogger().info("Too many mobs already in this greenhouse");
+		snowball.remove();
+		return;
+	    }
+	    List<Entity> localEntities = snowball.getNearbyEntities(x+24D, y+24D, z+24D);
+	    snowball.remove();
+	    // Check for players
+	    for (Entity e : localEntities) {	
 		if (e instanceof Player) {
 		    //plugin.getLogger().info("DEBUG: players around");
-		    snowball.remove();
 		    return;
 		}
 	    }
-	    snowball.remove();
+
 	} else {
 	    plugin.getLogger().info("Could not spawn snowball!");
 	}
-	//plugin.getLogger().info("DEBUG: no players around");
+	plugin.getLogger().info("DEBUG: no players around");
 	// No players around
+	Material type = biomeRecipe.getMobSpawnOn(mob);
+	int minx = Math.min(pos1.getBlockX(), pos2.getBlockX());
+	int maxx = Math.max(pos1.getBlockX(), pos2.getBlockX());
+	int minz = Math.min(pos1.getBlockZ(), pos2.getBlockZ());
+	int maxz = Math.max(pos1.getBlockZ(), pos2.getBlockZ());
+	// Try 10 times
+	for (int i = 0; i<10; i++) {
+	    int x = Greenhouses.randInt(minx,maxx);
+	    int z = Greenhouses.randInt(minz,maxz);
+	    Block h = world.getHighestBlockAt(x, z);
+	    Block b = h.getRelative(BlockFace.DOWN);
+	    Block a = h.getRelative(BlockFace.UP);
+	    //plugin.getLogger().info("DEBUG: block found " + h.getType().toString());
+	    //plugin.getLogger().info("DEBUG: below found " + b.getType().toString());
+	    //plugin.getLogger().info("DEBUG: above found " + a.getType().toString());
+	    if ((b.getType().equals(type) && h.getType().equals(Material.AIR))
+		    || (h.getType().equals(type) && a.getType().equals(Material.AIR)) ) {
+		plugin.getLogger().info("DEBUG: Trying to spawn a "+mob.toString() + " on "+ type.toString() + " at " + h.getLocation());
+		if (world.spawnEntity(h.getLocation(), mob) != null)
+		    return;
+	    }
+	}
+
+
+
+	/*
 	switch (greenhouseBiome) {
 	case COLD_TAIGA:
 	    spawn(EntityType.WOLF, Material.SNOW);
@@ -977,7 +1023,7 @@ public class Greenhouse {
 
     }
 
-
+    /*
     private void spawn(EntityType creature, Material type) {
 	plugin.getLogger().info("DEBUG: spawn ");
 	// Find a suitable place to place the creature
@@ -1004,7 +1050,7 @@ public class Greenhouse {
 	}
 	//plugin.getLogger().info("DEBUG: no suitable spot found to spawn " +creature.toString() + " on "+ type.toString());
     }
-
+     */
     public void snow() {
 	// Lay down snow
 	int minx = Math.min(pos1.getBlockX(), pos2.getBlockX());
@@ -1018,7 +1064,6 @@ public class Greenhouse {
 		for (int y = b.getLocation().getBlockY(); y < heightY; y++) {
 		    Block airCheck = world.getBlockAt(x, y, z);
 		    if (airCheck.getType().equals(Material.AIR)) {
-			// TODO add particle effect
 			ParticleEffect.SNOWBALL_POOF.display(airCheck.getLocation(), 0F, 0F, 0F, 0.1F, 5);
 		    }
 		}
@@ -1067,7 +1112,7 @@ public class Greenhouse {
 			remBoneMeal.setDurability((short)15);
 			remBoneMeal.setAmount(1);
 			// Rewrite to use on bonemeal per flower
-			plugin.getLogger().info("DEBUG: Bonemeal found!");
+			//plugin.getLogger().info("DEBUG: Bonemeal found!");
 			// Now go and grow stuff with the set probability
 			int minx = Math.min(pos1.getBlockX(), pos2.getBlockX());
 			int maxx = Math.max(pos1.getBlockX(), pos2.getBlockX());
@@ -1076,167 +1121,23 @@ public class Greenhouse {
 			for (int x = minx+1; x < maxx; x++) {
 			    for (int z = minz+1; z < maxz;z++) {
 				Block bl = world.getHighestBlockAt(new Location(world,x,pos1.getBlockY(),z));
-				Material belowBl = bl.getRelative(BlockFace.DOWN).getType();
-				if (belowBl.equals(Material.GRASS)) {
-				    // Spray the bonemeal if it exists
-				    if (bonemeal> 0) {
-					for (int y = bl.getLocation().getBlockY(); y< heightY; y++) {
-					    Block airCheck = world.getBlockAt(x, y, z);
-					    if (airCheck.getType().equals(Material.AIR)) {
-						// TODO add particle effect
-						ParticleEffect.EXPLODE.display(airCheck.getLocation(), 0F, 0F, 0F, 0.1F, 5);
-					    }
+				//if (Math.random()<Settings.flowerChance) {
+				//plugin.getLogger().info("DEBUG: Block is " + bl.getType().toString());
+				if (biomeRecipe.growPlant(bl)) {
+				    bonemeal--;
+				    // Spray the bonemeal 
+				    for (int y = bl.getLocation().getBlockY(); y< heightY; y++) {
+					Block airCheck = world.getBlockAt(x, y, z);
+					if (airCheck.getType().equals(Material.AIR)) {
+					    ParticleEffect.EXPLODE.display(airCheck.getLocation(), 0F, 0F, 0F, 0.1F, 5);
 					}
 				    }
-				    // TODO: Add other effects here depending on hopper inventory
-
-				    Block aboveBl = bl.getRelative(BlockFace.UP);
-				    if (Math.random()<Settings.flowerChance) {
-					int dice = Greenhouses.randInt(0,5);
-					Material type = null;
-					int modifier = 0;
-					// Decide by biome
-					switch (greenhouseBiome) {
-					case BEACH:
-					    if (dice == 0)
-						type = Material.DEAD_BUSH;
-					    break;
-					case DESERT:
-					    if (dice < 3)
-						type = Material.DEAD_BUSH;
-					    else 
-						type = Material.CACTUS;
-					    break;
-					case COLD_TAIGA:
-					    // First choice - grass, small flowers or double flowers
-					    switch (dice) {
-					    case 1: 
-						type = Material.LONG_GRASS;
-						modifier = 1;
-					    default:// nothing, it's cold!
-					    }
-					    break;
-					case FLOWER_FOREST:
-					    // First choice - grass, small flowers or double flowers
-					    switch (dice) {
-					    case 1: // Small flowers
-						type = Material.RED_ROSE;
-						modifier = Greenhouses.randInt(0,8);
-						if (modifier == 1) { // Blue orchid 
-						    type = Material.YELLOW_FLOWER;
-						}
-						break;
-					    case 2: // Double plant
-						type = Material.DOUBLE_PLANT;
-						modifier = Greenhouses.randInt(1,5);
-						if (modifier == 3) { // Large fern 
-						    type = Material.LONG_GRASS;
-						    modifier = 3;
-						}   
-						break;
-					    default:// Grass
-						type = Material.LONG_GRASS;
-						modifier = 1;
-						break;
-					    }
-					    break;
-					case HELL:
-					    break;
-					case JUNGLE:
-					    switch (dice) {
-					    case 0:
-						type = Material.DOUBLE_PLANT;
-						modifier = 3; // large fern
-						break;
-					    case 1:
-						type = Material.MELON_BLOCK;
-						break;
-					    case 2:
-						type = Material.YELLOW_FLOWER;
-						break;
-					    case 3:
-						type = Material.RED_ROSE;
-					    default:
-						type = Material.LONG_GRASS;
-						modifier = 2; // fern
-					    }
-					    break;
-					case SAVANNA:
-					    type = Material.DOUBLE_PLANT;
-					    modifier = 2; // tall grass
-					    break;
-					case MUSHROOM_ISLAND:
-					    switch (dice) {
-					    case 0: // red mushroom
-						type = Material.RED_MUSHROOM;
-						break;
-					    case 1: // brown mushroom
-						type = Material.BROWN_MUSHROOM;
-						modifier = 2;
-						break;
-					    default: // Nothing
-					    }
-					    break;
-					case SUNFLOWER_PLAINS:
-					    switch (dice) {
-					    case 0: // Sunflower
-						type = Material.DOUBLE_PLANT;
-						modifier = 0;
-						break;
-					    case 1: // Double height grass
-						type = Material.DOUBLE_PLANT;
-						modifier = 2;
-						break;
-					    default: // Grass
-						type = Material.LONG_GRASS;
-						modifier = 1;
-					    }
-					    break;
-					case SWAMPLAND:
-					    switch (dice) {
-					    case 0:
-						type = Material.RED_MUSHROOM;
-						modifier = 3; // large fern
-						break;
-					    case 1:
-						type = Material.BROWN_MUSHROOM;
-						break;
-					    case 2:
-						type = Material.RED_ROSE;
-						modifier = 2; // Blue orchid
-					    default:
-						type = Material.LONG_GRASS;
-						modifier = 1; // fern
-					    }
-					    break;
-					default:
-					    break;
-
-					}
-					if (type != null) {
-					    //getLogger().info("DEBUG: Type = " + type.toString());
-					    //getLogger().info("DEBUG: modifier is " + modifier);
-					    bl.setType(type);
-					    bl.setData((byte)modifier);
-					    if (type.equals(Material.DOUBLE_PLANT)) {
-						// put the top on
-						aboveBl.setType(Material.DOUBLE_PLANT);
-						aboveBl.setData((byte)8);
-					    }
-					    // Only flowers consume bonemeal, not grass
-					    if (!(type.equals(Material.LONG_GRASS) && modifier==1)) {
-						bonemeal--;
-						// Remove the bonemeal from the hopper
-						h.getInventory().removeItem(remBoneMeal);
-					    }
-					}
-				    }
+				    // Remove the bonemeal from the hopper
+				    h.getInventory().removeItem(remBoneMeal);
 
 				}
-
 			    }
 			}
-
 		    }
 		}
 	    } else {
@@ -1246,5 +1147,7 @@ public class Greenhouse {
 	    }
 	}
     }
+
+
 
 }

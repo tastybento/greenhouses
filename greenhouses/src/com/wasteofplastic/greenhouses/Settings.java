@@ -33,9 +33,7 @@ public class Settings {
     public static double snowDensity;
     public static long snowSpeed;
     public static int ecoTick;
-    public static double flowerChance;
     public static int iceInfluence;
-    public static double mobSpawnChance;
    
     
 }

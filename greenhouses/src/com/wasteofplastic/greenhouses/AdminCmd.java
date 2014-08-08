@@ -48,6 +48,7 @@ public class AdminCmd implements CommandExecutor {
 	    if (split[0].equalsIgnoreCase("reload")) {
 		plugin.reloadConfig();
 		plugin.loadPluginConfig();
+		plugin.loadBiomeRecipes();
 		plugin.ecoTick();
 		sender.sendMessage(ChatColor.YELLOW + Locale.reloadconfigReloaded);
 		return true;

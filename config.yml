@@ -22,10 +22,6 @@ greenhouses:
    # How often should greenhouse biomes be checked, mobs potentially spawned and
    # Flowers potentially grow
    ecotick: 5
-   # Chance of double height flowers growing
-   flowerchance: 0.1
-   # Friendly mob spawn chance every ecotick
-   mobspawnchance: 0.1
 
    ### Default settings for greenhouse protection 
 

@@ -53,7 +53,7 @@ public class Players {
      * @param uuid
      */
     public void load(UUID uuid) {
-	playerInfo = Greenhouses.loadYamlFile("players/" + uuid.toString() + ".yml");
+	playerInfo = plugin.loadYamlFile("players/" + uuid.toString() + ".yml");
 	// Load in from YAML file
 	this.playerName = playerInfo.getString("playerName", "");
 	if (playerName.isEmpty()) {
@@ -79,8 +79,8 @@ public class Players {
 		    // Load all the values
 		    final Location pos1 = getLocationString(playerInfo.getString("greenhouses." + key + ".pos-one"));
 		    final Location pos2 = getLocationString(playerInfo.getString("greenhouses." + key + ".pos-two"));
-		    plugin.getLogger().info("DEBUG: File pos1: " + pos1.toString());
-		    plugin.getLogger().info("DEBUG: File pos1: " + pos2.toString());
+		    //plugin.getLogger().info("DEBUG: File pos1: " + pos1.toString());
+		    //plugin.getLogger().info("DEBUG: File pos1: " + pos2.toString());
 		    // Check if this greenhouse already exists
 		    if (plugin.checkGreenhouseIntersection(pos1, pos2)) {
 			plugin.getLogger().info("DEBUG: Greenhouse already exists or overlaps - ignoring");
@@ -88,8 +88,8 @@ public class Players {
 		    } else {
 			Greenhouse g = new Greenhouse(plugin, pos1, pos2, uuid);
 			g.setId(UUID.fromString(playerInfo.getString("greenhouses." + key + ".id")));
-			plugin.getLogger().info("DEBUG: Greenhouse pos1: " + g.getPos1().toString());
-			plugin.getLogger().info("DEBUG: Greenhouse pos2: " + g.getPos2().toString());
+			//plugin.getLogger().info("DEBUG: Greenhouse pos1: " + g.getPos1().toString());
+			//plugin.getLogger().info("DEBUG: Greenhouse pos2: " + g.getPos2().toString());
 			// Set biome
 			String oBiome = playerInfo.getString("greenhouses." + key + ".originalBiome", "SUNFLOWER_PLAINS");
 			Biome originalBiome = Biome.valueOf(oBiome);
@@ -102,7 +102,15 @@ public class Players {
 			if (greenhouseBiome == null) {
 			    greenhouseBiome = Biome.SUNFLOWER_PLAINS;
 			}
-			g.setBiome(greenhouseBiome);
+
+			// Check to see if this biome has a recipe
+			for (BiomeRecipe br : plugin.getBiomeRecipes()) {
+			    if (br.getType().equals(greenhouseBiome)) {
+				g.setBiome(br);
+				break;
+			    }
+			}
+			//g.setBiome(greenhouseBiome);			
 			Location hopperLoc = getLocationString(playerInfo.getString("greenhouses." + key + ".roofHopperLocation"));
 			if (hopperLoc != null) {
 			    g.setRoofHopperLocation(hopperLoc);

@@ -4,6 +4,7 @@ package com.wasteofplastic.greenhouses;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
@@ -18,6 +19,7 @@ import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.block.Biome;
+import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -77,7 +79,10 @@ public class GreenhouseCmd implements CommandExecutor {
 		player.sendMessage(ChatColor.GREEN + "Greenhouses " + plugin.getDescription().getVersion() + " help:");
 		player.sendMessage(ChatColor.YELLOW + "/greenhouse make: " + ChatColor.WHITE + "Tries to make a greenhouse");
 		player.sendMessage(ChatColor.YELLOW + "/greenhouse remove: " + ChatColor.WHITE + "Removes a greenhouse that you are standing in if you are the owner");
-		player.sendMessage(ChatColor.YELLOW + "/greenhouse info: " + ChatColor.WHITE + "Shows info on the greenhouse you are in or how to make one");
+		player.sendMessage(ChatColor.YELLOW + "/greenhouse info: " + ChatColor.WHITE + "Shows info on the greenhouse you and general info");
+		player.sendMessage(ChatColor.YELLOW + "/greenhouse list: " + ChatColor.WHITE + "Lists all the greenhouse biomes that can be made");
+		player.sendMessage(ChatColor.YELLOW + "/greenhouse recipe <number>: " + ChatColor.WHITE + "Tells you how to make greenhouse biome");
+
 		if (Settings.useProtection) {
 		    player.sendMessage(ChatColor.YELLOW + "/greenhouse trust <playername>: " + ChatColor.WHITE + "Gives player full access to your greenhouse");
 		    player.sendMessage(ChatColor.YELLOW + "/greenhouse untrust <playername>: " + ChatColor.WHITE + "Revokes trust to your greenhouse");
@@ -87,6 +92,15 @@ public class GreenhouseCmd implements CommandExecutor {
 		    player.sendMessage(ChatColor.YELLOW + "/greenhouse rent <price>: " + ChatColor.WHITE + "Puts the greenhouse you are in up for rent for a weekly rent");
 		    player.sendMessage(ChatColor.YELLOW + "/greenhouse sell <price>: " + ChatColor.WHITE + "Puts the greenhouse you are in up for sale");
 		    player.sendMessage(ChatColor.YELLOW + "/greenhouse cancel: " + ChatColor.WHITE + "Cancels a For Sale, For Rent or a Lease");
+		}
+		return true;
+	    } else if (split[0].equalsIgnoreCase("list") || split[0].equalsIgnoreCase("recipe")) {
+		// List all the biomes that can be made
+		player.sendMessage(ChatColor.GREEN + "[Greenhouse Biome Recipes]");
+		player.sendMessage("Use /greenhouse recipe <number> to see details on how to make each greenhouse");
+		int index = 1;
+		for (BiomeRecipe br : plugin.getBiomeRecipes()) {
+		    player.sendMessage(ChatColor.YELLOW + Integer.toString(index++) + ": " + Greenhouses.prettifyText(br.getType().toString()));
 		}
 		return true;
 	    } else if (split[0].equalsIgnoreCase("untrustall") && Settings.useProtection) {
@@ -386,7 +400,48 @@ public class GreenhouseCmd implements CommandExecutor {
 	    }
 	    break;
 	case 2:
-	    if (split[0].equalsIgnoreCase("untrust") && Settings.useProtection) {
+	    if (split[0].equalsIgnoreCase("recipe")) {
+		int recipeNumber = 0;
+		try {
+		    recipeNumber = Integer.valueOf(split[1]);
+		} catch (Exception e) {
+		    player.sendMessage(ChatColor.RED + "Use /greenhouse list to see a list of recipe numbers!");
+		    return true;
+		}
+		List<BiomeRecipe> recipeList = plugin.getBiomeRecipes();
+		if (recipeNumber <1 || recipeNumber > recipeList.size()) {
+		    player.sendMessage(ChatColor.RED + "Recipe number must be between 1 and " + recipeList.size());
+		    return true;
+		}
+		BiomeRecipe br = recipeList.get(recipeNumber-1);
+		player.sendMessage(ChatColor.GREEN + "[" + Greenhouses.prettifyText(br.getType().toString()) + " recipe]");
+		if (br.getWaterCoverage() == 0) {
+		    player.sendMessage("No water allowed.");
+		} else if (br.getWaterCoverage() > 0) {
+		    player.sendMessage("Water must be at least " + br.getWaterCoverage() + "% of floor area.");
+		}
+		if (br.getIceCoverage() == 0) {
+		    player.sendMessage("No ice allowed.");
+		} else if (br.getIceCoverage() > 0) {
+		    player.sendMessage("Ice blocks must be at least " + br.getIceCoverage() + "% of floor area.");
+		}
+		if (br.getLavaCoverage() == 0) {
+		    player.sendMessage("No lava allowed.");
+		} else if (br.getLavaCoverage() > 0) {
+		    player.sendMessage("Lava must be at least " + br.getLavaCoverage() + "% of floor area.");
+		}
+		List<String> reqBlocks = br.getRecipeBlocks();
+		if (reqBlocks.size() > 0) {
+		    player.sendMessage(ChatColor.YELLOW + "[Minimum blocks required]");
+		    int index = 1;
+		    for (String list : reqBlocks) {
+			player.sendMessage((index++) + ": " + list);
+		    }
+		} else {
+		    player.sendMessage(ChatColor.YELLOW + "No other blocks required.");
+		}
+		return true;
+	    } else if (split[0].equalsIgnoreCase("untrust") && Settings.useProtection) {
 		Greenhouse d = players.getInGreenhouse(playerUUID);
 		if (d == null) {
 		    player.sendMessage(ChatColor.RED + "Move to a greenhouse you own or rent first.");
@@ -581,9 +636,10 @@ public class GreenhouseCmd implements CommandExecutor {
      */
     private Greenhouse checkGreenhouse(final Player player) {
 	final Location location = player.getLocation().add(new Vector(0,1,0));
+//plugin.getLogger().info("DEBUG: Player location is " + location.getBlockX() + " " + location.getBlockY() + " " + location.getBlockZ());
 	final Biome originalBiome = location.getBlock().getBiome();
 	// Define the blocks
-	final List<Material> roofBlocks = Arrays.asList(new Material[]{Material.GLASS, Material.THIN_GLASS, Material.GLOWSTONE,Material.STAINED_GLASS, Material.HOPPER});
+	final List<Material> roofBlocks = Arrays.asList(new Material[]{Material.GLASS, Material.STAINED_GLASS, Material.HOPPER});
 	final List<Material> wallBlocks = Arrays.asList(new Material[]{Material.HOPPER, Material.GLASS, Material.THIN_GLASS, Material.GLOWSTONE, Material.WOODEN_DOOR, Material.IRON_DOOR_BLOCK,Material.STAINED_GLASS,Material.STAINED_GLASS_PANE});
 	//final List<Material> groundBlocks = Arrays.asList(new Material[]{Material.GRASS, Material.DIRT, Material.SAND, Material.STATIONARY_WATER, Material.WATER, Material.LOG, Material.LOG_2});
 	//final List<Material> waterBlocks = Arrays.asList(new Material[]{Material.WATER, Material.STATIONARY_WATER});
@@ -610,13 +666,13 @@ public class GreenhouseCmd implements CommandExecutor {
 	    }
 	}
 	final int roofY = height.getBlockY();
-	plugin.getLogger().info("DEBUG: roof block found " + roofY + " of type " + height.getBlock().getType().toString());
+	//plugin.getLogger().info("DEBUG: roof block found " + roofY + " of type " + height.getBlock().getType().toString());
 	// we have the height above this location where a roof block is
 	// Check the sides
 	Location sidex = location.clone();
 	int limit = 100;
 	while (!wallBlocks.contains(sidex.getBlock().getType())) {
-	    //plugin.getLogger().info("DEBUG: wall block type " + sidex.getBlock().getType().toString());
+	    //plugin.getLogger().info("DEBUG: wall block type " + sidex.getBlock().getType().toString() + " at x="+sidex.getBlockX());
 	    sidex.add(new Vector(-1,0,0));
 	    limit--;
 	    if (limit ==0) {
@@ -625,9 +681,10 @@ public class GreenhouseCmd implements CommandExecutor {
 	    }
 	}
 	final int minx = sidex.getBlockX();
-	plugin.getLogger().info("DEBUG: wall block found " + minx + " of type " + sidex.getBlock().getType().toString());
+	//plugin.getLogger().info("DEBUG: minx wall block found " + minx + " of type " + sidex.getBlock().getType().toString());
 	sidex = location.clone();
 	limit = 100;
+	
 	while (!wallBlocks.contains(sidex.getBlock().getType())) {
 	    sidex.add(new Vector(1,0,0));
 	    limit--;
@@ -637,7 +694,7 @@ public class GreenhouseCmd implements CommandExecutor {
 	    }
 	}
 	final int maxx = sidex.getBlockX();
-	plugin.getLogger().info("DEBUG: wall block found " + maxx + " of type " + sidex.getBlock().getType().toString());
+	//plugin.getLogger().info("DEBUG: maxx wall block found " + maxx + " of type " + sidex.getBlock().getType().toString());
 	Location sidez = location.clone();
 	limit = 100;
 	while (!wallBlocks.contains(sidez.getBlock().getType())) {
@@ -649,7 +706,7 @@ public class GreenhouseCmd implements CommandExecutor {
 	    }
 	}
 	final int minz = sidez.getBlockZ();
-	plugin.getLogger().info("DEBUG: wall block found " + minz + " of type " + sidez.getBlock().getType().toString());
+	//plugin.getLogger().info("DEBUG: minz wall block found " + minz + " of type " + sidez.getBlock().getType().toString());
 	sidez = location.clone();
 	limit = 100;
 	while (!wallBlocks.contains(sidez.getBlock().getType())) {
@@ -661,7 +718,7 @@ public class GreenhouseCmd implements CommandExecutor {
 	    }
 	}
 	final int maxz = sidez.getBlockZ();
-	plugin.getLogger().info("DEBUG: wall block found " + maxz + " of type " + sidez.getBlock().getType().toString());
+	//plugin.getLogger().info("DEBUG: maxz wall block found " + maxz + " of type " + sidez.getBlock().getType().toString());
 	int ghHopper = 0;
 	Location roofHopperLoc = null;
 	// Check the roof is solid
@@ -688,8 +745,8 @@ public class GreenhouseCmd implements CommandExecutor {
 	    return null;
 	}
 	int roofArea = Math.abs((maxx-minx+1) * (maxz-minz+1));
-	plugin.getLogger().info("DEBUG: Roof area is " + roofArea + " blocks");
-	plugin.getLogger().info("DEBUG: roofglass = " + roofGlass + " glowstone = " + roofGlowstone);
+	//plugin.getLogger().info("DEBUG: Roof area is " + roofArea + " blocks");
+	//plugin.getLogger().info("DEBUG: roofglass = " + roofGlass + " glowstone = " + roofGlowstone);
 	if (roofArea != (roofGlass+roofGlowstone+ghHopper)) {
 	    player.sendMessage(ChatColor.RED + "There is a hole in the roof or it is not flat!");
 	    return null;
@@ -702,7 +759,7 @@ public class GreenhouseCmd implements CommandExecutor {
 	    for (int y = roofY; y>0; y--) {
 		if (y< groundY) {
 		    // the walls are not even
-		    plugin.getLogger().info("DEBUG: Walls are not even!");
+		    //plugin.getLogger().info("DEBUG: Walls are not even!");
 		    fault = true;
 		    break;
 		}
@@ -738,7 +795,7 @@ public class GreenhouseCmd implements CommandExecutor {
 	    for (int y = roofY; y>0; y--) {
 		if (y< groundY) {
 		    // the walls are not even
-		    plugin.getLogger().info("DEBUG: Walls are not even!");
+		    //plugin.getLogger().info("DEBUG: Walls are not even!");
 		    fault = true;
 		    break;
 		}
@@ -775,7 +832,7 @@ public class GreenhouseCmd implements CommandExecutor {
 	    for (int y = roofY; y>0; y--) {
 		if (y< groundY) {
 		    // the walls are not even
-		    plugin.getLogger().info("DEBUG: Walls are not even!");
+		    //plugin.getLogger().info("DEBUG: Walls are not even!");
 		    fault = true;
 		    break;
 		}
@@ -812,7 +869,7 @@ public class GreenhouseCmd implements CommandExecutor {
 	    for (int y = roofY; y>0; y--) {
 		if (y< groundY) {
 		    // the walls are not even
-		    plugin.getLogger().info("DEBUG: Walls are not even!");
+		    //plugin.getLogger().info("DEBUG: Walls are not even!");
 		    fault = true;
 		    break;
 		}
@@ -848,20 +905,54 @@ public class GreenhouseCmd implements CommandExecutor {
 	    return null;  
 	}
 	// So all the walls are even and we have our counts
-	plugin.getLogger().info("DEBUG: glass = " + (wallGlass + roofGlass));
-	plugin.getLogger().info("DEBUG: glowstone = " + (wallGlowstone + roofGlowstone));
-	plugin.getLogger().info("DEBUG: doors = " + (wallDoors/2));
-	plugin.getLogger().info("DEBUG: height = " + height.getBlockY() + " ground = " + groundY);
+	//plugin.getLogger().info("DEBUG: glass = " + (wallGlass + roofGlass));
+	//plugin.getLogger().info("DEBUG: glowstone = " + (wallGlowstone + roofGlowstone));
+	//plugin.getLogger().info("DEBUG: doors = " + (wallDoors/2));
+	//plugin.getLogger().info("DEBUG: height = " + height.getBlockY() + " ground = " + groundY);
 	Location pos1 = new Location(world,minx,groundY,minz);
 	Location pos2 = new Location(world,maxx,height.getBlockY(),maxz);
-	plugin.getLogger().info("DEBUG: pos1 = " + pos1.toString() + " pos2 = " + pos2.toString());
+	//plugin.getLogger().info("DEBUG: pos1 = " + pos1.toString() + " pos2 = " + pos2.toString());
 	// Place some limits
 	if (wallDoors > 8) {
 	    player.sendMessage(ChatColor.RED + "You cannot have more than 4 doors in the greenhouse!");
 	    return null;
 	}
 	// We now have most of the corner coordinates. We need to find the lowest floor block, which is one below the lowest AIR block
-	// Check what we have in this greenhouse
+
+	Location insideOne = new Location(world,minx,groundY,minz);
+	Location insideTwo = new Location(world,maxx,height.getBlockY(),maxz);
+	// Loop through biomes to see which ones match
+	// Int is the priority. Higher priority ones win
+	int priority = 0;
+	BiomeRecipe winner = null;
+	for (BiomeRecipe r : plugin.getBiomeRecipes()) {
+	    // Only check higher priority ones
+	    if (r.getPriority()>priority) {
+		if (r.checkRecipe(insideOne, insideTwo)) {
+		    winner = r;
+		    priority = r.getPriority();
+		}
+	    }
+	}
+	if (winner != null) {
+	    //plugin.getLogger().info("DEBUG: biome winner is " + winner.toString());
+	    Greenhouse g = plugin.createNewGreenhouse(pos1, pos2, player);
+	    g.setOriginalBiome(originalBiome);
+	    g.setBiome(winner);
+	    g.setEnterMessage("Entering " + player.getDisplayName() + "'s " + Greenhouses.prettifyText(winner.getType().toString()) + " greenhouse!");
+	    // Store the roof hopper location so it can be tapped in the future
+	    if (ghHopper == 1) {
+		g.setRoofHopperLocation(roofHopperLoc);
+	    }
+	    // Store the contents of the greenhouse so it can be audited later
+	    //g.setOriginalGreenhouseContents(contents);
+	    g.startBiome();
+	    player.sendMessage(ChatColor.GREEN + "You succesfully made a "+ Greenhouses.prettifyText(winner.getType().toString()) + " biome greenhouse!");
+	    return g;
+	}
+	return null;
+
+	/*
 	ConcurrentHashMap<Material,AtomicLong> contents = new ConcurrentHashMap<Material,AtomicLong>();
 	for (int y = groundY; y<height.getBlockY();y++) {
 	    for (int x = minx+1;x<maxx;x++) {
@@ -871,12 +962,13 @@ public class GreenhouseCmd implements CommandExecutor {
 		}
 	    }
 	}
+	 */
 	/*
 	plugin.getLogger().info("DEBUG: We have the following blocks inside this greenhouse:");
 	for (Material m: contents.keySet()){
 	    plugin.getLogger().info(m.toString() + " x " + contents.get(m));
 	}*/
-	Greenhouse g = plugin.createNewGreenhouse(pos1, pos2, player);
+	//Greenhouse g = plugin.createNewGreenhouse(pos1, pos2, player);
 	// Work out what type of biome the greenhouse should have
 	// Check ratios
 	/*
@@ -893,6 +985,7 @@ public class GreenhouseCmd implements CommandExecutor {
 	 Rose Bush	No	No	No	Gen	Gen	No
 	 Peony		No	No	No	Gen	Gen	No
 	 */
+	/*
 	Biome greenhouseBiome = originalBiome;
 	// Calculate water ratio
 	long water = 0;
@@ -902,8 +995,7 @@ public class GreenhouseCmd implements CommandExecutor {
 	    water += contents.get(Material.STATIONARY_WATER).longValue();
 	if (contents.containsKey(Material.ICE))
 	    water += contents.get(Material.ICE).longValue();
-	if (contents.containsKey(Material.PACKED_ICE))
-	    water += contents.get(Material.PACKED_ICE).longValue();
+	// Packed ice doesn't count
 
 	Double waterRatio = (double)(Math.abs((maxx-minx-1) * (maxz-minz-1)))/(double)water;
 	plugin.getLogger().info("Debug: water ratio = " + waterRatio);
@@ -911,6 +1003,11 @@ public class GreenhouseCmd implements CommandExecutor {
 	// Larger water ratios means there is less water compared to area
 	// Smaller numbers means there is more water
 	// Water dominated biomes
+	// TODO: Jungle
+	// Add types of wood
+	// Add leaves
+	// Turn dirt under water into clay in swamp
+	// Turn dirt into sand in desert
 	// Sunflower Plains
 	if (contents.containsKey(Material.GRASS)) {
 	    greenhouseBiome = Biome.SUNFLOWER_PLAINS;
@@ -981,6 +1078,7 @@ public class GreenhouseCmd implements CommandExecutor {
 	    plugin.getLogger().info("Debug: " + greenhouseBiome.toString());
 	}
 	plugin.getLogger().info("Debug: " + greenhouseBiome.toString());
+	 */
 	// Set the biome
 	/*
 	for (int y = groundY; y<height.getBlockY();y++) {
@@ -990,6 +1088,7 @@ public class GreenhouseCmd implements CommandExecutor {
 		}
 	    }
 	}*/
+	/*
 	g.setOriginalBiome(originalBiome);
 	g.setBiome(greenhouseBiome);
 	g.setEnterMessage("Entering " + player.getDisplayName() + "'s " + Greenhouses.prettifyText(greenhouseBiome.toString()) + " greenhouse!");
@@ -1003,6 +1102,8 @@ public class GreenhouseCmd implements CommandExecutor {
 
 	// Tell the player
 	// Refresh all the greenhouse chunks
+	 * 
+	 */
 	/*
 	for (int x = minx+1;x<maxx;x++) {
 	    for (int z = minz+1;z<maxz;z++) {
@@ -1011,7 +1112,7 @@ public class GreenhouseCmd implements CommandExecutor {
 		world.refreshChunk(l.getChunk().getX(), l.getChunk().getZ());
 	    }
 	}*/
-	player.sendMessage(ChatColor.GREEN + "You succesfully made a "+ Greenhouses.prettifyText(greenhouseBiome.toString()) + " biome greenhouse!");
-	return g;
+	//player.sendMessage(ChatColor.GREEN + "You succesfully made a "+ Greenhouses.prettifyText(greenhouseBiome.toString()) + " biome greenhouse!");
+	//return g;
     }
 }

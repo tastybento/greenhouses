@@ -25,11 +25,11 @@ import org.bukkit.inventory.ItemStack;
  * @author ben
  * This class listens for changes to greenhouses and reacts to them
  */
-public class GreenhouseCheck implements Listener {
+public class GreenhouseEvents implements Listener {
     private final Greenhouses plugin;
     private List<Location> blockedPistons = new ArrayList<Location>();
    
-    public GreenhouseCheck(final Greenhouses plugin) {
+    public GreenhouseEvents(final Greenhouses plugin) {
 	this.plugin = plugin;
 
     }
@@ -239,8 +239,8 @@ public class GreenhouseCheck implements Listener {
 	    e.setCancelled(true);
 	    return;
 	}
-	plugin.getLogger().info("DEBUG: Direction: " + e.getDirection());
-	plugin.getLogger().info("DEBUG: Location of piston block:" + l);
+	//plugin.getLogger().info("DEBUG: Direction: " + e.getDirection());
+	//plugin.getLogger().info("DEBUG: Location of piston block:" + l);
 	// Pistons can push up to 12 blocks - find the end block + 1
 	for (int i = 0; i < 13; i++) {
 	   l = l.getBlock().getRelative(e.getDirection()).getLocation();
@@ -248,7 +248,7 @@ public class GreenhouseCheck implements Listener {
 	       break;
 	   }
 	}
-	plugin.getLogger().info("DEBUG: Location of end block + 1:" + l);
+	//plugin.getLogger().info("DEBUG: Location of end block + 1:" + l);
 	// The end block location is now l
 	if (plugin.aboveAGreenhouse(l)  == null) {
 	    return;
