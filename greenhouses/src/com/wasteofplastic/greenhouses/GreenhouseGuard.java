@@ -40,7 +40,7 @@ public class GreenhouseGuard implements Listener {
      */
     @EventHandler(priority = EventPriority.HIGH)
     public void onBlockBreak(final BlockBreakEvent e) {
-	if (!e.getPlayer().getWorld().getName().equalsIgnoreCase(Settings.worldName)) {
+	if (!Settings.worldName.contains(e.getPlayer().getWorld().getName())) {
 	    return;
 	}
 	//plugin.getLogger().info("Debug: block break");
@@ -66,8 +66,7 @@ public class GreenhouseGuard implements Listener {
      */
     @EventHandler(priority = EventPriority.HIGH)
     public void onEntityDamage(final EntityDamageByEntityEvent e) {
-	if (!e.getEntity().getWorld().getName().equalsIgnoreCase(Settings.worldName)) {
-	    //plugin.getLogger().info("Not in world");
+	if (!Settings.worldName.contains(e.getEntity().getWorld().getName())) {
 	    return;
 	}
 	// Get the greenhouse that this block is in (if any)
@@ -185,7 +184,7 @@ public class GreenhouseGuard implements Listener {
      */
     @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerBlockPlace(final BlockPlaceEvent e) {
-	if (!e.getPlayer().getWorld().getName().equalsIgnoreCase(Settings.worldName)) {
+	if (!Settings.worldName.contains(e.getPlayer().getWorld().getName())) {
 	    return;
 	}
 	// If the offending block is not in a greenhouse, forget it!
@@ -203,7 +202,7 @@ public class GreenhouseGuard implements Listener {
     // Prevent sleeping in other beds
     @EventHandler(priority = EventPriority.NORMAL)
     public void onPlayerBedEnter(final PlayerBedEnterEvent e) {
-	if (!e.getPlayer().getWorld().getName().equalsIgnoreCase(Settings.worldName)) {
+	if (!Settings.worldName.contains(e.getPlayer().getWorld().getName())) {
 	    return;
 	}
 	// If the offending bed is not in a greenhouse, forget it!
@@ -222,7 +221,7 @@ public class GreenhouseGuard implements Listener {
      */
     @EventHandler(priority = EventPriority.NORMAL)
     public void onBreakHanging(final HangingBreakByEntityEvent e) {
-	if (!e.getRemover().getWorld().getName().equalsIgnoreCase(Settings.worldName)) {
+	if (!Settings.worldName.contains(e.getRemover().getWorld().getName())) {
 	    return;
 	}
 	if (!(e.getRemover() instanceof Player)) {
@@ -244,7 +243,7 @@ public class GreenhouseGuard implements Listener {
 
     @EventHandler(priority = EventPriority.NORMAL)
     public void onBucketEmpty(final PlayerBucketEmptyEvent e) {
-	if (!e.getPlayer().getWorld().getName().equalsIgnoreCase(Settings.worldName)) {
+	if (!Settings.worldName.contains(e.getPlayer().getWorld().getName())) {
 	    return;
 	}
 	// If the offending item is not in a greenhouse, forget it!
@@ -259,7 +258,7 @@ public class GreenhouseGuard implements Listener {
     }
     @EventHandler(priority = EventPriority.NORMAL)
     public void onBucketFill(final PlayerBucketFillEvent e) {
-	if (!e.getPlayer().getWorld().getName().equalsIgnoreCase(Settings.worldName)) {
+	if (!Settings.worldName.contains(e.getPlayer().getWorld().getName())) {
 	    return;
 	}
 	// If the offending item is not in a greenhouse, forget it!
@@ -277,7 +276,7 @@ public class GreenhouseGuard implements Listener {
     // Protect sheep
     @EventHandler(priority = EventPriority.NORMAL)
     public void onShear(final PlayerShearEntityEvent e) {
-	if (!e.getPlayer().getWorld().getName().equalsIgnoreCase(Settings.worldName)) {
+	if (!Settings.worldName.contains(e.getPlayer().getWorld().getName())) {
 	    return;
 	}
 	// If the offending item is not in a greenhouse, forget it!
@@ -294,7 +293,7 @@ public class GreenhouseGuard implements Listener {
 
     @EventHandler(priority = EventPriority.NORMAL)
     public void onPlayerInteract(final PlayerInteractEvent e) {
-	if (!e.getPlayer().getWorld().getName().equalsIgnoreCase(Settings.worldName)) {
+	if (!Settings.worldName.contains(e.getPlayer().getWorld().getName())) {
 	    return;
 	}
 

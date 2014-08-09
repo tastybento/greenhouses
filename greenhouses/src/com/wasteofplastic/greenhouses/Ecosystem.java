@@ -8,15 +8,12 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.block.Hopper;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.weather.WeatherChangeEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
-
-import com.wasteofplastic.particles.ParticleEffect;
 
 /**
  * Monitors the greenhouses and grows things, adds weather etc.
@@ -37,8 +34,9 @@ public class Ecosystem implements Listener {
 
     @EventHandler
     public void onWeatherChangeEvent(final WeatherChangeEvent e) {
-	if (!e.getWorld().getName().equalsIgnoreCase(Settings.worldName))
+	if (!Settings.worldName.contains(e.getWorld().getName())) {
 	    return;
+	}
 	if (e.toWeatherState()) {
 	    // It's raining
 	    //plugin.getLogger().info("DEBUG: It's raining!");

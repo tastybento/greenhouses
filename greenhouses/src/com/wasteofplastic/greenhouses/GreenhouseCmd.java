@@ -4,12 +4,9 @@ package com.wasteofplastic.greenhouses;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 
 import net.milkbowl.vault.economy.EconomyResponse;
 
@@ -19,7 +16,6 @@ import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.block.Biome;
-import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -56,8 +52,8 @@ public class GreenhouseCmd implements CommandExecutor {
 	}
 	final Player player = (Player) sender;
 	// Check we are in the right world
-	if (!player.getWorld().getName().equalsIgnoreCase(Settings.worldName)) {
-	    player.sendMessage("Greenhouses only available in " + Settings.worldName + " world.");
+	if (!Settings.worldName.contains(player.getWorld().getName())) {
+	    player.sendMessage("Greenhouses are not available in this world.");
 	    return true;
 	}
 	// Basic permissions check to even use /greenhouse
@@ -94,7 +90,11 @@ public class GreenhouseCmd implements CommandExecutor {
 		    player.sendMessage(ChatColor.YELLOW + "/greenhouse cancel: " + ChatColor.WHITE + "Cancels a For Sale, For Rent or a Lease");
 		}
 		return true;
-	    } else if (split[0].equalsIgnoreCase("list") || split[0].equalsIgnoreCase("recipe")) {
+	    } else if (split[0].equalsIgnoreCase("recipe")) {
+		// Show control panel
+		player.openInventory(plugin.getRecipeInv());
+		return true;
+	    } else if (split[0].equalsIgnoreCase("list")) {
 		// List all the biomes that can be made
 		player.sendMessage(ChatColor.GREEN + "[Greenhouse Biome Recipes]");
 		player.sendMessage("Use /greenhouse recipe <number> to see details on how to make each greenhouse");
@@ -281,9 +281,9 @@ public class GreenhouseCmd implements CommandExecutor {
 		    return true;
 		}
 		// Check we are in a greenhouse
-		Greenhouse g = checkGreenhouse(player);
+		Greenhouse g = plugin.checkGreenhouse(player);
 		if (g == null) {
-		    player.sendMessage(ChatColor.RED + "This does not meet greenhouse specs!");
+		    player.sendMessage(ChatColor.RED + "This does not meet any greenhouse recipe!");
 		    return true;
 		}
 		// Greenhouse is made
@@ -629,490 +629,6 @@ public class GreenhouseCmd implements CommandExecutor {
 	}
 	return false;
     }
-    /**
-     * Checks that a greenhouse meets specs and makes it
-     * @param player
-     * @return the Greenhouse object
-     */
-    private Greenhouse checkGreenhouse(final Player player) {
-	final Location location = player.getLocation().add(new Vector(0,1,0));
-//plugin.getLogger().info("DEBUG: Player location is " + location.getBlockX() + " " + location.getBlockY() + " " + location.getBlockZ());
-	final Biome originalBiome = location.getBlock().getBiome();
-	// Define the blocks
-	final List<Material> roofBlocks = Arrays.asList(new Material[]{Material.GLASS, Material.STAINED_GLASS, Material.HOPPER});
-	final List<Material> wallBlocks = Arrays.asList(new Material[]{Material.HOPPER, Material.GLASS, Material.THIN_GLASS, Material.GLOWSTONE, Material.WOODEN_DOOR, Material.IRON_DOOR_BLOCK,Material.STAINED_GLASS,Material.STAINED_GLASS_PANE});
-	//final List<Material> groundBlocks = Arrays.asList(new Material[]{Material.GRASS, Material.DIRT, Material.SAND, Material.STATIONARY_WATER, Material.WATER, Material.LOG, Material.LOG_2});
-	//final List<Material> waterBlocks = Arrays.asList(new Material[]{Material.WATER, Material.STATIONARY_WATER});
+    
 
-	final World world = location.getWorld();
-	// Counts
-	int roofGlass = 0;
-	int roofGlowstone = 0;
-	// Walls
-	int wallGlass = 0;
-	int wallGlowstone = 0;
-	int wallDoors = 0;
-	// Floor coordinate
-	int groundY = 0;
-
-
-	// Try up
-	Location height = location.clone();
-	while (!roofBlocks.contains(height.getBlock().getType())) {
-	    height.add(new Vector(0,1,0));
-	    if (height.getBlockY() > 255) {
-		player.sendMessage(ChatColor.RED + "There seems to be no roof!");
-		return null;
-	    }
-	}
-	final int roofY = height.getBlockY();
-	//plugin.getLogger().info("DEBUG: roof block found " + roofY + " of type " + height.getBlock().getType().toString());
-	// we have the height above this location where a roof block is
-	// Check the sides
-	Location sidex = location.clone();
-	int limit = 100;
-	while (!wallBlocks.contains(sidex.getBlock().getType())) {
-	    //plugin.getLogger().info("DEBUG: wall block type " + sidex.getBlock().getType().toString() + " at x="+sidex.getBlockX());
-	    sidex.add(new Vector(-1,0,0));
-	    limit--;
-	    if (limit ==0) {
-		player.sendMessage(ChatColor.RED + "A wall is missing!");
-		return null;
-	    }
-	}
-	final int minx = sidex.getBlockX();
-	//plugin.getLogger().info("DEBUG: minx wall block found " + minx + " of type " + sidex.getBlock().getType().toString());
-	sidex = location.clone();
-	limit = 100;
-	
-	while (!wallBlocks.contains(sidex.getBlock().getType())) {
-	    sidex.add(new Vector(1,0,0));
-	    limit--;
-	    if (limit ==0) {
-		player.sendMessage(ChatColor.RED + "A wall is missing!");
-		return null;
-	    }
-	}
-	final int maxx = sidex.getBlockX();
-	//plugin.getLogger().info("DEBUG: maxx wall block found " + maxx + " of type " + sidex.getBlock().getType().toString());
-	Location sidez = location.clone();
-	limit = 100;
-	while (!wallBlocks.contains(sidez.getBlock().getType())) {
-	    sidez.add(new Vector(0,0,-1));
-	    limit--;
-	    if (limit ==0) {
-		player.sendMessage(ChatColor.RED + "A wall is missing!");
-		return null;
-	    }
-	}
-	final int minz = sidez.getBlockZ();
-	//plugin.getLogger().info("DEBUG: minz wall block found " + minz + " of type " + sidez.getBlock().getType().toString());
-	sidez = location.clone();
-	limit = 100;
-	while (!wallBlocks.contains(sidez.getBlock().getType())) {
-	    sidez.add(new Vector(0,0,1));
-	    limit--;
-	    if (limit ==0) {
-		player.sendMessage(ChatColor.RED + "A wall is missing!");
-		return null;
-	    }
-	}
-	final int maxz = sidez.getBlockZ();
-	//plugin.getLogger().info("DEBUG: maxz wall block found " + maxz + " of type " + sidez.getBlock().getType().toString());
-	int ghHopper = 0;
-	Location roofHopperLoc = null;
-	// Check the roof is solid
-	boolean blockAbove = false;
-	for (int x = minx; x <= maxx; x++) {
-	    for (int z = minz; z <= maxz; z++) {
-		Material bt = world.getBlockAt(x, height.getBlockY(), z).getType();
-		if (bt.equals(Material.GLASS) || bt.equals(Material.THIN_GLASS) || bt.equals(Material.STAINED_GLASS))
-		    roofGlass++;
-		if (bt.equals(Material.GLOWSTONE))
-		    roofGlowstone++;
-		if (bt.equals(Material.HOPPER)) {
-		    ghHopper++;
-		    roofHopperLoc = new Location(world,x,height.getBlockY(), z);
-		}
-		// Check if there are any blocks above the greenhouse
-		if (world.getHighestBlockYAt(x, z) > height.getBlockY())
-		    blockAbove=true;
-
-	    }
-	}
-	if (blockAbove) {
-	    player.sendMessage(ChatColor.RED + "There can be no blocks above the greeenhouse!");
-	    return null;
-	}
-	int roofArea = Math.abs((maxx-minx+1) * (maxz-minz+1));
-	//plugin.getLogger().info("DEBUG: Roof area is " + roofArea + " blocks");
-	//plugin.getLogger().info("DEBUG: roofglass = " + roofGlass + " glowstone = " + roofGlowstone);
-	if (roofArea != (roofGlass+roofGlowstone+ghHopper)) {
-	    player.sendMessage(ChatColor.RED + "There is a hole in the roof or it is not flat!");
-	    return null;
-	}
-	// Roof is now ok - need to check for hopper later
-	boolean fault = false;
-	// Check wall height - has to be the same all the way around
-	// Side #1 - minx is constant
-	for (int z = minz; z <= maxz; z++) {
-	    for (int y = roofY; y>0; y--) {
-		if (y< groundY) {
-		    // the walls are not even
-		    //plugin.getLogger().info("DEBUG: Walls are not even!");
-		    fault = true;
-		    break;
-		}
-		Material bt = world.getBlockAt(minx, y, z).getType();
-		if (!wallBlocks.contains(bt)) {
-
-		    //plugin.getLogger().info("DEBUG: "+bt.toString() +" found at y=" + y);
-		    groundY= y;
-		    break;
-		}
-		if (bt.equals(Material.GLASS) || bt.equals(Material.THIN_GLASS) || bt.equals(Material.STAINED_GLASS) || bt.equals(Material.STAINED_GLASS_PANE))
-		    wallGlass++;
-		if (bt.equals(Material.GLOWSTONE))
-		    wallGlowstone++;
-		if (bt.equals(Material.WOODEN_DOOR) || bt.equals(Material.IRON_DOOR_BLOCK)) {
-		    wallDoors++;
-		}
-		if (bt.equals(Material.HOPPER)) {
-		    ghHopper++;
-		    roofHopperLoc = new Location(world,minx,y, z);
-		}
-
-	    }
-	    if (fault)
-		break;
-	}
-	if (fault) {
-	    player.sendMessage(ChatColor.RED + "There is a hole in the wall or they are not the same height all the way around!");
-	    return null;
-	}
-	// Side #2 - maxx is constant
-	for (int z = minz; z <= maxz; z++) {
-	    for (int y = roofY; y>0; y--) {
-		if (y< groundY) {
-		    // the walls are not even
-		    //plugin.getLogger().info("DEBUG: Walls are not even!");
-		    fault = true;
-		    break;
-		}
-		Material bt = world.getBlockAt(maxx, y, z).getType();
-		if (!wallBlocks.contains(bt)) {
-		    //plugin.getLogger().info("DEBUG: "+bt.toString() +" found at y=" + y);
-		    //plugin.getLogger().info("DEBUG: Ground level found at y=" + y);
-		    groundY= y;
-		    break;
-		}
-		if (bt.equals(Material.GLASS) || bt.equals(Material.THIN_GLASS) || bt.equals(Material.STAINED_GLASS) || bt.equals(Material.STAINED_GLASS_PANE))
-		    wallGlass++;
-		if (bt.equals(Material.GLOWSTONE))
-		    wallGlowstone++;
-		if (bt.equals(Material.WOODEN_DOOR) || bt.equals(Material.IRON_DOOR_BLOCK)) {
-		    wallDoors++;
-		}
-		if (bt.equals(Material.HOPPER)) {
-		    ghHopper++;
-		    roofHopperLoc = new Location(world,maxx,y, z);
-		}
-
-	    }
-	    if (fault)
-		break;
-	}
-	if (fault) {
-	    player.sendMessage(ChatColor.RED + "There is a hole in the wall or they are not the same height all the way around!");
-	    return null;
-	}
-
-	// Side #3 - mixz is constant
-	for (int x = minx; x <= maxx; x++) {
-	    for (int y = roofY; y>0; y--) {
-		if (y< groundY) {
-		    // the walls are not even
-		    //plugin.getLogger().info("DEBUG: Walls are not even!");
-		    fault = true;
-		    break;
-		}
-		Material bt = world.getBlockAt(x, y, minz).getType();
-		if (!wallBlocks.contains(bt)) {
-		    // plugin.getLogger().info("DEBUG: "+bt.toString() +" found at y=" + y);
-		    //plugin.getLogger().info("DEBUG: Ground level found at y=" + y);
-		    groundY= y;
-		    break;
-		}
-		if (bt.equals(Material.GLASS) || bt.equals(Material.THIN_GLASS) || bt.equals(Material.STAINED_GLASS) || bt.equals(Material.STAINED_GLASS_PANE))
-		    wallGlass++;
-		if (bt.equals(Material.GLOWSTONE))
-		    wallGlowstone++;
-		if (bt.equals(Material.WOODEN_DOOR) || bt.equals(Material.IRON_DOOR_BLOCK)) {
-		    wallDoors++;
-		}
-		if (bt.equals(Material.HOPPER)) {
-		    ghHopper++;
-		    roofHopperLoc = new Location(world,x,y, minz);
-		}
-
-	    }
-	    if (fault)
-		break;
-	}
-	if (fault) {
-	    player.sendMessage(ChatColor.RED + "There is a hole in the wall or they are not the same height all the way around!");
-	    return null;
-	}
-
-	// Side #4 - max z is constant
-	for (int x = minx; x <= maxx; x++) {
-	    for (int y = roofY; y>0; y--) {
-		if (y< groundY) {
-		    // the walls are not even
-		    //plugin.getLogger().info("DEBUG: Walls are not even!");
-		    fault = true;
-		    break;
-		}
-		Material bt = world.getBlockAt(x, y, maxz).getType();
-		if (!wallBlocks.contains(bt)) {
-		    //plugin.getLogger().info("DEBUG: "+bt.toString() +" found at y=" + y);
-		    //plugin.getLogger().info("DEBUG: Ground level found at y=" + y);
-		    groundY= y;
-		    break;
-		}
-		if (bt.equals(Material.GLASS) || bt.equals(Material.THIN_GLASS) || bt.equals(Material.STAINED_GLASS) || bt.equals(Material.STAINED_GLASS_PANE))
-		    wallGlass++;
-		if (bt.equals(Material.GLOWSTONE))
-		    wallGlowstone++;
-		if (bt.equals(Material.WOODEN_DOOR) || bt.equals(Material.IRON_DOOR_BLOCK)) {
-		    wallDoors++;
-		}
-		if (bt.equals(Material.HOPPER)) {
-		    ghHopper++;
-		    roofHopperLoc = new Location(world,x,y, maxz);
-		}
-	    }
-	    if (fault)
-		break;
-	}
-	if (fault) {
-	    player.sendMessage(ChatColor.RED + "There is a hole in the wall or they are not the same height all the way around!");
-	    return null;
-	}
-	// Only one hopper allowed
-	if (ghHopper>1) {
-	    player.sendMessage(ChatColor.RED + "Only one hopper is allowed in the walls or roof.");
-	    return null;  
-	}
-	// So all the walls are even and we have our counts
-	//plugin.getLogger().info("DEBUG: glass = " + (wallGlass + roofGlass));
-	//plugin.getLogger().info("DEBUG: glowstone = " + (wallGlowstone + roofGlowstone));
-	//plugin.getLogger().info("DEBUG: doors = " + (wallDoors/2));
-	//plugin.getLogger().info("DEBUG: height = " + height.getBlockY() + " ground = " + groundY);
-	Location pos1 = new Location(world,minx,groundY,minz);
-	Location pos2 = new Location(world,maxx,height.getBlockY(),maxz);
-	//plugin.getLogger().info("DEBUG: pos1 = " + pos1.toString() + " pos2 = " + pos2.toString());
-	// Place some limits
-	if (wallDoors > 8) {
-	    player.sendMessage(ChatColor.RED + "You cannot have more than 4 doors in the greenhouse!");
-	    return null;
-	}
-	// We now have most of the corner coordinates. We need to find the lowest floor block, which is one below the lowest AIR block
-
-	Location insideOne = new Location(world,minx,groundY,minz);
-	Location insideTwo = new Location(world,maxx,height.getBlockY(),maxz);
-	// Loop through biomes to see which ones match
-	// Int is the priority. Higher priority ones win
-	int priority = 0;
-	BiomeRecipe winner = null;
-	for (BiomeRecipe r : plugin.getBiomeRecipes()) {
-	    // Only check higher priority ones
-	    if (r.getPriority()>priority) {
-		if (r.checkRecipe(insideOne, insideTwo)) {
-		    winner = r;
-		    priority = r.getPriority();
-		}
-	    }
-	}
-	if (winner != null) {
-	    //plugin.getLogger().info("DEBUG: biome winner is " + winner.toString());
-	    Greenhouse g = plugin.createNewGreenhouse(pos1, pos2, player);
-	    g.setOriginalBiome(originalBiome);
-	    g.setBiome(winner);
-	    g.setEnterMessage("Entering " + player.getDisplayName() + "'s " + Greenhouses.prettifyText(winner.getType().toString()) + " greenhouse!");
-	    // Store the roof hopper location so it can be tapped in the future
-	    if (ghHopper == 1) {
-		g.setRoofHopperLocation(roofHopperLoc);
-	    }
-	    // Store the contents of the greenhouse so it can be audited later
-	    //g.setOriginalGreenhouseContents(contents);
-	    g.startBiome();
-	    player.sendMessage(ChatColor.GREEN + "You succesfully made a "+ Greenhouses.prettifyText(winner.getType().toString()) + " biome greenhouse!");
-	    return g;
-	}
-	return null;
-
-	/*
-	ConcurrentHashMap<Material,AtomicLong> contents = new ConcurrentHashMap<Material,AtomicLong>();
-	for (int y = groundY; y<height.getBlockY();y++) {
-	    for (int x = minx+1;x<maxx;x++) {
-		for (int z = minz+1;z<maxz;z++) {
-		    contents.putIfAbsent(world.getBlockAt(x, y, z).getType(), new AtomicLong(0));
-		    contents.get(world.getBlockAt(x, y, z).getType()).incrementAndGet();
-		}
-	    }
-	}
-	 */
-	/*
-	plugin.getLogger().info("DEBUG: We have the following blocks inside this greenhouse:");
-	for (Material m: contents.keySet()){
-	    plugin.getLogger().info(m.toString() + " x " + contents.get(m));
-	}*/
-	//Greenhouse g = plugin.createNewGreenhouse(pos1, pos2, player);
-	// Work out what type of biome the greenhouse should have
-	// Check ratios
-	/*
-	Flower		Plains	SPlains	Swamp	Forest	FForest	Any other
-	 Dandelion	Yes	Yes	No	Yes	No	Yes
-	 Poppy		Yes	Yes	No	Yes	Yes	Yes
-	 Blue Orchid	No	No	Yes	No	No	No
-	 Allium		No	No	No	No	Yes	No
-	 Azure Bluet	Yes	Yes	No	No	Yes	No
-	 Tulips		Yes	Yes	No	No	Yes	No
-	 Oxeye Daisy	Yes	Yes	No	No	Yes	No
-	 Sunflower	No	Gen	No	No	No	No
-	 Lilac		No	No	No	Gen	Gen	No
-	 Rose Bush	No	No	No	Gen	Gen	No
-	 Peony		No	No	No	Gen	Gen	No
-	 */
-	/*
-	Biome greenhouseBiome = originalBiome;
-	// Calculate water ratio
-	long water = 0;
-	if (contents.containsKey(Material.WATER))
-	    water += contents.get(Material.WATER).longValue();
-	if (contents.containsKey(Material.STATIONARY_WATER))
-	    water += contents.get(Material.STATIONARY_WATER).longValue();
-	if (contents.containsKey(Material.ICE))
-	    water += contents.get(Material.ICE).longValue();
-	// Packed ice doesn't count
-
-	Double waterRatio = (double)(Math.abs((maxx-minx-1) * (maxz-minz-1)))/(double)water;
-	plugin.getLogger().info("Debug: water ratio = " + waterRatio);
-	// A water ratio of 1 means all the floor is water, or there is a waterfall etc.
-	// Larger water ratios means there is less water compared to area
-	// Smaller numbers means there is more water
-	// Water dominated biomes
-	// TODO: Jungle
-	// Add types of wood
-	// Add leaves
-	// Turn dirt under water into clay in swamp
-	// Turn dirt into sand in desert
-	// Sunflower Plains
-	if (contents.containsKey(Material.GRASS)) {
-	    greenhouseBiome = Biome.SUNFLOWER_PLAINS;
-	    plugin.getLogger().info("Debug: " + greenhouseBiome.toString());
-	}
-	// Flower Forest is caused if there are grown trees in the greenhouse and grass
-	if (contents.containsKey(Material.LOG) && contents.containsKey(Material.GRASS)) {
-	    greenhouseBiome = Biome.FLOWER_FOREST;
-	    plugin.getLogger().info("Debug: " + greenhouseBiome.toString());
-	}
-	// Savanna
-	if (contents.containsKey(Material.LOG_2) && contents.containsKey(Material.GRASS)) {
-	    greenhouseBiome = Biome.SAVANNA;
-	    plugin.getLogger().info("Debug: " + greenhouseBiome.toString());
-	}	
-	// Desert comes from no grass and at least some sand and no water
-	if (!contents.containsKey(Material.GRASS) && contents.containsKey(Material.SAND) 
-		&& !(contents.containsKey(Material.WATER) || contents.containsKey(Material.STATIONARY_WATER))) {
-	    greenhouseBiome = Biome.DESERT;
-	    plugin.getLogger().info("Debug: " + greenhouseBiome.toString());
-	}
-	// Swamp requires trees, water and grass
-	if ((contents.containsKey(Material.WATER) || contents.containsKey(Material.STATIONARY_WATER))
-		&& contents.containsKey(Material.GRASS)
-		&& contents.containsKey(Material.LOG)
-		&& contents.containsKey(Material.LEAVES)) {
-	    if (waterRatio <= 3D) {
-		greenhouseBiome = Biome.SWAMPLAND;
-		plugin.getLogger().info("Debug: " + greenhouseBiome.toString());
-	    }
-	}
-	// Mooshroom land
-	if (contents.containsKey(Material.MYCEL) && (contents.containsKey(Material.WATER) || contents.containsKey(Material.STATIONARY_WATER))) {
-	    Double mycelRatio = (double)(Math.abs((maxx-minx-1) * (maxz-minz-1)))/(double)contents.get(Material.MYCEL).longValue();
-	    if (mycelRatio <= 3D) {
-		greenhouseBiome = Biome.MUSHROOM_ISLAND;
-		plugin.getLogger().info("Debug: " + greenhouseBiome.toString());
-	    }
-	}
-	if (waterRatio <= 0.3) {
-	    greenhouseBiome = Biome.OCEAN;
-	    plugin.getLogger().info("Debug: " + greenhouseBiome.toString());	    
-	}
-	// If there is ice in the greenhouse then everything gets cold!
-	if (contents.containsKey(Material.PACKED_ICE) || contents.containsKey(Material.ICE)) {
-	    // Check if there is enough ice
-	    int ice = 0;
-	    if (contents.get(Material.PACKED_ICE) !=null) {
-		ice += contents.get(Material.PACKED_ICE).intValue();
-	    }
-	    if (contents.get(Material.ICE) !=null) {
-		ice += contents.get(Material.PACKED_ICE).intValue();
-	    }
-	    int requiredBlocks = Math.round((g.getArea()*g.getHeight())/Settings.iceInfluence);
-	    if (requiredBlocks > ice) {
-		player.sendMessage(ChatColor.YELLOW + "Warning: " + (requiredBlocks-ice) +" more ice blocks needed to freeze this greenhouse.");
-	    } else {
-		if (greenhouseBiome.equals(Biome.DESERT)) {
-		    greenhouseBiome = Biome.COLD_BEACH;
-		} else if (greenhouseBiome.equals(Biome.FLOWER_FOREST)) {
-		    greenhouseBiome = Biome.COLD_TAIGA;
-		} else if (greenhouseBiome.equals(Biome.SWAMPLAND) || greenhouseBiome.equals(Biome.MUSHROOM_ISLAND)) {
-		    greenhouseBiome = Biome.FROZEN_RIVER;
-		} else {
-		    greenhouseBiome = Biome.ICE_PLAINS;
-		}
-	    }
-	    plugin.getLogger().info("Debug: " + greenhouseBiome.toString());
-	}
-	plugin.getLogger().info("Debug: " + greenhouseBiome.toString());
-	 */
-	// Set the biome
-	/*
-	for (int y = groundY; y<height.getBlockY();y++) {
-	    for (int x = minx+1;x<maxx;x++) {
-		for (int z = minz+1;z<maxz;z++) {
-		    world.getBlockAt(x, y, z).setBiome(greenhouseBiome);
-		}
-	    }
-	}*/
-	/*
-	g.setOriginalBiome(originalBiome);
-	g.setBiome(greenhouseBiome);
-	g.setEnterMessage("Entering " + player.getDisplayName() + "'s " + Greenhouses.prettifyText(greenhouseBiome.toString()) + " greenhouse!");
-	// Store the roof hopper location so it can be tapped in the future
-	if (ghHopper == 1) {
-	    g.setRoofHopperLocation(roofHopperLoc);
-	}
-	// Store the contents of the greenhouse so it can be audited later
-	g.setOriginalGreenhouseContents(contents);
-	g.startBiome();
-
-	// Tell the player
-	// Refresh all the greenhouse chunks
-	 * 
-	 */
-	/*
-	for (int x = minx+1;x<maxx;x++) {
-	    for (int z = minz+1;z<maxz;z++) {
-		Location l = new Location(world,x,0,z);
-		//world.regenerateChunk(l.getChunk().getX(), l.getChunk().getZ());
-		world.refreshChunk(l.getChunk().getX(), l.getChunk().getZ());
-	    }
-	}*/
-	//player.sendMessage(ChatColor.GREEN + "You succesfully made a "+ Greenhouses.prettifyText(greenhouseBiome.toString()) + " biome greenhouse!");
-	//return g;
-    }
 }

@@ -42,18 +42,11 @@ public class Greenhouse {
     private Biome originalBiome;
     private Biome greenhouseBiome;
     private Location roofHopperLocation;
-    private ConcurrentHashMap<Material, AtomicLong> originalContents;
-    private long keyBlockQty = 0;
     private int area;
     private int heightY;
     private int height;
     private int groundY;
     private BiomeRecipe biomeRecipe;
-    // BiomeRecipe key block types
-    // TODO: Improve with a biome fingerprint system
-    private List<Material> keyTypes = Arrays.asList(new Material[]{Material.LOG, Material.LOG_2, Material.LEAVES,
-	    Material.LEAVES_2, Material.GRASS, Material.WATER, Material.STATIONARY_WATER, Material.STATIONARY_LAVA,
-	    Material.LAVA, Material.SAND, Material.DIRT, Material.MYCEL, Material.ICE, Material.PACKED_ICE});
 
     public Greenhouse(Greenhouses plugin, Location pos1, Location pos2, UUID owner) {
 	this.plugin = plugin;
@@ -765,11 +758,6 @@ public class Greenhouse {
 	return roofHopperLocation;
     }
 
-    public ConcurrentHashMap<Material, AtomicLong> getOriginalGreenhouseContents() {
-	return originalContents;	
-    }
-
-
     /** 
      * @return the area
      */
@@ -793,42 +781,14 @@ public class Greenhouse {
 	return height;
     }
 
-    /**
-     * Stores the original block contents of the greenhouse
-     * @param contents
-     */
-    public void setOriginalGreenhouseContents(ConcurrentHashMap<Material, AtomicLong> contents) {
-	this.originalContents = contents;
-	// Count the key blocks and liquid
-	keyBlockQty = 0;
-	for (Material m: contents.keySet()) {
-	    if (keyTypes.contains(m)) {
-		keyBlockQty += contents.get(m).longValue();
-	    }
-	}
-    }
 
     /**
-     * Checks if the greenhouse still contains at least the same number of key blocks as
-     * it had when it was made
+     * Reruns the recipe check to see if this greenhouse is still viable
      * @return true if okay, otherwise false
      */
     public boolean checkEco() {
-	plugin.getLogger().info("DEBUG: checking the ecology of the greenhouse. Keyblock qty is:" + keyBlockQty);
-	long check = 0;
-	for (int y = groundY; y<heightY;y++) {
-	    for (int x = pos1.getBlockX()+1;x<pos2.getBlockX();x++) {
-		for (int z = pos1.getBlockZ()+1;z<pos2.getBlockZ();z++) {
-		    if (keyTypes.contains(world.getBlockAt(x, y, z).getType()))
-			check++;	    
-		}
-	    }
-	}
-	plugin.getLogger().info("DEBUG: check is:" + check);
-	if (check>=keyBlockQty)
-	    return true;
-	else
-	    return false;
+	//plugin.getLogger().info("DEBUG: checking the ecology of the greenhouse.");
+	return this.biomeRecipe.checkRecipe(getPos1(), getPos2());
     }
 
 
@@ -871,7 +831,7 @@ public class Greenhouse {
      * Spawns friendly mobs according to the type of biome
      */
     public void populateGreenhouse() {
-	plugin.getLogger().info("DEBUG: populating mobs in greenhouse");
+	//plugin.getLogger().info("DEBUG: populating mobs in greenhouse");
 	// Make sure no players are around
 	if (plugin.players.getNumberInGreenhouse(this) > 0)
 	    return;
@@ -880,7 +840,7 @@ public class Greenhouse {
 	if (mob == null) {
 	    return;
 	}
-	plugin.getLogger().info("Mob ready to spawn!");
+	//plugin.getLogger().info("Mob ready to spawn!");
 	// Spawn a temporary snowball in center of greenhouse
 	Vector p1 = pos1.clone();
 	Entity snowball = world.spawnEntity(p1.midpoint(pos2).toLocation(world), EntityType.SNOWBALL);
@@ -890,15 +850,15 @@ public class Greenhouse {
 	    Double z = (Math.abs(pos2.getZ()-pos1.getZ())-1)/2D;
 	    //Double distance = (pos1.distance(pos2)/2)+24D
 	    // Limit spawning
-	    plugin.getLogger().info("Mob limit is " + biomeRecipe.getMobLimit());
+	    //plugin.getLogger().info("Mob limit is " + biomeRecipe.getMobLimit());
 	    // Find out how many of this type of mob is around
-	    
+
 	    int mobsInArea = snowball.getNearbyEntities(x, y, z).size();
 	    double internalArea = (x*4*z);
-	    plugin.getLogger().info("Mobs in area = " + mobsInArea);
-	    plugin.getLogger().info("Area of greenhouse = " + internalArea);
+	    //plugin.getLogger().info("Mobs in area = " + mobsInArea);
+	    //plugin.getLogger().info("Area of greenhouse = " + internalArea);
 	    if (internalArea - (mobsInArea * biomeRecipe.getMobLimit()) <= 0) {
-		plugin.getLogger().info("Too many mobs already in this greenhouse");
+		//plugin.getLogger().info("Too many mobs already in this greenhouse");
 		snowball.remove();
 		return;
 	    }
@@ -913,9 +873,9 @@ public class Greenhouse {
 	    }
 
 	} else {
-	    plugin.getLogger().info("Could not spawn snowball!");
+	    //plugin.getLogger().info("Could not spawn snowball!");
 	}
-	plugin.getLogger().info("DEBUG: no players around");
+	//plugin.getLogger().info("DEBUG: no players around");
 	// No players around
 	Material type = biomeRecipe.getMobSpawnOn(mob);
 	int minx = Math.min(pos1.getBlockX(), pos2.getBlockX());
@@ -934,123 +894,16 @@ public class Greenhouse {
 	    //plugin.getLogger().info("DEBUG: above found " + a.getType().toString());
 	    if ((b.getType().equals(type) && h.getType().equals(Material.AIR))
 		    || (h.getType().equals(type) && a.getType().equals(Material.AIR)) ) {
-		plugin.getLogger().info("DEBUG: Trying to spawn a "+mob.toString() + " on "+ type.toString() + " at " + h.getLocation());
-		if (world.spawnEntity(h.getLocation(), mob) != null)
+		Location midBlock = new Location(world, h.getLocation().getX()+0.5D, h.getLocation().getY(), h.getLocation().getZ()+0.5D);
+		plugin.getLogger().info("Trying to spawn a "+mob.toString() + " on "+ type.toString() + " at " + midBlock);
+		Entity e = world.spawnEntity(midBlock, mob);
+		if (e != null)
 		    return;
 	    }
 	}
 
-
-
-	/*
-	switch (greenhouseBiome) {
-	case COLD_TAIGA:
-	    spawn(EntityType.WOLF, Material.SNOW);
-	    break;
-	case DESERT:
-	    break;
-	case FLOWER_FOREST:
-	    break;
-	case HELL:
-	    spawn(EntityType.PIG_ZOMBIE, Material.NETHERRACK);
-	    break;
-	case ICE_PLAINS:
-	    break;
-	case JUNGLE:
-	    spawn(EntityType.OCELOT, Material.GRASS);
-	    break;
-	case MUSHROOM_ISLAND:
-	    spawn(EntityType.MUSHROOM_COW, Material.MYCEL);
-	    break;
-	case OCEAN:
-	    spawn(EntityType.SQUID, Material.STATIONARY_WATER);
-	    break;
-	case SAVANNA:
-	    switch (Greenhouses.randInt(1, 3)) {
-	    case 1:
-		spawn(EntityType.SHEEP, Material.GRASS);
-		break;
-	    case 2:
-		spawn(EntityType.COW, Material.GRASS);
-		break;
-	    case 3:
-		spawn(EntityType.HORSE, Material.GRASS);
-		break;
-	    }
-	    break;
-	case SUNFLOWER_PLAINS:
-	    switch (Greenhouses.randInt(1, 3)) {
-	    case 1:
-		spawn(EntityType.SHEEP, Material.GRASS);
-		break;
-	    case 2:
-		spawn(EntityType.COW, Material.GRASS);
-		break;
-	    case 3:
-		spawn(EntityType.HORSE, Material.GRASS);
-		break;
-	    }
-	    break;
-	case SWAMPLAND:
-	    spawn(EntityType.SLIME, Material.STATIONARY_WATER);
-	    break;
-	default:
-	    break;
-
-	}
-	/*
-	    //Check the 8 corners
-	    Vector pPoint = p.getLocation().toVector();
-	    // Players must be > 24 squares away from the greenhouse
-	    if (pos1.distanceSquared(pPoint) < 576)
-		return;
-	    if (pPoint.distanceSquared(new Vector(pos1.getBlockX(),pos1.getBlockY(),pos2.getBlockZ())) < 576)
-		return;
-	    if (pPoint.distanceSquared(new Vector(pos1.getBlockX(),pos2.getBlockY(),pos1.getBlockZ())) < 576)
-		return;
-	    if (pPoint.distanceSquared(new Vector(pos1.getBlockX(),pos2.getBlockY(),pos2.getBlockZ())) < 576)
-		return;
-	    if (pPoint.distanceSquared(new Vector(pos2.getBlockX(),pos1.getBlockY(),pos1.getBlockZ())) < 576)
-		return;
-	    if (pPoint.distanceSquared(new Vector(pos2.getBlockX(),pos1.getBlockY(),pos2.getBlockZ())) < 576)
-		return;
-	    if (pPoint.distanceSquared(new Vector(pos2.getBlockX(),pos2.getBlockY(),pos1.getBlockZ())) < 576)
-		return;
-	    if (pos2.distanceSquared(pPoint) < 576)
-		return;
-	 */
-
-
     }
 
-    /*
-    private void spawn(EntityType creature, Material type) {
-	plugin.getLogger().info("DEBUG: spawn ");
-	// Find a suitable place to place the creature
-	// The creature must spawn on this type of block
-	int minx = Math.min(pos1.getBlockX(), pos2.getBlockX()) + 2;
-	int maxx = Math.max(pos1.getBlockX(), pos2.getBlockX()) - 2;
-	int minz = Math.min(pos1.getBlockZ(), pos2.getBlockZ()) + 2;
-	int maxz = Math.max(pos1.getBlockZ(), pos2.getBlockZ()) - 2;
-	// Try 10 times
-	for (int i = 0; i<10; i++) {
-	    int x = Greenhouses.randInt(minx,maxx);
-	    int z = Greenhouses.randInt(minz,maxz);
-	    Block h = world.getHighestBlockAt(x, z);
-	    Block b = h.getRelative(BlockFace.DOWN);
-	    Block a = h.getRelative(BlockFace.UP);
-	    //plugin.getLogger().info("DEBUG: block found " + h.getType().toString());
-	    //plugin.getLogger().info("DEBUG: below found " + b.getType().toString());
-	    //plugin.getLogger().info("DEBUG: above found " + a.getType().toString());
-	    if ((b.getType().equals(type) && h.getType().equals(Material.AIR)) || (h.getType().equals(type) && a.getType().equals(Material.AIR)) ) {
-		//plugin.getLogger().info("DEBUG: Trying to spawn a "+creature.toString() + " on "+ type.toString() + " at " + h.getLocation());
-		if (world.spawnEntity(h.getLocation(), creature) != null)
-		    return;
-	    }
-	}
-	//plugin.getLogger().info("DEBUG: no suitable spot found to spawn " +creature.toString() + " on "+ type.toString());
-    }
-     */
     public void snow() {
 	// Lay down snow
 	int minx = Math.min(pos1.getBlockX(), pos2.getBlockX());
@@ -1144,6 +997,28 @@ public class Greenhouse {
 		// Greenhouse is broken or no longer has a hopper when it should
 		// TODO remove the greenhouse
 		plugin.getLogger().info("DEBUG: Hopper is not there anymore...");
+	    }
+	}
+    }
+
+
+    /**
+     * Converts blocks in the greenhouse over time at a random rate
+     * Depends on the biome recipe
+     */
+    public void convertBlocks() {
+	if (biomeRecipe.getBlockConvert()) {
+	    // Check biome recipe
+	    int minx = Math.min(pos1.getBlockX(), pos2.getBlockX());
+	    int maxx = Math.max(pos1.getBlockX(), pos2.getBlockX());
+	    int minz = Math.min(pos1.getBlockZ(), pos2.getBlockZ());
+	    int maxz = Math.max(pos1.getBlockZ(), pos2.getBlockZ());
+	    for (int x = minx+1; x < maxx; x++) {
+		for (int z = minz+1; z < maxz;z++) {
+		    for (int y = groundY; y < heightY; y++) {
+			biomeRecipe.convertBlock(world.getBlockAt(x,y,z));
+		    }
+		}
 	    }
 	}
     }

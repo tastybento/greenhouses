@@ -1,5 +1,7 @@
 package com.wasteofplastic.greenhouses;
 
+import java.util.List;
+
 
 /**
  * @author ben
@@ -26,14 +28,17 @@ public class Settings {
     public static boolean allowGateUse;
     public static boolean allowMobHarm;
     // General
-    public static String worldName;
+    public static List<String> worldName;
     public static int checkLeases;
     public static boolean useProtection;
     public static double snowChanceGlobal;
     public static double snowDensity;
     public static long snowSpeed;
-    public static int ecoTick;
+    public static int plantTick;
     public static int iceInfluence;
+    public static int blockTick;
+    public static int mobTick;
+    public static int ecoTick;
    
     
 }

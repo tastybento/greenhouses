@@ -21,21 +21,16 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Biome;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
-import org.bukkit.block.Hopper;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
-
-import com.wasteofplastic.particles.ParticleEffect;
 
 /**
  * @author ben
@@ -64,10 +59,14 @@ public class Greenhouses extends JavaPlugin {
     private static HashMap<UUID, List<Location>> visualizations = new HashMap<UUID, List<Location>>();
     // Ecosystem object and random number generator
     private Ecosystem eco = new Ecosystem(this);
-    // Eco check task object
-    private BukkitTask ecoCheck = null;
+    // Tasks
+    private BukkitTask plantTask = null;
+    private BukkitTask mobTask = null;
+    private BukkitTask blockTask = null;
+    private BukkitTask ecoTask = null;
     // Biomes
     private List<BiomeRecipe> biomeRecipes = new ArrayList<BiomeRecipe>();
+    private ControlPanel biomeInv;
     /**
      * @return plugin object instance
      */
@@ -182,6 +181,8 @@ public class Greenhouses extends JavaPlugin {
 		if (thisBiome != null) {
 		    int priority = biomeSection.getInt(type + ".priority", 0);
 		    BiomeRecipe b = new BiomeRecipe(this, thisBiome,priority);
+		    // Set the icon
+		    b.setIcon(Material.valueOf(biomeSection.getString(type + ".icon", "SAPLING")));
 		    // A value of zero on these means that there must be NO coverage, e.g., desert. If the value is not present, then the default is -1
 		    b.setWatercoverage(biomeSection.getInt(type + ".watercoverage",-1));
 		    b.setLavacoverage(biomeSection.getInt(type + ".lavacoverage",-1));
@@ -189,7 +190,7 @@ public class Greenhouses extends JavaPlugin {
 		    b.setMobLimit(biomeSection.getInt(type + ".moblimit", 9));
 		    // Set the needed blocks
 		    String contents = biomeSection.getString(type + ".contents", "");
-		    getLogger().info("DEBUG: contents = '" + contents + "'");
+		    //getLogger().info("DEBUG: contents = '" + contents + "'");
 		    if (!contents.isEmpty()) {
 			String[] split = contents.split(" ");
 			// Format is MATERIAL: Qty or MATERIAL: Type:Quantity
@@ -256,7 +257,35 @@ public class Greenhouses extends JavaPlugin {
 			    }
 			}
 		    }
-		    
+		    // Load block conversions
+		    String conversions = biomeSection.getString(type + ".conversions", "");
+		    //getLogger().info("DEBUG: conversions = '" + conversions + "'");
+		    if (!conversions.isEmpty()) {
+			String[] split = conversions.split(" ");
+			for (String s : split) {
+			    // Split it again
+			    String[] subSplit = s.split(":");
+			    // After this is split, there must be 5 entries!
+			    Material oldMaterial = null;
+			    int oldType = 0;
+			    Material newMaterial = null;
+			    int newType = 0;
+			    Material localMaterial = null;
+			    int localType = 0;
+			    int convChance;
+			    oldMaterial = Material.valueOf(subSplit[0]);
+			    oldType = Integer.valueOf(subSplit[1]);
+			    convChance = Integer.valueOf(subSplit[2]);
+			    newMaterial = Material.valueOf(subSplit[3]);
+			    newType = Integer.valueOf(subSplit[4]);
+			    if (subSplit.length == 7) {
+				localMaterial = Material.valueOf(subSplit[5]);
+				localType = Integer.valueOf(subSplit[6]);					
+			    }
+			    b.addConvBlocks(oldMaterial, oldType, newMaterial, newType, convChance, localMaterial, localType);
+			}
+		    }
+
 		}
 	    }
 	} catch (Exception e) {
@@ -318,7 +347,10 @@ public class Greenhouses extends JavaPlugin {
 	Settings.allowGateUse = getConfig().getBoolean("greenhouses.allowgateuse", false);
 	Settings.allowMobHarm = getConfig().getBoolean("greenhouses.allowmobharm", false);
 	// Other settings
-	Settings.worldName = getConfig().getString("greenhouses.worldName","world");
+	Settings.worldName = getConfig().getStringList("greenhouses.worldName");
+	if (Settings.worldName.isEmpty()) {
+	    Settings.worldName.add("world");
+	}
 	getLogger().info("World name is: " + Settings.worldName );
 	Settings.useProtection = getConfig().getBoolean("greenhouses.useProtection", false);
 	Settings.snowChanceGlobal = getConfig().getDouble("greenhouses.snowchance", 0.5D);
@@ -326,6 +358,9 @@ public class Greenhouses extends JavaPlugin {
 	Settings.snowSpeed = getConfig().getLong("greenhouses.snowspeed", 30L);
 	Settings.iceInfluence = getConfig().getInt("greenhouses.iceinfluence", 125);
 	Settings.ecoTick = getConfig().getInt("greenhouses.ecotick", 30);
+	Settings.mobTick = getConfig().getInt("greenhouses.mobtick", 20);
+	Settings.plantTick = getConfig().getInt("greenhouses.planttick", 5);
+	Settings.blockTick = getConfig().getInt("greenhouses.blocktick", 10);
 
 	//getLogger().info("Debug: Snowchance " + Settings.snowChanceGlobal);
 	//getLogger().info("Debug: Snowdensity " + Settings.snowDensity);
@@ -384,6 +419,8 @@ public class Greenhouses extends JavaPlugin {
 	}
 	loadPluginConfig();
 	loadBiomeRecipes();
+	biomeInv = new ControlPanel(this);
+
 	// Set and make the player's directory if it does not exist and then load players into memory
 	playersFolder = new File(getDataFolder() + File.separator + "players");
 	if (!playersFolder.exists()) {
@@ -439,28 +476,87 @@ public class Greenhouses extends JavaPlugin {
 
     public void ecoTick() {
 	// Cancel any old schedulers
-	if (ecoCheck != null)
-	    ecoCheck.cancel();
-	// Kick off flower growingetc.
-	long ecoTick = Settings.ecoTick * 60 * 20; // In minutes
+	if (plantTask != null)
+	    plantTask.cancel();
+	if (blockTask != null)
+	    blockTask.cancel();
+	if (mobTask != null)
+	    mobTask.cancel();
+	if (ecoTask != null)
+	    ecoTask.cancel();
 
-	if (ecoTick > 0) {
-	    ecoCheck = getServer().getScheduler().runTaskTimer(plugin, new Runnable() {
+	// Kick off flower growing
+	long plantTick = Settings.plantTick * 60 * 20; // In minutes
+	if (plantTick > 0) {
+	    getLogger().info("Kicking off flower growing scheduler every " + Settings.plantTick + " minutes");
+	    plantTask = getServer().getScheduler().runTaskTimer(plugin, new Runnable() {
 		@Override
 		public void run() {
-		    getLogger().info("Kicking off flower growing and eco check scheduler every " + Settings.ecoTick + " minutes");
 		    for (Greenhouse g : getGreenhouses()) {
 			//getLogger().info("DEBUG: Servicing greenhouse biome : " + g.getBiome().toString());
 			//checkEco();
 			g.growFlowers();
-			g.populateGreenhouse();
+			//g.populateGreenhouse();
 		    }
 		}
-	    }, 0L, ecoTick);
+	    }, 80L, plantTick);
 
 	} else {
 	    getLogger().info("Flower growth disabled.");
 	}
+
+	// Kick off flower growing
+	long blockTick = Settings.blockTick * 60 * 20; // In minutes
+	if (blockTick > 0) {
+	    getLogger().info("Kicking off block conversion scheduler every " + Settings.blockTick + " minutes");
+	    blockTask = getServer().getScheduler().runTaskTimer(plugin, new Runnable() {
+		@Override
+		public void run() {		    
+		    for (Greenhouse g : getGreenhouses()) {
+			g.convertBlocks();
+			//getLogger().info("DEBUG: Servicing greenhouse biome : " + g.getBiome().toString());
+		    }
+		}
+	    }, 60L, blockTick);
+
+	} else {
+	    getLogger().info("Block conversion disabled.");
+	}
+	// Kick off g/h verification
+	long ecoTick = Settings.plantTick * 60 * 20; // In minutes
+	if (ecoTick > 0) {
+	    getLogger().info("Kicking off greenhouse verify scheduler every " + Settings.ecoTick + " minutes");
+	    ecoTask = getServer().getScheduler().runTaskTimer(plugin, new Runnable() {
+		@Override
+		public void run() {
+		    for (Greenhouse g : getGreenhouses()) {
+			//getLogger().info("DEBUG: Servicing greenhouse biome : " + g.getBiome().toString());
+			checkEco();
+		    }
+		}
+	    }, ecoTick, ecoTick);
+
+	} else {
+	    getLogger().info("Greenhouse verification disabled.");
+	}
+	// Kick off mob population
+	long mobTick = Settings.mobTick * 60 * 20; // In minutes
+	if (mobTick > 0) {
+	    getLogger().info("Kicking off mob populator scheduler every " + Settings.plantTick + " minutes");
+	    mobTask = getServer().getScheduler().runTaskTimer(plugin, new Runnable() {
+		@Override
+		public void run() {
+		    for (Greenhouse g : getGreenhouses()) {
+			g.populateGreenhouse();
+		    }
+		}
+	    }, 120L, mobTick);
+
+	} else {
+	    getLogger().info("Mob disabled.");
+	}
+
+
 
     }
 
@@ -648,6 +744,8 @@ public class Greenhouses extends JavaPlugin {
 	manager.registerEvents(new GreenhouseEvents(this), this);
 	// Events for when a player joins or leaves the server
 	manager.registerEvents(new JoinLeaveEvents(this, players), this);
+	// Biome CP
+	manager.registerEvents(biomeInv, this);
 	// Weather event
 	manager.registerEvents(eco, this);
     }
@@ -1099,11 +1197,11 @@ public class Greenhouses extends JavaPlugin {
      */
     public void checkEco() {
 	// Run through each greenhouse
-	plugin.getLogger().info("DEBUG: started eco check");
-	// Check all the greenhouses to see if they have the minimum number of key blocks
+	//plugin.getLogger().info("DEBUG: started eco check");
+	// Check all the greenhouses to see if they still meet the g/h recipe
 	List<Greenhouse> onesToRemove = new ArrayList<Greenhouse>();
 	for (Greenhouse g : plugin.getGreenhouses()) {
-	    plugin.getLogger().info("DEBUG: Testing greenhouse owned by " + g.getOwner().toString());
+	    //plugin.getLogger().info("DEBUG: Testing greenhouse owned by " + g.getOwner().toString());
 	    if (!g.checkEco()) {
 		// The greenhouse failed an eco check - remove it
 		onesToRemove.add(g);
@@ -1152,7 +1250,368 @@ public class Greenhouses extends JavaPlugin {
 	return fin;
     }
 
-    
 
-    
+    public Inventory getRecipeInv() {
+	return biomeInv.biomePanel;
+    }
+
+    /**
+     * Checks that a greenhouse meets specs and makes it
+     * @param player
+     * @return the Greenhouse object
+     */
+    public Greenhouse checkGreenhouse(final Player player) {
+	return checkGreenhouse(player, null);
+    }
+    public Greenhouse checkGreenhouse(final Player player, Biome type) {
+	final Location location = player.getLocation().add(new Vector(0,1,0));
+	//plugin.getLogger().info("DEBUG: Player location is " + location.getBlockX() + " " + location.getBlockY() + " " + location.getBlockZ());
+	final Biome originalBiome = location.getBlock().getBiome();
+	// Define the blocks
+	final List<Material> roofBlocks = Arrays.asList(new Material[]{Material.GLASS, Material.STAINED_GLASS, Material.HOPPER});
+	final List<Material> wallBlocks = Arrays.asList(new Material[]{Material.HOPPER, Material.GLASS, Material.THIN_GLASS, Material.GLOWSTONE, Material.WOODEN_DOOR, Material.IRON_DOOR_BLOCK,Material.STAINED_GLASS,Material.STAINED_GLASS_PANE});
+	//final List<Material> groundBlocks = Arrays.asList(new Material[]{Material.GRASS, Material.DIRT, Material.SAND, Material.STATIONARY_WATER, Material.WATER, Material.LOG, Material.LOG_2});
+	//final List<Material> waterBlocks = Arrays.asList(new Material[]{Material.WATER, Material.STATIONARY_WATER});
+
+	final World world = location.getWorld();
+	// Counts
+	int roofGlass = 0;
+	int roofGlowstone = 0;
+	// Walls
+	int wallGlass = 0;
+	int wallGlowstone = 0;
+	int wallDoors = 0;
+	// Floor coordinate
+	int groundY = 0;
+
+
+	// Try up
+	Location height = location.clone();
+	while (!roofBlocks.contains(height.getBlock().getType())) {
+	    height.add(new Vector(0,1,0));
+	    if (height.getBlockY() > 255) {
+		player.sendMessage(ChatColor.RED + "There seems to be no roof!");
+		return null;
+	    }
+	}
+	final int roofY = height.getBlockY();
+	//plugin.getLogger().info("DEBUG: roof block found " + roofY + " of type " + height.getBlock().getType().toString());
+	// we have the height above this location where a roof block is
+	// Check the sides
+	Location sidex = location.clone();
+	int limit = 100;
+	while (!wallBlocks.contains(sidex.getBlock().getType())) {
+	    //plugin.getLogger().info("DEBUG: wall block type " + sidex.getBlock().getType().toString() + " at x="+sidex.getBlockX());
+	    sidex.add(new Vector(-1,0,0));
+	    limit--;
+	    if (limit ==0) {
+		player.sendMessage(ChatColor.RED + "A wall is missing!");
+		return null;
+	    }
+	}
+	final int minx = sidex.getBlockX();
+	//plugin.getLogger().info("DEBUG: minx wall block found " + minx + " of type " + sidex.getBlock().getType().toString());
+	sidex = location.clone();
+	limit = 100;
+
+	while (!wallBlocks.contains(sidex.getBlock().getType())) {
+	    sidex.add(new Vector(1,0,0));
+	    limit--;
+	    if (limit ==0) {
+		player.sendMessage(ChatColor.RED + "A wall is missing!");
+		return null;
+	    }
+	}
+	final int maxx = sidex.getBlockX();
+	//plugin.getLogger().info("DEBUG: maxx wall block found " + maxx + " of type " + sidex.getBlock().getType().toString());
+	Location sidez = location.clone();
+	limit = 100;
+	while (!wallBlocks.contains(sidez.getBlock().getType())) {
+	    sidez.add(new Vector(0,0,-1));
+	    limit--;
+	    if (limit ==0) {
+		player.sendMessage(ChatColor.RED + "A wall is missing!");
+		return null;
+	    }
+	}
+	final int minz = sidez.getBlockZ();
+	//plugin.getLogger().info("DEBUG: minz wall block found " + minz + " of type " + sidez.getBlock().getType().toString());
+	sidez = location.clone();
+	limit = 100;
+	while (!wallBlocks.contains(sidez.getBlock().getType())) {
+	    sidez.add(new Vector(0,0,1));
+	    limit--;
+	    if (limit ==0) {
+		player.sendMessage(ChatColor.RED + "A wall is missing!");
+		return null;
+	    }
+	}
+	final int maxz = sidez.getBlockZ();
+	//plugin.getLogger().info("DEBUG: maxz wall block found " + maxz + " of type " + sidez.getBlock().getType().toString());
+	int ghHopper = 0;
+	Location roofHopperLoc = null;
+	// Check the roof is solid
+	boolean blockAbove = false;
+	for (int x = minx; x <= maxx; x++) {
+	    for (int z = minz; z <= maxz; z++) {
+		Material bt = world.getBlockAt(x, height.getBlockY(), z).getType();
+		if (bt.equals(Material.GLASS) || bt.equals(Material.THIN_GLASS) || bt.equals(Material.STAINED_GLASS))
+		    roofGlass++;
+		if (bt.equals(Material.GLOWSTONE))
+		    roofGlowstone++;
+		if (bt.equals(Material.HOPPER)) {
+		    ghHopper++;
+		    roofHopperLoc = new Location(world,x,height.getBlockY(), z);
+		}
+		// Check if there are any blocks above the greenhouse
+		if (world.getHighestBlockYAt(x, z) > height.getBlockY())
+		    blockAbove=true;
+
+	    }
+	}
+	if (blockAbove) {
+	    player.sendMessage(ChatColor.RED + "There can be no blocks above the greenhouse!");
+	    return null;
+	}
+	int roofArea = Math.abs((maxx-minx+1) * (maxz-minz+1));
+	//plugin.getLogger().info("DEBUG: Roof area is " + roofArea + " blocks");
+	//plugin.getLogger().info("DEBUG: roofglass = " + roofGlass + " glowstone = " + roofGlowstone);
+	if (roofArea != (roofGlass+roofGlowstone+ghHopper)) {
+	    player.sendMessage(ChatColor.RED + "There is a hole in the roof or it is not flat!");
+	    return null;
+	}
+	// Roof is now ok - need to check for hopper later
+	boolean fault = false;
+	// Check wall height - has to be the same all the way around
+	// Side #1 - minx is constant
+	for (int z = minz; z <= maxz; z++) {
+	    for (int y = roofY; y>0; y--) {
+		if (y< groundY) {
+		    // the walls are not even
+		    //plugin.getLogger().info("DEBUG: Walls are not even!");
+		    fault = true;
+		    break;
+		}
+		Material bt = world.getBlockAt(minx, y, z).getType();
+		if (!wallBlocks.contains(bt)) {
+
+		    //plugin.getLogger().info("DEBUG: "+bt.toString() +" found at y=" + y);
+		    groundY= y;
+		    break;
+		}
+		if (bt.equals(Material.GLASS) || bt.equals(Material.THIN_GLASS) || bt.equals(Material.STAINED_GLASS) || bt.equals(Material.STAINED_GLASS_PANE))
+		    wallGlass++;
+		if (bt.equals(Material.GLOWSTONE))
+		    wallGlowstone++;
+		if (bt.equals(Material.WOODEN_DOOR) || bt.equals(Material.IRON_DOOR_BLOCK)) {
+		    wallDoors++;
+		}
+		if (bt.equals(Material.HOPPER)) {
+		    if (roofHopperLoc == null || !roofHopperLoc.equals(new Location(world,minx,y, z))) {
+			ghHopper++;
+			roofHopperLoc = new Location(world,minx,y, z);
+		    }
+		}
+
+	    }
+	    if (fault)
+		break;
+	}
+	if (fault) {
+	    player.sendMessage(ChatColor.RED + "There is a hole in the wall or they are not the same height all the way around!");
+	    return null;
+	}
+	// Side #2 - maxx is constant
+	for (int z = minz; z <= maxz; z++) {
+	    for (int y = roofY; y>0; y--) {
+		if (y< groundY) {
+		    // the walls are not even
+		    //plugin.getLogger().info("DEBUG: Walls are not even!");
+		    fault = true;
+		    break;
+		}
+		Material bt = world.getBlockAt(maxx, y, z).getType();
+		if (!wallBlocks.contains(bt)) {
+		    //plugin.getLogger().info("DEBUG: "+bt.toString() +" found at y=" + y);
+		    //plugin.getLogger().info("DEBUG: Ground level found at y=" + y);
+		    groundY= y;
+		    break;
+		}
+		if (bt.equals(Material.GLASS) || bt.equals(Material.THIN_GLASS) || bt.equals(Material.STAINED_GLASS) || bt.equals(Material.STAINED_GLASS_PANE))
+		    wallGlass++;
+		if (bt.equals(Material.GLOWSTONE))
+		    wallGlowstone++;
+		if (bt.equals(Material.WOODEN_DOOR) || bt.equals(Material.IRON_DOOR_BLOCK)) {
+		    wallDoors++;
+		}
+		if (bt.equals(Material.HOPPER)) {
+		    if (roofHopperLoc == null || !roofHopperLoc.equals(new Location(world,maxx,y, z))) {
+			ghHopper++;
+			roofHopperLoc = new Location(world,maxx,y, z);
+		    }
+		}
+
+	    }
+	    if (fault)
+		break;
+	}
+	if (fault) {
+	    player.sendMessage(ChatColor.RED + "There is a hole in the wall or they are not the same height all the way around!");
+	    return null;
+	}
+
+	// Side #3 - mixz is constant
+	for (int x = minx; x <= maxx; x++) {
+	    for (int y = roofY; y>0; y--) {
+		if (y< groundY) {
+		    // the walls are not even
+		    //plugin.getLogger().info("DEBUG: Walls are not even!");
+		    fault = true;
+		    break;
+		}
+		Material bt = world.getBlockAt(x, y, minz).getType();
+		if (!wallBlocks.contains(bt)) {
+		    // plugin.getLogger().info("DEBUG: "+bt.toString() +" found at y=" + y);
+		    //plugin.getLogger().info("DEBUG: Ground level found at y=" + y);
+		    groundY= y;
+		    break;
+		}
+		if (bt.equals(Material.GLASS) || bt.equals(Material.THIN_GLASS) || bt.equals(Material.STAINED_GLASS) || bt.equals(Material.STAINED_GLASS_PANE))
+		    wallGlass++;
+		if (bt.equals(Material.GLOWSTONE))
+		    wallGlowstone++;
+		if (bt.equals(Material.WOODEN_DOOR) || bt.equals(Material.IRON_DOOR_BLOCK)) {
+		    wallDoors++;
+		}
+		if (bt.equals(Material.HOPPER)) {
+		    if (roofHopperLoc == null || !roofHopperLoc.equals(new Location(world,x,y, minz))) {
+			ghHopper++;
+			roofHopperLoc = new Location(world,x,y, minz);
+		    }
+		}
+
+	    }
+	    if (fault)
+		break;
+	}
+	if (fault) {
+	    player.sendMessage(ChatColor.RED + "There is a hole in the wall or they are not the same height all the way around!");
+	    return null;
+	}
+
+	// Side #4 - max z is constant
+	for (int x = minx; x <= maxx; x++) {
+	    for (int y = roofY; y>0; y--) {
+		if (y< groundY) {
+		    // the walls are not even
+		    //plugin.getLogger().info("DEBUG: Walls are not even!");
+		    fault = true;
+		    break;
+		}
+		Material bt = world.getBlockAt(x, y, maxz).getType();
+		if (!wallBlocks.contains(bt)) {
+		    //plugin.getLogger().info("DEBUG: "+bt.toString() +" found at y=" + y);
+		    //plugin.getLogger().info("DEBUG: Ground level found at y=" + y);
+		    groundY= y;
+		    break;
+		}
+		if (bt.equals(Material.GLASS) || bt.equals(Material.THIN_GLASS) || bt.equals(Material.STAINED_GLASS) || bt.equals(Material.STAINED_GLASS_PANE))
+		    wallGlass++;
+		if (bt.equals(Material.GLOWSTONE))
+		    wallGlowstone++;
+		if (bt.equals(Material.WOODEN_DOOR) || bt.equals(Material.IRON_DOOR_BLOCK)) {
+		    wallDoors++;
+		}
+		if (bt.equals(Material.HOPPER)) {
+		    if (roofHopperLoc == null || !roofHopperLoc.equals(new Location(world,x,y, maxz))) {
+			ghHopper++;
+			roofHopperLoc = new Location(world,x,y, maxz);
+		    }
+		}
+	    }
+	    if (fault)
+		break;
+	}
+	if (fault) {
+	    player.sendMessage(ChatColor.RED + "There is a hole in the wall or they are not the same height all the way around!");
+	    return null;
+	}
+	// Only one hopper allowed
+	if (ghHopper>1) {
+	    player.sendMessage(ChatColor.RED + "Only one hopper is allowed in the walls or roof.");
+	    return null;  
+	}
+	// So all the walls are even and we have our counts
+	//plugin.getLogger().info("DEBUG: glass = " + (wallGlass + roofGlass));
+	//plugin.getLogger().info("DEBUG: glowstone = " + (wallGlowstone + roofGlowstone));
+	//plugin.getLogger().info("DEBUG: doors = " + (wallDoors/2));
+	//plugin.getLogger().info("DEBUG: height = " + height.getBlockY() + " ground = " + groundY);
+	Location pos1 = new Location(world,minx,groundY,minz);
+	Location pos2 = new Location(world,maxx,height.getBlockY(),maxz);
+	//plugin.getLogger().info("DEBUG: pos1 = " + pos1.toString() + " pos2 = " + pos2.toString());
+	// Place some limits
+	if (wallDoors > 8) {
+	    player.sendMessage(ChatColor.RED + "You cannot have more than 4 doors in the greenhouse!");
+	    return null;
+	}
+	// We now have most of the corner coordinates. We need to find the lowest floor block, which is one below the lowest AIR block
+
+	Location insideOne = new Location(world,minx,groundY,minz);
+	Location insideTwo = new Location(world,maxx,height.getBlockY(),maxz);
+	// Loop through biomes to see which ones match
+	// Int is the priority. Higher priority ones win
+	int priority = 0;
+	BiomeRecipe winner = null;
+	for (BiomeRecipe r : plugin.getBiomeRecipes()) {
+	    if (type != null && r.getType().equals(type)) {
+		if (r.checkRecipe(insideOne, insideTwo)) {
+		    winner = r;
+		    priority = r.getPriority();
+		} else {
+		    getLogger().info("Debug: No luck");
+		}
+	    } else {
+		// Only check higher priority ones
+		if (r.getPriority()>priority) {
+		    if (r.checkRecipe(insideOne, insideTwo)) {
+			winner = r;
+			priority = r.getPriority();
+		    }
+		}
+	    }
+	}
+	if (winner != null) {
+	    //plugin.getLogger().info("DEBUG: biome winner is " + winner.toString());
+	    Greenhouse g = createNewGreenhouse(pos1, pos2, player);
+	    g.setOriginalBiome(originalBiome);
+	    g.setBiome(winner);
+	    g.setEnterMessage("Entering " + player.getDisplayName() + "'s " + Greenhouses.prettifyText(winner.getType().toString()) + " greenhouse!");
+	    // Store the roof hopper location so it can be tapped in the future
+	    if (ghHopper == 1) {
+		g.setRoofHopperLocation(roofHopperLoc);
+	    }
+	    // Store the contents of the greenhouse so it can be audited later
+	    //g.setOriginalGreenhouseContents(contents);
+	    g.startBiome();
+	    player.sendMessage(ChatColor.GREEN + "You succesfully made a "+ Greenhouses.prettifyText(winner.getType().toString()) + " biome greenhouse!");
+	    return g;
+	}
+	return null;
+	/*
+	Flower		Plains	SPlains	Swamp	Forest	FForest	Any other
+	 Dandelion	Yes	Yes	No	Yes	No	Yes
+	 Poppy		Yes	Yes	No	Yes	Yes	Yes
+	 Blue Orchid	No	No	Yes	No	No	No
+	 Allium		No	No	No	No	Yes	No
+	 Azure Bluet	Yes	Yes	No	No	Yes	No
+	 Tulips		Yes	Yes	No	No	Yes	No
+	 Oxeye Daisy	Yes	Yes	No	No	Yes	No
+	 Sunflower	No	Gen	No	No	No	No
+	 Lilac		No	No	No	Gen	Gen	No
+	 Rose Bush	No	No	No	Gen	Gen	No
+	 Peony		No	No	No	Gen	Gen	No
+	 */
+    }
+
+
 }

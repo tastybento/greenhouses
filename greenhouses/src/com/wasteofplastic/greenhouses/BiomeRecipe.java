@@ -10,12 +10,11 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.material.Leaves;
-import org.bukkit.material.Tree;
 
 public class BiomeRecipe {
     private Greenhouses plugin;
     private Biome type;
+    private Material icon; // Biome icon for control panel
     private int priority;
     // Content requirements
     // Material, Type, Qty. There can be more than one type of material required
@@ -37,12 +36,12 @@ public class BiomeRecipe {
     // Conversions
     // Original Material, Original Type, New Material, New Type, Probability
     private List<Material> oldMaterial = new ArrayList<Material>();
-    private List<Integer> oldType = new ArrayList<Integer>();
+    private List<Byte> oldType = new ArrayList<Byte>();
     private List<Integer> convChance = new ArrayList<Integer>();
     private List<Material> newMaterial = new ArrayList<Material>();
-    private List<Integer> newType = new ArrayList<Integer>();
+    private List<Byte> newType = new ArrayList<Byte>();
     private List<Material> localMaterial = new ArrayList<Material>();
-    private List<Integer> localType = new ArrayList<Integer>();
+    private List<Byte> localType = new ArrayList<Byte>();
 
     private int mobLimit;
     private int waterCoverage;
@@ -71,6 +70,12 @@ public class BiomeRecipe {
 
 
     // Check required blocks
+    /**
+     * Returns true if a cube defined by pos1 and pos2 meet this biome recipe
+     * @param pos1
+     * @param pos2
+     * @return
+     */
     public boolean checkRecipe(Location pos1, Location pos2) {
 	//plugin.getLogger().info("DEBUG: Checking for biome " + type.toString());
 	// Calculate floor area
@@ -89,23 +94,23 @@ public class BiomeRecipe {
 		    Block b = pos1.getWorld().getBlockAt(x, y, z);
 		    if (!b.getType().equals(Material.AIR))
 			//plugin.getLogger().info("Checking block " + b.getType() + ":" + b.getData() + "@" + x + " " + y + " " + z);
-		    // Log water, lava and ice blocks
-		    switch (b.getType()) {
-		    case WATER:
-		    case STATIONARY_WATER:
-			water++;
-			break;
-		    case LAVA:
-		    case STATIONARY_LAVA:
-			lava++;
-			break;
-		    case ICE:
-		    case PACKED_ICE:
-			ice++;
-			break;
-		    default:
-			break;
-		    }
+			// Log water, lava and ice blocks
+			switch (b.getType()) {
+			case WATER:
+			case STATIONARY_WATER:
+			    water++;
+			    break;
+			case LAVA:
+			case STATIONARY_LAVA:
+			    lava++;
+			    break;
+			case ICE:
+			case PACKED_ICE:
+			    ice++;
+			    break;
+			default:
+			    break;
+			}
 		    int index = indexOfReqBlocks(b.getType(),b.getData());
 		    if (index>=0) {
 			//plugin.getLogger().info("DEBUG: Found block " + b.getType().toString() + " type " + b.getData() + " at index " + index);
@@ -147,11 +152,12 @@ public class BiomeRecipe {
 
 	    // reset the list
 	    this.blockQtyCheck.set(i, this.blockQty.get(i));
-	}
+	}/*
 	if (pass)
 	    plugin.getLogger().info("DEBUG: Could be biome " + type.toString());
 	else
 	    plugin.getLogger().info("DEBUG: Cannot be biome " + type.toString());
+	    */
 	return pass;
     }
 
@@ -260,12 +266,87 @@ public class BiomeRecipe {
     public void addConvBlocks(Material oldMaterial, int oldType, Material newMaterial, int newType, int convChance,
 	    Material localMaterial, int localType) {
 	this.oldMaterial.add(oldMaterial);
-	this.oldType.add(oldType);
+	this.oldType.add((byte)oldType);
 	this.newMaterial.add(newMaterial);
-	this.newType.add(newType);
+	this.newType.add((byte)newType);
 	this.localMaterial.add(localMaterial);
-	this.localType.add(localType);
+	this.localType.add((byte)localType);
 	this.convChance.add(convChance); 
+    }
+
+    /**
+     * @return true if there are blocks to convert for this biome
+     */
+    public boolean getBlockConvert() {
+	if (oldMaterial.isEmpty())
+	    return false;
+	return true;
+    }
+    public void convertBlock(Block b) {
+	//plugin.getLogger().info("DEBUG: try to convert block");
+	// Check if block is in the list
+	@SuppressWarnings("deprecation")
+	byte type = b.getData();
+	if (!oldMaterial.contains(b.getType()) || !oldType.contains(type)) {
+	    //plugin.getLogger().info("DEBUG: no material or type match");
+	    return;
+	}
+	//plugin.getLogger().info("DEBUG: material or type match");
+	int index = oldMaterial.indexOf(b.getType());
+	if (!oldType.get(index).equals(type)) {
+	    //plugin.getLogger().info("DEBUG: no type match");
+	    return;
+	}
+	//plugin.getLogger().info("DEBUG: type match");
+	// Block material and data match
+	// Check the chance
+	double chance = Math.random();
+	double convCh = (double)convChance.get(index)/100D;
+	if (chance > convCh) {
+	    //plugin.getLogger().info("DEBUG: failed the probability check - " + chance + " > " + convCh);
+	    return;
+	}
+	//plugin.getLogger().info("DEBUG: pass the probability check");
+	// Check if the block is in the right area, up, down, n,s,e,w
+	if (localMaterial.get(index) != null) {
+	    //plugin.getLogger().info("DEBUG: Looking for " + localMaterial.get(index).toString() + ":" + localType.get(index));
+	    boolean found = false;
+	    for (BlockFace bf : BlockFace.values()) {
+		switch (bf) {
+		case DOWN:
+		case EAST:
+		case NORTH:
+		case SOUTH:
+		case UP:
+		case WEST:
+		    //plugin.getLogger().info("DEBUG:" + bf.toString() + " material is " + b.getRelative(bf).getType().toString());
+		    if (b.getRelative(bf).getType().equals(localMaterial.get(index))) {
+			//plugin.getLogger().info("DEBUG: Material matches");
+			byte t = b.getRelative(bf).getData();
+			if (localType.get(index).equals((byte)0) || localType.get(index).equals(t)) {
+			    //plugin.getLogger().info("DEBUG: found adjacent block");
+			    found = true;
+			    break;
+			}
+		    }
+		    break;
+		default:
+		    break;
+
+		}
+
+	    }
+	    if (!found)
+		return;
+	} else {
+	    plugin.getLogger().info("DEBUG: no adjacent block requirement");
+	}
+
+	// Convert!
+	plugin.getLogger().info("DEBUG: Convert block");
+	b.setType(newMaterial.get(index));
+	b.setData(newType.get(index));
+	return;
     }
 
     /**
@@ -370,6 +451,20 @@ public class BiomeRecipe {
 	    index++;
 	}
 	return grewPlant;
+    }
+
+    /**
+     * @return the icon
+     */
+    public Material getIcon() {
+	return icon;
+    }
+
+    /**
+     * @param icon the icon to set
+     */
+    public void setIcon(Material icon) {
+	this.icon = icon;
     }
 
 }

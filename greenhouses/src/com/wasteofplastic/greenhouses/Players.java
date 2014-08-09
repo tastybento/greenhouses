@@ -115,26 +115,6 @@ public class Players {
 			if (hopperLoc != null) {
 			    g.setRoofHopperLocation(hopperLoc);
 			}
-			// Load the contents
-			// Store original contents
-			if (playerInfo.getConfigurationSection("greenhouses." + key + ".ocontents") != null) {
-			    HashMap<String,Object> oContents = (HashMap<String,Object>) playerInfo.getConfigurationSection("greenhouses." + key + ".ocontents").getValues(true);
-			    ConcurrentHashMap<Material,AtomicLong> originalBlocks = new ConcurrentHashMap<Material,AtomicLong>();
-			    // try to covert the info
-			    try {
-				for (String material: oContents.keySet()) {
-				    int qty = (Integer) oContents.get(material);
-				    originalBlocks.put(Material.valueOf(material), new AtomicLong((long)qty));
-				}
-				g.setOriginalGreenhouseContents(originalBlocks);
-			    } catch (Exception e) {
-				plugin.getLogger().severe("Error loading greenhouse.");
-				e.printStackTrace();
-			    }
-			} else {
-			    plugin.getLogger().severe("Error loading original contents of greenhouse."); 
-			}
-
 			// Load all the flags
 			HashMap<String,Object> flags = (HashMap<String, Object>) playerInfo.getConfigurationSection("greenhouses." + key + ".flags").getValues(false);
 			//d.setEnterMessage(playerInfo.getString("greenhouses." + key + ".entermessage",""));
@@ -218,16 +198,6 @@ public class Players {
 		    playerInfo.set("greenhouses." + index + ".originalBiome", greenhouse.getOriginalBiome().toString());
 		    playerInfo.set("greenhouses." + index + ".greenhouseBiome", greenhouse.getBiome().toString());
 		    playerInfo.set("greenhouses." + index + ".roofHopperLocation", getStringLocation(greenhouse.getRoofHopperLocation()));
-		    // Store original contents
-		    ConcurrentHashMap<Material,AtomicLong> oContents = greenhouse.getOriginalGreenhouseContents();
-		    if (oContents != null) {
-			HashMap<String,Long> originalBlocks = new HashMap<String,Long>();
-			// Convert to string/object for storage
-			for (Material m : oContents.keySet())
-			    originalBlocks.put(m.toString(), oContents.get(m).longValue());
-			playerInfo.createSection("greenhouses." + index + ".ocontents", originalBlocks);
-		    }
-
 		    if (greenhouse.getRenter() != null)
 			playerInfo.set("greenhouses." + index + ".renter", greenhouse.getRenter().toString());
 		    playerInfo.set("greenhouses." + index + ".forSale", greenhouse.isForSale());

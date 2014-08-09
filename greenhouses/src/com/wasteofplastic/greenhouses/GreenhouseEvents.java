@@ -1,7 +1,6 @@
 package com.wasteofplastic.greenhouses;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.bukkit.ChatColor;
@@ -42,8 +41,10 @@ public class GreenhouseEvents implements Listener {
     public void onPlayerMove(PlayerMoveEvent event) {
 	Player player = event.getPlayer();
 	World world = player.getWorld();
-	if (!world.getName().equalsIgnoreCase(Settings.worldName))
+	// Check we are in the right world
+	if (!Settings.worldName.contains(world.getName())) {
 	    return;
+	}
 	if (player.getVehicle() != null) {
 	    return; // handled in vehicle listener
 	}
@@ -81,8 +82,10 @@ public class GreenhouseEvents implements Listener {
 	// Check if they changed worlds
 	World fromWorld = event.getFrom().getWorld();
 	World toWorld = event.getTo().getWorld();
-	if (!toWorld.getName().equalsIgnoreCase(Settings.worldName) && !fromWorld.getName().equalsIgnoreCase(Settings.worldName))
+	// Check we are in the right world
+	if (!Settings.worldName.contains(fromWorld.getName()) && !Settings.worldName.contains(toWorld.getName())) {
 	    return;
+	}
 	// Did we move a block?
 	checkMove(player, event.getFrom(), event.getTo());
     }
@@ -182,7 +185,7 @@ public class GreenhouseEvents implements Listener {
      */
     @EventHandler(priority = EventPriority.HIGH)
     public void onBlockBreak(final BlockBreakEvent e) {
-	if (!e.getPlayer().getWorld().getName().equalsIgnoreCase(Settings.worldName)) {
+	if (!Settings.worldName.contains(e.getPlayer().getWorld().getName())) {
 	    return;
 	}
 	//plugin.getLogger().info("Debug: block break");
@@ -209,7 +212,7 @@ public class GreenhouseEvents implements Listener {
      */
     @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerBlockPlace(final BlockPlaceEvent e) {
-	if (!e.getPlayer().getWorld().getName().equalsIgnoreCase(Settings.worldName)) {
+	if (!Settings.worldName.contains(e.getPlayer().getWorld().getName())) {
 	    return;
 	}
 	// If the offending block is not above a greenhouse, forget it!
@@ -227,7 +230,7 @@ public class GreenhouseEvents implements Listener {
      */
     @EventHandler
     public void onPistonPush(final BlockPistonExtendEvent e) {
-	if (!e.getBlock().getWorld().getName().equalsIgnoreCase(Settings.worldName)) {
+	if (!Settings.worldName.contains(e.getBlock().getWorld().getName())) {
 	    return;
 	}
 	// Check if piston is already extended to avoid the double event effect
@@ -255,7 +258,7 @@ public class GreenhouseEvents implements Listener {
 	}
 	// Find out who is around the piston
 	for (Player p : plugin.getServer().getOnlinePlayers()) {
-	    if (p.getLocation().getWorld().getName().equalsIgnoreCase(Settings.worldName)) {
+	    if (Settings.worldName.contains(p.getLocation().getWorld().getName())) {
 		if (p.getLocation().distanceSquared(e.getBlock().getLocation()) <= 25) {
 		    p.sendMessage(ChatColor.RED + "Pistons cannot push blocks over a greenhouse!");
 		    e.setCancelled(true);
@@ -269,7 +272,7 @@ public class GreenhouseEvents implements Listener {
 
     @EventHandler(priority = EventPriority.NORMAL)
     public void onBucketEmpty(final PlayerBucketEmptyEvent e) {
-	if (!e.getPlayer().getWorld().getName().equalsIgnoreCase(Settings.worldName)) {
+	if (!Settings.worldName.contains(e.getPlayer().getWorld().getName())) {
 	    return;
 	}
 	// If the offending item is not in a greenhouse, forget it!
@@ -281,7 +284,7 @@ public class GreenhouseEvents implements Listener {
     }
     @EventHandler(priority = EventPriority.NORMAL)
     public void onBucketFill(final PlayerBucketFillEvent e) {
-	if (!e.getPlayer().getWorld().getName().equalsIgnoreCase(Settings.worldName)) {
+	if (!Settings.worldName.contains(e.getPlayer().getWorld().getName())) {
 	    return;
 	}
 	// If the offending item is not in a greenhouse, forget it!
