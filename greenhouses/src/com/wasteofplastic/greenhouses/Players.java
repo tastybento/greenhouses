@@ -83,7 +83,7 @@ public class Players {
 		    //plugin.getLogger().info("DEBUG: File pos1: " + pos2.toString());
 		    // Check if this greenhouse already exists
 		    if (plugin.checkGreenhouseIntersection(pos1, pos2)) {
-			plugin.getLogger().info("DEBUG: Greenhouse already exists or overlaps - ignoring");
+			//plugin.getLogger().info("DEBUG: Greenhouse already exists or overlaps - ignoring");
 
 		    } else {
 			Greenhouse g = new Greenhouse(plugin, pos1, pos2, uuid);
@@ -234,6 +234,10 @@ public class Players {
 	}
 	final String[] parts = s.split(":");
 	if (parts.length == 4) {
+	    for (World w : Bukkit.getServer().getWorlds()) {
+	    //Bukkit.getLogger().info("DEBUG: Worlds are " + w.getName());
+	    }
+	    //Bukkit.getLogger().info("DEBUG: Looking for : " + parts[0]);
 	    final World w = Bukkit.getServer().getWorld(parts[0]);
 	    final int x = Integer.parseInt(parts[1]);
 	    final int y = Integer.parseInt(parts[2]);

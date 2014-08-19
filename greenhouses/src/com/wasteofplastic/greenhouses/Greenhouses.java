@@ -529,10 +529,12 @@ public class Greenhouses extends JavaPlugin {
 	    ecoTask = getServer().getScheduler().runTaskTimer(plugin, new Runnable() {
 		@Override
 		public void run() {
-		    for (Greenhouse g : getGreenhouses()) {
+		    //for (Greenhouse g : getGreenhouses()) {
 			//getLogger().info("DEBUG: Servicing greenhouse biome : " + g.getBiome().toString());
+			// TODO: Bug here - the checkEco removes greenhouses that do not meet spec - that causes a problem
+			// with getGreenhouses!
 			checkEco();
-		    }
+		    //}
 		}
 	    }, ecoTick, ecoTick);
 
@@ -604,14 +606,14 @@ public class Greenhouses extends JavaPlugin {
 	lease.set(Calendar.SECOND, 0);                 // set second in minute
 	lease.set(Calendar.MILLISECOND, 0);            // set millisecond in second
 
-	getLogger().info("DEBUG: Last week = " + lastWeek.getTime().toString());
-	getLogger().info("DEBUG: Last payment = " + lease.getTime().toString());
+	//getLogger().info("DEBUG: Last week = " + lastWeek.getTime().toString());
+	//getLogger().info("DEBUG: Last payment = " + lease.getTime().toString());
 	int daysBetween = 0;
 	while (lastWeek.before(lease)) {
 	    lastWeek.add(Calendar.DAY_OF_MONTH, 1);
 	    daysBetween++;
 	}
-	getLogger().info("DEBUG: days left on lease = " + daysBetween);
+	//getLogger().info("DEBUG: days left on lease = " + daysBetween);
 	if (daysBetween < 1) {
 	    getLogger().info("Lease expired");
 	    return 0;
@@ -625,12 +627,12 @@ public class Greenhouses extends JavaPlugin {
 	    // Only check rented properties
 	    if (d.getLastPayment() != null && d.getRenter() != null) {
 		if (daysToEndOfLease(d) == 0) {
-		    getLogger().info("Debug: Check to see if the lease is renewable");
+		    //getLogger().info("Debug: Check to see if the lease is renewable");
 		    // Check to see if the lease is renewable
 		    if (d.isForRent()) {
-			getLogger().info("Debug: Greenhouse is still for rent");
+			//getLogger().info("Debug: Greenhouse is still for rent");
 			// Try to deduct rent
-			getLogger().info("Debug: Withdrawing rent from renters account");
+			//getLogger().info("Debug: Withdrawing rent from renters account");
 			EconomyResponse r = VaultHelper.econ.withdrawPlayer(getServer().getOfflinePlayer(d.getRenter()), d.getPrice());
 			if (r.transactionSuccess()) {
 			    getLogger().info("Successfully withdrew rent of " + VaultHelper.econ.format(d.getPrice()) + " from " + getServer().getOfflinePlayer(d.getRenter()).getName() + " account.");
@@ -1351,6 +1353,7 @@ public class Greenhouses extends JavaPlugin {
 	int ghHopper = 0;
 	Location roofHopperLoc = null;
 	// Check the roof is solid
+	//getLogger().info("Debug: height = " + height.getBlockY());
 	boolean blockAbove = false;
 	for (int x = minx; x <= maxx; x++) {
 	    for (int z = minz; z <= maxz; z++) {
@@ -1364,9 +1367,12 @@ public class Greenhouses extends JavaPlugin {
 		    roofHopperLoc = new Location(world,x,height.getBlockY(), z);
 		}
 		// Check if there are any blocks above the greenhouse
-		if (world.getHighestBlockYAt(x, z) > height.getBlockY())
+		
+		if (world.getHighestBlockYAt(x, z) > height.getBlockY()) {
+		    //getLogger().info("Debug: highest block at  " + x + " " + z + " is " + world.getHighestBlockYAt(x, z) + " which is higher than " + height.getBlockY());
+		    
 		    blockAbove=true;
-
+		}
 	    }
 	}
 	if (blockAbove) {
@@ -1568,7 +1574,7 @@ public class Greenhouses extends JavaPlugin {
 		    winner = r;
 		    priority = r.getPriority();
 		} else {
-		    getLogger().info("Debug: No luck");
+		    //getLogger().info("Debug: No luck");
 		}
 	    } else {
 		// Only check higher priority ones

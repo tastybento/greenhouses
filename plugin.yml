@@ -1,6 +1,6 @@
 name: Greenhouses
 main: com.wasteofplastic.greenhouses.Greenhouses
-version: 0.7
+version: 0.8
 description: Enables players to create biome greenhouses
 author: Tastybento
 depend: [Vault]

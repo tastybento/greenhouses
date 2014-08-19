@@ -996,7 +996,7 @@ public class Greenhouse {
 	    } else {
 		// Greenhouse is broken or no longer has a hopper when it should
 		// TODO remove the greenhouse
-		plugin.getLogger().info("DEBUG: Hopper is not there anymore...");
+		//plugin.getLogger().info("DEBUG: Hopper is not there anymore...");
 	    }
 	}
     }

@@ -339,11 +339,11 @@ public class BiomeRecipe {
 	    if (!found)
 		return;
 	} else {
-	    plugin.getLogger().info("DEBUG: no adjacent block requirement");
+	    //plugin.getLogger().info("DEBUG: no adjacent block requirement");
 	}
 
 	// Convert!
-	plugin.getLogger().info("DEBUG: Convert block");
+	//plugin.getLogger().info("DEBUG: Convert block");
 	b.setType(newMaterial.get(index));
 	b.setData(newType.get(index));
 	return;
