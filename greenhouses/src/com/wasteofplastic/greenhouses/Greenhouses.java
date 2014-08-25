@@ -1367,12 +1367,17 @@ public class Greenhouses extends JavaPlugin {
 		    roofHopperLoc = new Location(world,x,height.getBlockY(), z);
 		}
 		// Check if there are any blocks above the greenhouse
-		
-		if (world.getHighestBlockYAt(x, z) > height.getBlockY()) {
-		    //getLogger().info("Debug: highest block at  " + x + " " + z + " is " + world.getHighestBlockYAt(x, z) + " which is higher than " + height.getBlockY());
-		    
-		    blockAbove=true;
+		for (int y = height.getBlockY()+1; y <255; y++) {
+		    if (!world.getBlockAt(x, y, z).getType().equals(Material.AIR)) {
+			getLogger().info("Debug: non-air block found at  " + x + "," + y+ "," + z + " which is higher than " + height.getBlockY());
+			blockAbove = true;
+			break;
+		    }
 		}
+		//if (world.getHighestBlockYAt(x, z) > height.getBlockY()) {
+		//    
+		//    blockAbove=true;
+		//}
 	    }
 	}
 	if (blockAbove) {
