@@ -384,7 +384,7 @@ public class Greenhouses extends JavaPlugin {
 	    Settings.checkLeases = 24;
 	    getLogger().warning("Maximum value for Checkleases in config.yml is 24 hours. Setting to 24.");	    
 	}
-	
+
     }
 
     /*
@@ -504,7 +504,11 @@ public class Greenhouses extends JavaPlugin {
 		    for (Greenhouse g : getGreenhouses()) {
 			//getLogger().info("DEBUG: Servicing greenhouse biome : " + g.getBiome().toString());
 			//checkEco();
-			g.growFlowers();
+			try {
+			    g.growFlowers();
+			} catch (Exception e) {
+			    getLogger().severe("Problem found with greenhouse during growing flowers. Skipping...");
+			}
 			//g.populateGreenhouse();
 		    }
 		}
@@ -522,7 +526,12 @@ public class Greenhouses extends JavaPlugin {
 		@Override
 		public void run() {		    
 		    for (Greenhouse g : getGreenhouses()) {
-			g.convertBlocks();
+			try {
+			    g.convertBlocks();
+			} catch (Exception e) {
+			    getLogger().severe("Problem found with greenhouse during block conversion. Skipping...");
+			}
+
 			//getLogger().info("DEBUG: Servicing greenhouse biome : " + g.getBiome().toString());
 		    }
 		}
@@ -542,7 +551,12 @@ public class Greenhouses extends JavaPlugin {
 		    //getLogger().info("DEBUG: Servicing greenhouse biome : " + g.getBiome().toString());
 		    // TODO: Bug here - the checkEco removes greenhouses that do not meet spec - that causes a problem
 		    // with getGreenhouses!
-		    checkEco();
+		    try {
+			checkEco();
+		    } catch (Exception e) {
+			getLogger().severe("Problem found with greenhouse during eco check. Skipping...");
+		    }
+
 		    //}
 		}
 	    }, ecoTick, ecoTick);
@@ -1159,7 +1173,7 @@ public class Greenhouses extends JavaPlugin {
 			    // Evaporate it
 			    b.setType(Material.AIR);
 			    ParticleEffect.LARGE_SMOKE.display(b.getLocation(), 0F, 0F, 0F, 0.1F, 5);
-			    
+
 			}
 		    }
 		}
