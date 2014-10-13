@@ -20,17 +20,24 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.World.Environment;
 import org.bukkit.block.Biome;
+import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.FurnaceRecipe;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.material.MaterialData;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
+
+import com.wasteofplastic.particles.ParticleEffect;
 
 /**
  * @author ben
@@ -346,6 +353,8 @@ public class Greenhouses extends JavaPlugin {
 	Settings.allowBrewing = getConfig().getBoolean("greenhouses.allowbrewing", false);
 	Settings.allowGateUse = getConfig().getBoolean("greenhouses.allowgateuse", false);
 	Settings.allowMobHarm = getConfig().getBoolean("greenhouses.allowmobharm", false);
+	Settings.allowFlowIn = getConfig().getBoolean("greenhouses.allowflowin", false);
+	Settings.allowFlowOut = getConfig().getBoolean("greenhouses.allowflowout", false);
 	// Other settings
 	Settings.worldName = getConfig().getStringList("greenhouses.worldName");
 	if (Settings.worldName.isEmpty()) {
@@ -375,6 +384,7 @@ public class Greenhouses extends JavaPlugin {
 	    Settings.checkLeases = 24;
 	    getLogger().warning("Maximum value for Checkleases in config.yml is 24 hours. Setting to 24.");	    
 	}
+	
     }
 
     /*
@@ -420,7 +430,6 @@ public class Greenhouses extends JavaPlugin {
 	loadPluginConfig();
 	loadBiomeRecipes();
 	biomeInv = new ControlPanel(this);
-
 	// Set and make the player's directory if it does not exist and then load players into memory
 	playersFolder = new File(getDataFolder() + File.separator + "players");
 	if (!playersFolder.exists()) {
@@ -530,10 +539,10 @@ public class Greenhouses extends JavaPlugin {
 		@Override
 		public void run() {
 		    //for (Greenhouse g : getGreenhouses()) {
-			//getLogger().info("DEBUG: Servicing greenhouse biome : " + g.getBiome().toString());
-			// TODO: Bug here - the checkEco removes greenhouses that do not meet spec - that causes a problem
-			// with getGreenhouses!
-			checkEco();
+		    //getLogger().info("DEBUG: Servicing greenhouse biome : " + g.getBiome().toString());
+		    // TODO: Bug here - the checkEco removes greenhouses that do not meet spec - that causes a problem
+		    // with getGreenhouses!
+		    checkEco();
 		    //}
 		}
 	    }, ecoTick, ecoTick);
@@ -1127,16 +1136,35 @@ public class Greenhouses extends JavaPlugin {
 		ownerOnline=true;
 	    if (g.insideGreenhouse(p.getLocation())) {
 		players.setInGreenhouse(p.getUniqueId(), null);
+		// TODO messages.removed
 		p.sendMessage(ChatColor.RED + "This greenhouse is no more...");
 		devisualize(p);
 	    }
 	}
 	if (!ownerOnline)
-	    plugin.setMessage(g.getOwner(), "A " + g.getBiome() + " greenhouse of yours is no more!");
+	    setMessage(g.getOwner(), "A " + g.getBiome() + " greenhouse of yours is no more!");
 	World world = g.getPos1().getWorld();
 	getLogger().info("DEBUG: Returning biome to original state: " + g.getOriginalBiome().toString());
 	g.setBiome(g.getOriginalBiome()); // just in case
 	g.endBiome();
+	if (g.getBiome().equals(Biome.HELL) || g.getBiome().equals(Biome.DESERT)
+		|| g.getBiome().equals(Biome.DESERT_HILLS) || g.getBiome().equals(Biome.DESERT_MOUNTAINS)) {
+	    // Remove any water
+	    for (int y = g.getPos1().getBlockY(); y< g.getPos2().getBlockY();y++) {
+		for (int x = g.getPos1().getBlockX()+1;x<g.getPos2().getBlockX();x++) {
+		    for (int z = g.getPos1().getBlockZ()+1;z<g.getPos2().getBlockZ();z++) {
+			Block b = g.getPos1().getWorld().getBlockAt(x, y, z);
+			if (b.getType().equals(Material.WATER) || b.getType().equals(Material.STATIONARY_WATER)
+				|| b.getType().equals(Material.ICE) || b.getType().equals(Material.PACKED_ICE)) {
+			    // Evaporate it
+			    b.setType(Material.AIR);
+			    ParticleEffect.LARGE_SMOKE.display(b.getLocation(), 0F, 0F, 0F, 0.1F, 5);
+			    
+			}
+		    }
+		}
+	    }
+	}
 	/*
 	// Set the biome
 	for (int y = g.getPos1().getBlockY(); y< g.getPos2().getBlockY();y++) {
@@ -1202,7 +1230,7 @@ public class Greenhouses extends JavaPlugin {
 	//plugin.getLogger().info("DEBUG: started eco check");
 	// Check all the greenhouses to see if they still meet the g/h recipe
 	List<Greenhouse> onesToRemove = new ArrayList<Greenhouse>();
-	for (Greenhouse g : plugin.getGreenhouses()) {
+	for (Greenhouse g : getGreenhouses()) {
 	    //plugin.getLogger().info("DEBUG: Testing greenhouse owned by " + g.getOwner().toString());
 	    if (!g.checkEco()) {
 		// The greenhouse failed an eco check - remove it
@@ -1213,12 +1241,13 @@ public class Greenhouses extends JavaPlugin {
 	    // Check if player is online
 	    Player owner = plugin.getServer().getPlayer(gg.getOwner());
 	    if (owner == null)  {
-		plugin.setMessage(gg.getOwner(), "Your greenhouse at " + Greenhouses.getStringLocation(gg.getPos1()) + " lost its eco system and was removed.");
+		// TODO messages.ecolost
+		setMessage(gg.getOwner(), "Your greenhouse at " + Greenhouses.getStringLocation(gg.getPos1()) + " lost its eco system and was removed.");
 	    } else {
 		owner.sendMessage(ChatColor.RED + "Your greenhouse at " + Greenhouses.getStringLocation(gg.getPos1()) + " lost its eco system and was removed.");
 	    }
-	    plugin.removeGreenhouse(gg);
-	    plugin.getLogger().info("Greenhouse at " + Greenhouses.getStringLocation(gg.getPos1()) + " lost its eco system and was removed.");
+	    removeGreenhouse(gg);
+	    getLogger().info("Greenhouse at " + Greenhouses.getStringLocation(gg.getPos1()) + " lost its eco system and was removed.");
 
 	}
     }
@@ -1292,6 +1321,7 @@ public class Greenhouses extends JavaPlugin {
 	while (!roofBlocks.contains(height.getBlock().getType())) {
 	    height.add(new Vector(0,1,0));
 	    if (height.getBlockY() > 255) {
+		// TODO create.noroof
 		player.sendMessage(ChatColor.RED + "There seems to be no roof!");
 		return null;
 	    }
@@ -1369,7 +1399,7 @@ public class Greenhouses extends JavaPlugin {
 		// Check if there are any blocks above the greenhouse
 		for (int y = height.getBlockY()+1; y <255; y++) {
 		    if (!world.getBlockAt(x, y, z).getType().equals(Material.AIR)) {
-			getLogger().info("Debug: non-air block found at  " + x + "," + y+ "," + z + " which is higher than " + height.getBlockY());
+			//getLogger().info("Debug: non-air block found at  " + x + "," + y+ "," + z + " which is higher than " + height.getBlockY());
 			blockAbove = true;
 			break;
 		    }
@@ -1380,7 +1410,8 @@ public class Greenhouses extends JavaPlugin {
 		//}
 	    }
 	}
-	if (blockAbove) {
+	if (blockAbove && world.getEnvironment().equals(Environment.NORMAL)) {
+	    // TODO create.nothingabove
 	    player.sendMessage(ChatColor.RED + "There can be no blocks above the greenhouse!");
 	    return null;
 	}
@@ -1388,6 +1419,7 @@ public class Greenhouses extends JavaPlugin {
 	//plugin.getLogger().info("DEBUG: Roof area is " + roofArea + " blocks");
 	//plugin.getLogger().info("DEBUG: roofglass = " + roofGlass + " glowstone = " + roofGlowstone);
 	if (roofArea != (roofGlass+roofGlowstone+ghHopper)) {
+	    // TODO create.holeinroof
 	    player.sendMessage(ChatColor.RED + "There is a hole in the roof or it is not flat!");
 	    return null;
 	}
@@ -1429,6 +1461,7 @@ public class Greenhouses extends JavaPlugin {
 		break;
 	}
 	if (fault) {
+	    // TODO create.holeinwall
 	    player.sendMessage(ChatColor.RED + "There is a hole in the wall or they are not the same height all the way around!");
 	    return null;
 	}
@@ -1549,6 +1582,7 @@ public class Greenhouses extends JavaPlugin {
 	}
 	// Only one hopper allowed
 	if (ghHopper>1) {
+	    // Todo create.hoppererror
 	    player.sendMessage(ChatColor.RED + "Only one hopper is allowed in the walls or roof.");
 	    return null;  
 	}
@@ -1562,6 +1596,7 @@ public class Greenhouses extends JavaPlugin {
 	//plugin.getLogger().info("DEBUG: pos1 = " + pos1.toString() + " pos2 = " + pos2.toString());
 	// Place some limits
 	if (wallDoors > 8) {
+	    // TODO: create.doorerror
 	    player.sendMessage(ChatColor.RED + "You cannot have more than 4 doors in the greenhouse!");
 	    return null;
 	}

@@ -89,10 +89,11 @@ public class ControlPanel implements Listener {
 		ItemStack item = store.get(slot);
 		if (clicked.equals(item)) {
 		    // We have a winner!
-		    plugin.getLogger().info("You clicked on slot " + slot);
+		    //plugin.getLogger().info("You clicked on slot " + slot);
 			// Sets up a greenhouse
 			if (plugin.players.getInGreenhouse(player.getUniqueId()) != null) {
 			    player.closeInventory(); // Closes the inventory
+			    // error.exists
 			    player.sendMessage(ChatColor.RED + "You are already in an existing greenhouse!");
 			    return;
 			}
@@ -101,6 +102,7 @@ public class ControlPanel implements Listener {
 			Greenhouse g = plugin.checkGreenhouse(player);
 			if (g == null) {
 			    player.closeInventory(); // Closes the inventory
+			    //error.norecipe
 			    player.sendMessage(ChatColor.RED + "This does not meet any greenhouse recipe!");
 			    return;
 			}

@@ -6,7 +6,13 @@ import java.util.List;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.World;
+import org.bukkit.World.Environment;
+import org.bukkit.block.Biome;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
+import org.bukkit.entity.ExperienceOrb;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -14,11 +20,15 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
+
+import com.wasteofplastic.particles.ParticleEffect;
 
 /**
  * @author ben
@@ -32,7 +42,54 @@ public class GreenhouseEvents implements Listener {
 	this.plugin = plugin;
 
     }
-
+    
+    /**
+     * Permits water to be placed in the Nether if in a greenhouse and in an acceptable biome 
+     * @param event
+     */
+    @EventHandler
+    public void onPlayerInteract(PlayerInteractEvent event){        
+	Player player = event.getPlayer();
+	World world = player.getWorld();
+	// Check we are in the right world
+	if (!Settings.worldName.contains(world.getName())) {
+	    return;
+	}
+	// Find out which greenhouse the player is in
+        if(event.getClickedBlock() != null && event.getClickedBlock().getWorld().getEnvironment() == Environment.NETHER 
+                && event.getItem() != null && event.getItem().getType() == Material.WATER_BUCKET) {
+            Greenhouse g = plugin.players.getInGreenhouse(player.getUniqueId());
+            if (g != null && !g.getBiome().equals(Biome.HELL) && !g.getBiome().equals(Biome.DESERT)
+        	    && !g.getBiome().equals(Biome.DESERT_HILLS) && !g.getBiome().equals(Biome.DESERT_MOUNTAINS)) {
+        	event.setCancelled(true);
+        	event.getClickedBlock().getRelative(event.getBlockFace()).setType(Material.WATER);
+            }
+        }
+    }
+    /**
+     * Makes water in the Nether if ice is broken and in a greenhouse
+     * @param event
+     */
+    @EventHandler
+    public void onIceBreak(BlockBreakEvent event){        
+	Player player = event.getPlayer();
+	World world = player.getWorld();
+	// Check we are in the right world
+	if (!Settings.worldName.contains(world.getName())) {
+	    return;
+	}
+	// Find out which greenhouse the player is in
+        if(event.getBlock().getWorld().getEnvironment() == Environment.NETHER 
+                && event.getBlock().getType() == Material.ICE) {
+            Greenhouse g = plugin.players.getInGreenhouse(player.getUniqueId());
+            if (g != null && !g.getBiome().equals(Biome.HELL) && !g.getBiome().equals(Biome.DESERT)
+        	    && !g.getBiome().equals(Biome.DESERT_HILLS) && !g.getBiome().equals(Biome.DESERT_MOUNTAINS)) {
+        	event.setCancelled(true);
+        	event.getBlock().setType(Material.WATER);
+            }
+        }
+    }
+    
     /**
      * Tracks player movement
      * @param event
@@ -215,6 +272,9 @@ public class GreenhouseEvents implements Listener {
 	if (!Settings.worldName.contains(e.getPlayer().getWorld().getName())) {
 	    return;
 	}
+	if (e.getPlayer().getWorld().getEnvironment().equals(Environment.NETHER)) {
+	    return;
+	}
 	// If the offending block is not above a greenhouse, forget it!
 	Greenhouse d = plugin.aboveAGreenhouse(e.getBlock().getLocation());
 	if (d == null) {
@@ -231,6 +291,9 @@ public class GreenhouseEvents implements Listener {
     @EventHandler
     public void onPistonPush(final BlockPistonExtendEvent e) {
 	if (!Settings.worldName.contains(e.getBlock().getWorld().getName())) {
+	    return;
+	}
+	if (e.getBlock().getWorld().getEnvironment().equals(Environment.NETHER)) {
 	    return;
 	}
 	// Check if piston is already extended to avoid the double event effect

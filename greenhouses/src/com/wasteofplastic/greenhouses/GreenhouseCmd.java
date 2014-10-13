@@ -2,7 +2,6 @@
 package com.wasteofplastic.greenhouses;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashSet;
 import java.util.List;
@@ -12,15 +11,11 @@ import net.milkbowl.vault.economy.EconomyResponse;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.World;
-import org.bukkit.block.Biome;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.util.Vector;
 
 public class GreenhouseCmd implements CommandExecutor {
     public boolean busyFlag = true;
@@ -53,6 +48,7 @@ public class GreenhouseCmd implements CommandExecutor {
 	final Player player = (Player) sender;
 	// Check we are in the right world
 	if (!Settings.worldName.contains(player.getWorld().getName())) {
+	    // notavailable
 	    player.sendMessage("Greenhouses are not available in this world.");
 	    return true;
 	}
@@ -106,6 +102,7 @@ public class GreenhouseCmd implements CommandExecutor {
 	    } else if (split[0].equalsIgnoreCase("untrustall") && Settings.useProtection) {
 		Greenhouse d = players.getInGreenhouse(playerUUID);
 		if (d == null) {
+		    // notinhouse
 		    player.sendMessage(ChatColor.RED + "Move to a greenhouse you own or rent first.");
 		    return true;
 		}
@@ -149,6 +146,7 @@ public class GreenhouseCmd implements CommandExecutor {
 		    }
 		    return true;
 		} else {
+		    // notowner
 		    player.sendMessage(ChatColor.RED + "You must be the owner or renter of this greenhouse to do that.");
 		    return true;
 		}
@@ -248,6 +246,7 @@ public class GreenhouseCmd implements CommandExecutor {
 			Player owner = plugin.getServer().getPlayer(d.getOwner());
 			if (owner != null) {
 			    plugin.devisualize(owner);
+			    // leased
 			    owner.sendMessage("You successfully rented a greenhouse for " + VaultHelper.econ.format(d.getPrice()) + " to " + player.getDisplayName());
 			} else {
 			    plugin.setMessage(d.getOwner(), "You successfully rented a greenhouse for " + VaultHelper.econ.format(d.getPrice()) + " to " + player.getDisplayName());
@@ -262,7 +261,9 @@ public class GreenhouseCmd implements CommandExecutor {
 			currentDate.set(Calendar.SECOND, 0);                 // set second in minute
 			currentDate.set(Calendar.MILLISECOND, 0);            // set millisecond in second
 			d.setLastPayment(currentDate.getTime());
+			// rented
 			player.sendMessage("You rented the greenhouse for "+ VaultHelper.econ.format(d.getPrice()) + " 1 week!");
+			// rententer
 			d.setEnterMessage("Entering " + player.getDisplayName() + "'s rented " + Greenhouses.prettifyText(d.getBiome().toString()) +" greenhouse!");
 			d.setFarewellMessage("Now leaving " + player.getDisplayName() + "'s rented greenhouse.");
 			players.save(d.getOwner());
@@ -273,16 +274,19 @@ public class GreenhouseCmd implements CommandExecutor {
 			return true;
 		    }
 		}
+		// notyours
 		player.sendMessage(ChatColor.RED + "This is not your greenhouse!");
 	    } else if (split[0].equalsIgnoreCase("make")) {
 		// Sets up a greenhouse
 		if (players.getInGreenhouse(playerUUID) != null) {
+		    // alreadyexists
 		    player.sendMessage(ChatColor.RED + "Greenhouse already exists!");
 		    return true;
 		}
 		// Check we are in a greenhouse
 		Greenhouse g = plugin.checkGreenhouse(player);
 		if (g == null) {
+		    // norecipe
 		    player.sendMessage(ChatColor.RED + "This does not meet any greenhouse recipe!");
 		    return true;
 		}
@@ -304,8 +308,10 @@ public class GreenhouseCmd implements CommandExecutor {
 			    player.sendMessage(ChatColor.GOLD + "Lease will not renew and will terminate in " + plugin.daysToEndOfLease(d) + " days.");
 			    player.sendMessage(ChatColor.GOLD + "You can put it up for rent again after that date.");
 			    if (plugin.getServer().getPlayer(d.getRenter()) != null) {
+				// onlinecancelmessage
 				plugin.getServer().getPlayer(d.getRenter()).sendMessage( players.getName(d.getOwner()) + " ended a lease you have on a greenhouse. It will end in " + plugin.daysToEndOfLease(d) + " days.");
 			    } else {
+				// offlinecancelmessage
 				plugin.setMessage(d.getRenter(), players.getName(d.getOwner()) + " ended a lease you have on a greenhouse!");
 			    }
 
@@ -317,6 +323,7 @@ public class GreenhouseCmd implements CommandExecutor {
 			}
 		    } else if (d.getRenter() != null && d.getRenter().equals(player.getUniqueId())) {
 			// Renter wanting to cancel the lease
+			// leaserenewalcancelled
 			player.sendMessage(ChatColor.GOLD + "Lease renewal cancelled. Lease term finishes in " + plugin.daysToEndOfLease(d) + " days.");
 			if (plugin.getServer().getPlayer(d.getOwner()) != null) {
 			    plugin.getServer().getPlayer(d.getOwner()).sendMessage( player.getDisplayName() + " canceled a lease with you. It will end in " + plugin.daysToEndOfLease(d) + " days.");
@@ -328,9 +335,11 @@ public class GreenhouseCmd implements CommandExecutor {
 			d.setPrice(0D);
 			return true;
 		    } else {
+			// error.notyours
 			player.sendMessage(ChatColor.RED + "This is not your greenhouse!");
 		    }
 		} else {
+		    // error.notinside
 		    player.sendMessage(ChatColor.RED + "You are not in a greenhouse!"); 
 		}
 		return true;
@@ -353,6 +362,7 @@ public class GreenhouseCmd implements CommandExecutor {
 		    return true;
 		}
 		player.sendMessage(ChatColor.GOLD + "[Greenhouse Info]");
+		// general.biome
 		player.sendMessage(ChatColor.GREEN + "Biome: " + Greenhouses.prettifyText(d.getBiome().toString()));
 		if (d.getOwner() != null) {
 		    Player owner = plugin.getServer().getPlayer(d.getOwner());
@@ -444,6 +454,7 @@ public class GreenhouseCmd implements CommandExecutor {
 	    } else if (split[0].equalsIgnoreCase("untrust") && Settings.useProtection) {
 		Greenhouse d = players.getInGreenhouse(playerUUID);
 		if (d == null) {
+		    // error.move
 		    player.sendMessage(ChatColor.RED + "Move to a greenhouse you own or rent first.");
 		    return true;
 		}
@@ -457,6 +468,7 @@ public class GreenhouseCmd implements CommandExecutor {
 
 		    if (d.getOwner().equals(playerUUID)) {
 			if (d.getOwnerTrusted().isEmpty()) {
+			    // error.notrust
 			    player.sendMessage(ChatColor.RED + "No one is trusted in this greenhouse.");
 			} else {
 			    // Remove trusted player
@@ -481,6 +493,7 @@ public class GreenhouseCmd implements CommandExecutor {
 			}
 		    }
 		    players.save(d.getOwner());
+		    // trust.title
 		    player.sendMessage(ChatColor.GOLD + "[Greenhouse Trusted Players]");
 		    player.sendMessage(ChatColor.GREEN + "[Owner's]");
 		    if (d.getOwnerTrusted().isEmpty()) {
@@ -496,6 +509,7 @@ public class GreenhouseCmd implements CommandExecutor {
 		    }	
 		    return true;
 		} else {
+		    // error.notowner
 		    player.sendMessage(ChatColor.RED + "You must be the owner or renter of this greenhouse to do that.");
 		    return true;
 		}
@@ -503,6 +517,7 @@ public class GreenhouseCmd implements CommandExecutor {
 	    } else if (split[0].equalsIgnoreCase("trust") && Settings.useProtection) {
 		Greenhouse d = players.getInGreenhouse(playerUUID);
 		if (d == null) {
+		    // error.move
 		    player.sendMessage(ChatColor.RED + "Move to a greenhouse you own or rent first.");
 		    return true;
 		}
@@ -537,6 +552,7 @@ public class GreenhouseCmd implements CommandExecutor {
 			    p.sendMessage(ChatColor.RED + player.getDisplayName() + " trusts you in a greenhouse.");
 			}
 			players.save(d.getOwner());
+			// info.info
 			player.sendMessage(ChatColor.GOLD + "[Greenhouse Info]");
 			player.sendMessage(ChatColor.GREEN + "[Owner's trusted players]");
 			if (d.getOwnerTrusted().isEmpty()) {
@@ -566,6 +582,7 @@ public class GreenhouseCmd implements CommandExecutor {
 		    if (d.getOwner().equals(playerUUID)) {
 			// Check to see if it is being rented right now
 			if (d.getRenter() != null) {
+			    // sell.beingrented
 			    player.sendMessage(ChatColor.RED + "The greenhouse is being rented at this time. Wait until the lease expires.");
 			    return true;
 			}
@@ -598,7 +615,9 @@ public class GreenhouseCmd implements CommandExecutor {
 		    if (d.getOwner().equals(playerUUID)) {
 			// Check to see if it is being rented right now
 			if (d.getRenter() != null) {
+			    // rent.alreadyleased
 			    player.sendMessage(ChatColor.RED+"The greenhouse is currently rented!");
+			    // rent.tip
 			    player.sendMessage(ChatColor.RED+"To end the renter's lease at the next due date, use /d cancel.");
 			    return true;
 			}

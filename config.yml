@@ -67,4 +67,8 @@ greenhouses:
    allowgateuse: false
    # Allow non-monster mobs to be hurt
    allowhurtmobs: false
+   # Allow lava or water to flow out of a greenhouse, e.g. through the door, floor
+   allowflowout: false
+   # Allow lava or water to flow into a greenhouse, e.g., through the door
+   allowflowin: false
    

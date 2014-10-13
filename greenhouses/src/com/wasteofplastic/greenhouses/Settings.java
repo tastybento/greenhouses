@@ -39,6 +39,8 @@ public class Settings {
     public static int blockTick;
     public static int mobTick;
     public static int ecoTick;
+    public static boolean allowFlowIn;
+    public static boolean allowFlowOut;
    
     
 }

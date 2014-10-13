@@ -3,6 +3,33 @@
 # the one at http://yaml-online-parser.appspot.com                                        #
 # If this file is deleted, then it will be recreate at the next reload.                   #
 ###########################################################################################
+general:
+   notavailable: "Greenhouses are not available in this world"
+   greenhouses: "Greenhouses"
+   biome: "Biome"
+   owner: "Owner"
+   renter: "Renter"
+
+help:
+   help: "help"
+   make: "Tries to make a greenhouse"
+   remove: "Removes a greenhouse that you are standing in if you are the owner"
+   info: "Shows info on the greenhouse you and general info"
+   list: "Lists all the greenhouse biomes that can be made"
+   recipe: "Tells you how to make greenhouse biome"
+   trust: "Gives player full access to your greenhouse"
+   untrust: "Revokes trust to your greenhouse"
+   untrustall: "Removes all trusted parties from your greenhouse"
+   buy: "Attempts to buy the greenhouse you are in"
+   rent: "Attempts to rent the greenhouse you are in"
+   rentprice: "Puts the greenhouse you are in up for rent for a weekly rent"
+   sell: "Puts the greenhouse you are in up for sale"
+   cancel: "Cancels a For Sale, For Rent or a Lease"
+
+list:
+   title: "[Greenhouse Biome Recipes]"
+   info: "Use /greenhouse recipe <number> to see details on how to make each greenhouse"
+
 
 ################
 #General Errors#
@@ -15,6 +42,117 @@ error:
    offlinePlayer: "That player is offline or doesn't exist."
    unknownCommand: "Unknown command."
    greenhouseProtected: "Greenhouse protected"
+   move: "Move to a greenhouse you own or rent first."
+   notowner: "You must be the owner or renter of this greenhouse to do that."
+   removing: "Removing greenhouse!"
+   notyours: "This is not your greenhouse!"
+   notinside: "You are not in a greenhouse!"
+   tooexpensive: "You cannot afford [price]" 
+   alreadyexists: "Greenhouse already exists!"
+   norecipe: "This does not meet any greenhouse recipe!"
+   noPVP: "Target is in a no-PVP greenhouse!"
+   
+trust:
+   trust: "[player] trusts you in a greenhouse."
+   untrust: "[player] untrusted you in a greenhouse."
+   title: "[Greenhouse Trusted Players]"
+   owners: "[Owner's]"
+   renters: "[Renter's]"
+   none: "None"
+   notrust: "No one is trusted in this greenhouse."
+   alreadytrusted: "That player is already trusted."
+
+sell:
+   notforsale: "This greenhouse is not for sale!"
+   youareowner: "You already own this greenhouse!" 
+   sold: "You successfully sold a greenhouse for [price] to [player]"
+   bought: "You purchased the greenhouse for [price]!"
+   ecoproblem: "There was an economy problem trying to purchase the greenhouse for [price]!"
+   beingrented: "The greenhouse is being rented at this time. Wait until the lease expires."
+   invalidprice: "The price is invalid (must be >= [price])"
+   forsale: "Putting greenhouse up for sale for [price]"
+   ad: "This greenhouse is for sale for [price]!"
+
+rent:
+   notforrent: "This greenhouse is not for rent!"
+   alreadyrenting: "You are already renting this greenhouse!"
+   alreadyleased: "This greenhouse is already being leased."
+   tip: "To end the renter's lease at the next due date, use the cancel command."
+   leased: "You successfully leased a greenhouse for [price] to [player]"
+   rented: "You rented the greenhouse for [price] for 1 week!"
+   error: "There was an economy problem trying to rent the greenhouse for [price]!"
+   invalidrent: "The rent is invalid (must be >= [price])"
+   forrent: "Putting greenhouse up for rent for [price]"
+   ad: "This greenhouse is for rent for [price] per week."
+
+messages:
+   enter: "Entering [owner]'s [biome] greenhouse!"
+   leave: "Now leaving [owners]'s greenhouse."
+   rententer: "Entering [player]'s rented [biome] greenhouse!"
+   rentfarewell: "Now leaving [player]'s rented greenhouse."
+   youarein: "You are now in [owner]'s [biome] greenhouse!"
+   removed: "This greenhouse is no more..."
+   removedmessage: "A [biome] greenhouse of yours is no more!"
+   ecolost: "Your greenhouse at [location] lost its eco system and was removed."
+
+cancel:
+   cancelled: "Greenhouse is no longer for sale or rent."
+   leasestatus1: "Greenhouse is currently leased by [player]."
+   leasestatus2: "Lease will not renew and will terminate in [time] days."
+   leasestatus3: "You can put it up for rent again after that date."
+   cancelmessage: "[owner] ended a lease you have on a greenhouse. It will end in [time] days."
+   leaserenewalcancelled: "Lease renewal cancelled. Lease term finishes in [time] days."
+   renewalcancelmessage: "[renter] canceled a lease with you. It will end in [time] days."
+
+info:
+   title: "&A[Greenhouse Construction]"
+   instructions:
+     - "&EGreenhouses must be built out of glass or glowstone, have 4 walls and a flat roof."
+     - "&EUp to &F4 wooden or metal doors &Eare allowed."
+     - "&F1 hopper &Ecan be placed in a wall or roof."
+     - "&EIf you break a greenhouse you will have to make it again."
+     - "&A[Biomes]"
+     - "&EGrass, water, trees, sand, ice and snow in the greenhouse determine the greenhouse biome."
+     - "&EBe careful to keep the biome in balance, otherwise it may be lost!"
+     - "&A[Snow and fertilizer]"
+     - "&EAdd water buckets or bonemeal to the hopper to disperse snow when it rain or fertilize grass automatically."
+   info: "[Greenhouse Info]"
+   ownerstrusted: "[Owner's trusted players]"
+   none: "None"
+   nextrent: "Next rent of [price] due in [time] days."
+   leasewillend: "Lease will end in [time] days!"
+   renter: "Renter: [nickname] ([name])"
+   renterstrusted: "[Renter's trusted players]"
+   ad: "This greenhouse can be leased for [price]"
+
+recipe:
+   hint: "Use /greenhouse list to see a list of recipe numbers!"
+   wrongnumber: "Recipe number must be between 1 and [size]"
+   title: "[[biome] recipe]"
+   nowater: "No water allowed."
+   noice: "No ice allowed."
+   nolava: "No lava allowed."
+   watermustbe: "Water > [coverage]% of floor area."
+   icemustbe: "Ice blocks > [coverage]% of floor area."
+   lavamustbe: "Lava > [coverage]% of floor area."
+   minimumblockstitle: "[Minimum blocks required]"
+   nootherblocks: "No other blocks required."
+
+event:
+   broke: "You broke this greenhouse! Reverting biome to [biome]!"
+   fix: "Fix the greenhouse and then make it again."
+   cannotplace: "Blocks cannot be placed above a greenhouse!"
+   pistonerror: "Pistons cannot push blocks over a greenhouse!"
+
+create:
+   noroof: "There seems to be no roof!"
+   missingwall: "A wall is missing!"
+   nothingabove: "There can be no blocks above the greenhouse!"
+   holeinroof: "There is a hole in the roof or it is not flat!"
+   holeinwall: "There is a hole in the wall or they are not the same height all the way around!"
+   hoppererror: "Only one hopper is allowed in the walls or roof."
+   doorerror: "You cannot have more than 4 doors in the greenhouse!"
+   success: "You succesfully made a [biome] biome greenhouse!"
 
 ##################################
 #Admin commands that use /gadmin #
@@ -22,22 +160,22 @@ error:
 
 #Help
 adminHelp:
-   #/dadmin reload:
    reload: "reload configuration from file."
-   #/dadmin delete
-   delete: "deletes the district you are standing in."
-   #/dadmin info <player>:
-   info: "display information for the given player."
+   info: "provides info on the greenhouse you are in"
 
 #reload
 reload:
    configReloaded: "Configuration reloaded from file."
 
-#delete
-delete:
-   removing: "Greenhouse removed."
+admininfo:
+   error: "Greenhouse info only available in-game"
+   error2: "Put yourself in a greenhouse to see info."
+   flags: "[Greenhouse Flags]"
 
 news:
    headline: "[Greenhouse News]"
+
+controlpanel:
+   title: "&AGreenhouses"
 
 
