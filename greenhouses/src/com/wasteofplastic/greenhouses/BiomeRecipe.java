@@ -92,6 +92,9 @@ public class BiomeRecipe {
 	    for (int x = pos1.getBlockX()+1;x<pos2.getBlockX();x++) {
 		for (int z = pos1.getBlockZ()+1;z<pos2.getBlockZ();z++) {
 		    Block b = pos1.getWorld().getBlockAt(x, y, z);
+
+		    int data = b.getData();
+
 		    if (!b.getType().equals(Material.AIR))
 			//plugin.getLogger().info("Checking block " + b.getType() + ":" + b.getData() + "@" + x + " " + y + " " + z);
 			// Log water, lava and ice blocks
@@ -108,10 +111,16 @@ public class BiomeRecipe {
 			case PACKED_ICE:
 			    ice++;
 			    break;
-			default:
+			case LEAVES:
+			case LEAVES_2:
+			    // Leaves need special handling because they can change state over time (decay)
+			    while (data > 3) {
+				data = data-4;
+			    }
 			    break;
+			default:
 			}
-		    int index = indexOfReqBlocks(b.getType(),b.getData());
+		    int index = indexOfReqBlocks(b.getType(),data); 
 		    if (index>=0) {
 			//plugin.getLogger().info("DEBUG: Found block " + b.getType().toString() + " type " + b.getData() + " at index " + index);
 			// Decrement the qty
@@ -157,12 +166,13 @@ public class BiomeRecipe {
 	    plugin.getLogger().info("DEBUG: Could be biome " + type.toString());
 	else
 	    plugin.getLogger().info("DEBUG: Cannot be biome " + type.toString());
-	    */
+	 */
 	return pass;
     }
 
     private int indexOfReqBlocks(Material blockMaterial, int blockType) {
 	// TODO: LEAVES are numbered differently to the docs - 5 6 7, odd...
+	// Leaves need special handling because their state can change
 	//plugin.getLogger().info("DEBUG: looking for block " + blockMaterial.toString() + " type " + blockType);
 	if (!this.blockMaterial.contains(blockMaterial))
 	    return -1;
