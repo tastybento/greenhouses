@@ -31,7 +31,7 @@ public class ControlPanel implements Listener {
 	this.plugin = plugin;
 	int panelSize = plugin.getBiomeRecipes().size() + 9 - 1;
 	panelSize -= ( panelSize % 9);
-	this.biomePanel = Bukkit.createInventory(null, panelSize, ChatColor.GREEN + "Greenhouses");
+	this.biomePanel = Bukkit.createInventory(null, panelSize, ChatColor.translateAlternateColorCodes('&', Locale.controlpaneltitle));
 	store.clear();
 	int index = 0;
 	// Run through biomes and add to the inventory
@@ -45,28 +45,28 @@ public class ControlPanel implements Listener {
 
 	    List<String> reqBlocks = br.getRecipeBlocks();
 	    if (reqBlocks.size() > 0) {
-		lore.add(ChatColor.YELLOW + "[Minimum blocks required]");
+		lore.add(ChatColor.YELLOW + Locale.recipeminimumblockstitle);
 		int i = 1;
 		for (String list : reqBlocks) {
 		    lore.add((i++) + ": " + list);
 		}
 	    } else {
-		lore.add(ChatColor.YELLOW + "No blocks required.");
+		lore.add(ChatColor.YELLOW + Locale.recipenootherblocks);
 	    }
 	    if (br.getWaterCoverage() == 0) {
-		lore.add("No water allowed.");
+		lore.add(Locale.recipenowater);
 	    } else if (br.getWaterCoverage() > 0) {
-		lore.add("Water >" + br.getWaterCoverage() + "% of floor area.");
+		lore.add(Locale.recipewatermustbe.replace("[coverage]", String.valueOf(br.getWaterCoverage())));
 	    }
 	    if (br.getIceCoverage() == 0) {
-		lore.add("No ice allowed.");
+		lore.add(Locale.recipenoice);
 	    } else if (br.getIceCoverage() > 0) {
-		lore.add("Ice blocks >" + br.getIceCoverage() + "% of floor area.");
+		lore.add(Locale.recipeicemustbe.replace("[coverage]", String.valueOf(br.getIceCoverage())));
 	    }
 	    if (br.getLavaCoverage() == 0) {
-		lore.add("No lava allowed.");
+		lore.add(Locale.recipenolava);
 	    } else if (br.getLavaCoverage() > 0) {
-		lore.add("Lava >" + br.getLavaCoverage() + "% of floor area.");
+		lore.add(Locale.recipelavamustbe.replace("[coverage]", String.valueOf(br.getLavaCoverage())));
 	    }
 
 	    meta.setLore(lore);
@@ -94,7 +94,7 @@ public class ControlPanel implements Listener {
 			if (plugin.players.getInGreenhouse(player.getUniqueId()) != null) {
 			    player.closeInventory(); // Closes the inventory
 			    // error.exists
-			    player.sendMessage(ChatColor.RED + "You are already in an existing greenhouse!");
+			    player.sendMessage(ChatColor.RED + Locale.erroralreadyexists);
 			    return;
 			}
 			// TODO Return what is missing so the player can see
@@ -103,7 +103,7 @@ public class ControlPanel implements Listener {
 			if (g == null) {
 			    player.closeInventory(); // Closes the inventory
 			    //error.norecipe
-			    player.sendMessage(ChatColor.RED + "This does not meet any greenhouse recipe!");
+			    player.sendMessage(ChatColor.RED + Locale.errornorecipe);
 			    return;
 			}
 			player.closeInventory(); // Closes the inventory

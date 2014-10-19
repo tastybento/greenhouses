@@ -258,10 +258,10 @@ public class Greenhouse {
 	    //plugin.getLogger().info("Owner");
 	    return true;
 	} else if (renter != null && renter.equals(uuid)) {
-	    plugin.getLogger().info("Renter");
+	    //plugin.getLogger().info("Renter");
 	    return true;
 	} else if (ownerTrusted.contains(uuid) || renterTrusted.contains(uuid)) {
-	    plugin.getLogger().info("Trusted");
+	    //plugin.getLogger().info("Trusted");
 	    return true;
 	}
 	return false;

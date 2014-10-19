@@ -220,9 +220,9 @@ public class GreenhouseEvents implements Listener {
 		player.sendMessage(toGreenhouse.getEnterMessage());
 	    }
 	    if (toGreenhouse.isForSale()) {
-		player.sendMessage("This greenhouse is for sale for " + VaultHelper.econ.format(toGreenhouse.getPrice()) + "!");
+		player.sendMessage(Locale.sellad.replace("[price]", VaultHelper.econ.format(toGreenhouse.getPrice())));
 	    } else if (toGreenhouse.isForRent()) {
-		player.sendMessage("This greenhouse is for rent for " + VaultHelper.econ.format(toGreenhouse.getPrice()) + "!");
+		player.sendMessage(Locale.rentad.replace("[price]", VaultHelper.econ.format(toGreenhouse.getPrice())));
 	    } 
 	}  
 	return false;
@@ -249,8 +249,8 @@ public class GreenhouseEvents implements Listener {
 	}
 	// Check to see if this causes the greenhouse to break
 	if ((e.getBlock().getLocation().getBlockY() == g.getHeightY()) || (g.isAWall(e.getBlock().getLocation()))) {
-	    e.getPlayer().sendMessage(ChatColor.RED + "You broke this greenhouse! Reverting biome to " + Greenhouses.prettifyText(g.getOriginalBiome().toString()) + "!");
-	    e.getPlayer().sendMessage(ChatColor.RED + "Fix the greenhouse and then make it again.");
+	    e.getPlayer().sendMessage(ChatColor.RED + Locale.eventbroke.replace("[biome]",Greenhouses.prettifyText(g.getOriginalBiome().toString())));
+	    e.getPlayer().sendMessage(ChatColor.RED + Locale.eventfix);
 	    plugin.removeGreenhouse(g);
 	    return;
 	}
@@ -273,7 +273,7 @@ public class GreenhouseEvents implements Listener {
 	if (d == null) {
 	    return;
 	}
-	e.getPlayer().sendMessage(ChatColor.RED + "Blocks cannot be placed above a greenhouse!");
+	e.getPlayer().sendMessage(ChatColor.RED + Locale.eventcannotplace);
 	e.setCancelled(true);
     }
 
@@ -316,7 +316,7 @@ public class GreenhouseEvents implements Listener {
 	for (Player p : plugin.getServer().getOnlinePlayers()) {
 	    if (Settings.worldName.contains(p.getLocation().getWorld().getName())) {
 		if (p.getLocation().distanceSquared(e.getBlock().getLocation()) <= 25) {
-		    p.sendMessage(ChatColor.RED + "Pistons cannot push blocks over a greenhouse!");
+		    p.sendMessage(ChatColor.RED + Locale.eventpistonerror);
 		    e.setCancelled(true);
 		    blockedPistons.add(e.getBlock().getLocation());
 		}
@@ -336,7 +336,7 @@ public class GreenhouseEvents implements Listener {
 	if (d == null) {
 	    return;
 	}
-	// Check if this messes up the greenhouse
+	// TODO Check if this messes up the greenhouse
     }
     @EventHandler(priority = EventPriority.NORMAL)
     public void onBucketFill(final PlayerBucketFillEvent e) {
@@ -349,7 +349,7 @@ public class GreenhouseEvents implements Listener {
 	    return;
 	}
 
-	// Check if this messes up the greenhouse
+	// TODO Check if this messes up the greenhouse
     }
 }
 

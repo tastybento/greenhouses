@@ -28,10 +28,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.FurnaceRecipe;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.material.MaterialData;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
@@ -40,7 +37,10 @@ import org.bukkit.util.Vector;
 import com.wasteofplastic.particles.ParticleEffect;
 
 /**
- * @author ben
+ * This plugin simulates greenhouses in Minecraft. It enables players to build biomes inside
+ * glass houses. Each biome is different and can spawn plants and animals. The recipe for each
+ * biome is determined by a configuration file.
+ * @author tastybento
  */
 public class Greenhouses extends JavaPlugin {
     // This plugin
@@ -321,6 +321,7 @@ public class Greenhouses extends JavaPlugin {
 	}
 	// Get the localization strings
 	getLocale();
+	/*
 	Locale.adminHelpdelete = getLocale().getString("adminHelp.delete", "deletes the greenhouse you are standing in.");
 	Locale.errorUnknownPlayer = getLocale().getString("error.unknownPlayer","That player is unknown.");
 	Locale.errorNoPermission = getLocale().getString("error.noPermission", "You don't have permission to use that command!");
@@ -334,6 +335,129 @@ public class Greenhouses extends JavaPlugin {
 	Locale.adminHelpinfo = getLocale().getString("adminHelp.info","display information for the given player.");
 	Locale.reloadconfigReloaded = getLocale().getString("reload.configurationReloaded", "Configuration reloaded from file.");	//delete
 	Locale.deleteremoving = getLocale().getString("delete.removing","Greenhouse removed.");
+	*/
+	Locale.generalnotavailable = getLocale().getString("general.notavailable", "Greenhouses are not available in this world");
+	Locale.generalgreenhouses = getLocale().getString("general.greenhouses", "Greenhouses");
+	Locale.generalbiome = getLocale().getString("general.biome", "Biome");
+	Locale.generalowner = getLocale().getString("general.owner", "Owner");
+	Locale.generalrenter = getLocale().getString("general.renter", "Renter");
+	Locale.helphelp = getLocale().getString("help.help", "help");
+	Locale.helpmake = getLocale().getString("help.make", "Tries to make a greenhouse");
+	Locale.helpremove = getLocale().getString("help.remove", "Removes a greenhouse that you are standing in if you are the owner");
+	Locale.helpinfo = getLocale().getString("help.info", "Shows info on the greenhouse you and general info");
+	Locale.helplist = getLocale().getString("help.list", "Lists all the greenhouse biomes that can be made");
+	Locale.helprecipe = getLocale().getString("help.recipe", "Tells you how to make greenhouse biome");
+	Locale.helptrust = getLocale().getString("help.trust", "Gives player full access to your greenhouse");
+	Locale.helpuntrust = getLocale().getString("help.untrust", "Revokes trust to your greenhouse");
+	Locale.helpuntrustall = getLocale().getString("help.untrustall", "Removes all trusted parties from your greenhouse");
+	Locale.helpbuy = getLocale().getString("help.buy", "Attempts to buy the greenhouse you are in");
+	Locale.helprent = getLocale().getString("help.rent", "Attempts to rent the greenhouse you are in");
+	Locale.helprentprice = getLocale().getString("help.rentprice", "Puts the greenhouse you are in up for rent for a weekly rent");
+	Locale.helpsell = getLocale().getString("help.sell", "Puts the greenhouse you are in up for sale");
+	Locale.helpcancel = getLocale().getString("help.cancel", "Cancels a For Sale, For Rent or a Lease");
+	Locale.listtitle = getLocale().getString("list.title", "[Greenhouse Biome Recipes]");
+	Locale.listinfo = getLocale().getString("list.info", "Use /greenhouse recipe <number> to see details on how to make each greenhouse");
+	Locale.errorunknownPlayer = getLocale().getString("error.unknownPlayer", "That player is unknown.");
+	Locale.errornoPermission = getLocale().getString("error.noPermission", "You don't have permission to use that command!");
+	Locale.errorcommandNotReady = getLocale().getString("error.commandNotReady", "You can't use that command right now.");
+	Locale.errorofflinePlayer = getLocale().getString("error.offlinePlayer", "That player is offline or doesn't exist.");
+	Locale.errorunknownCommand = getLocale().getString("error.unknownCommand", "Unknown command.");
+	Locale.errorgreenhouseProtected = getLocale().getString("error.greenhouseProtected", "Greenhouse protected");
+	Locale.errormove = getLocale().getString("error.move", "Move to a greenhouse you own or rent first.");
+	Locale.errornotowner = getLocale().getString("error.notowner", "You must be the owner or renter of this greenhouse to do that.");
+	Locale.errorremoving = getLocale().getString("error.removing", "Removing greenhouse!");
+	Locale.errornotyours = getLocale().getString("error.notyours", "This is not your greenhouse!");
+	Locale.errornotinside = getLocale().getString("error.notinside", "You are not in a greenhouse!");
+	Locale.errortooexpensive = getLocale().getString("error.tooexpensive", "You cannot afford [price]" );
+	Locale.erroralreadyexists = getLocale().getString("error.alreadyexists", "Greenhouse already exists!");
+	Locale.errornorecipe = getLocale().getString("error.norecipe", "This does not meet any greenhouse recipe!");
+	Locale.errornoPVP = getLocale().getString("error.noPVP", "Target is in a no-PVP greenhouse!");
+	Locale.trusttrust = getLocale().getString("trust.trust", "[player] trusts you in a greenhouse.");
+	Locale.trustuntrust = getLocale().getString("trust.untrust", "[player] untrusted you in a greenhouse.");
+	Locale.trusttitle = getLocale().getString("trust.title", "[Greenhouse Trusted Players]");
+	Locale.trustowners = getLocale().getString("trust.owners", "[Owner's]");
+	Locale.trustrenters = getLocale().getString("trust.renters", "[Renter's]");
+	Locale.trustnone = getLocale().getString("trust.none", "None");
+	Locale.trustnotrust = getLocale().getString("trust.notrust", "No one is trusted in this greenhouse.");
+	Locale.trustalreadytrusted = getLocale().getString("trust.alreadytrusted", "That player is already trusted.");
+	Locale.sellnotforsale = getLocale().getString("sell.notforsale", "This greenhouse is not for sale!");
+	Locale.sellyouareowner = getLocale().getString("sell.youareowner", "You already own this greenhouse!" );
+	Locale.sellsold = getLocale().getString("sell.sold", "You successfully sold a greenhouse for [price] to [player]");
+	Locale.sellbought = getLocale().getString("sell.bought", "You purchased the greenhouse for [price]!");
+	Locale.sellecoproblem = getLocale().getString("sell.ecoproblem", "There was an economy problem trying to purchase the greenhouse for [price]!");
+	Locale.sellbeingrented = getLocale().getString("sell.beingrented", "The greenhouse is being rented at this time. Wait until the lease expires.");
+	Locale.sellinvalidprice = getLocale().getString("sell.invalidprice", "The price is invalid (must be >= [price])");
+	Locale.sellforsale = getLocale().getString("sell.forsale", "Putting greenhouse up for sale for [price]");
+	Locale.sellad = getLocale().getString("sell.ad", "This greenhouse is for sale for [price]!");
+	Locale.rentnotforrent = getLocale().getString("rent.notforrent", "This greenhouse is not for rent!");
+	Locale.rentalreadyrenting = getLocale().getString("rent.alreadyrenting", "You are already renting this greenhouse!");
+	Locale.rentalreadyleased = getLocale().getString("rent.alreadyleased", "This greenhouse is already being leased.");
+	Locale.renttip = getLocale().getString("rent.tip", "To end the renter's lease at the next due date, use the cancel command.");
+	Locale.rentleased = getLocale().getString("rent.leased", "You successfully leased a greenhouse for [price] to [player]");
+	Locale.rentrented = getLocale().getString("rent.rented", "You rented the greenhouse for [price] for 1 week!");
+	Locale.renterror = getLocale().getString("rent.error", "There was an economy problem trying to rent the greenhouse for [price]!");
+	Locale.rentinvalidrent = getLocale().getString("rent.invalidrent", "The rent is invalid (must be >= [price])");
+	Locale.rentforrent = getLocale().getString("rent.forrent", "Putting greenhouse up for rent for [price]");
+	Locale.rentad = getLocale().getString("rent.ad", "This greenhouse is for rent for [price] per week.");
+	Locale.messagesenter = getLocale().getString("messages.enter", "Entering [owner]'s [biome] greenhouse!");
+	Locale.messagesleave = getLocale().getString("messages.leave", "Now leaving [owners]'s greenhouse.");
+	Locale.messagesrententer = getLocale().getString("messages.rententer", "Entering [player]'s rented [biome] greenhouse!");
+	Locale.messagesrentfarewell = getLocale().getString("messages.rentfarewell", "Now leaving [player]'s rented greenhouse.");
+	Locale.messagesyouarein = getLocale().getString("messages.youarein", "You are now in [owner]'s [biome] greenhouse!");
+	Locale.messagesremoved = getLocale().getString("messages.removed", "This greenhouse is no more...");
+	Locale.messagesremovedmessage = getLocale().getString("messages.removedmessage", "A [biome] greenhouse of yours is no more!");
+	Locale.messagesecolost = getLocale().getString("messages.ecolost", "Your greenhouse at [location] lost its eco system and was removed.");
+	Locale.cancelcancelled = getLocale().getString("cancel.cancelled", "Greenhouse is no longer for sale or rent.");
+	Locale.cancelleasestatus1 = getLocale().getString("cancel.leasestatus1", "Greenhouse is currently leased by [player].");
+	Locale.cancelleasestatus2 = getLocale().getString("cancel.leasestatus2", "Lease will not renew and will terminate in [time] days.");
+	Locale.cancelleasestatus3 = getLocale().getString("cancel.leasestatus3", "You can put it up for rent again after that date.");
+	Locale.cancelcancelmessage = getLocale().getString("cancel.cancelmessage", "[owner] ended a lease you have on a greenhouse. It will end in [time] days.");
+	Locale.cancelleaserenewalcancelled = getLocale().getString("cancel.leaserenewalcancelled", "Lease renewal cancelled. Lease term finishes in [time] days.");
+	Locale.cancelrenewalcancelmessage = getLocale().getString("cancel.renewalcancelmessage", "[renter] canceled a lease with you. It will end in [time] days.");
+	Locale.infotitle = getLocale().getString("info.title", "&A[Greenhouse Construction]");
+	Locale.infoinstructions = getLocale().getStringList("info.instructions");
+	Locale.infoinfo = getLocale().getString("info.info", "[Greenhouse Info]");
+	Locale.infoownerstrusted = getLocale().getString("info.ownerstrusted", "[Owner's trusted players]");
+	Locale.infonone = getLocale().getString("info.none", "None");
+	Locale.infonextrent = getLocale().getString("info.nextrent", "Next rent of [price] due in [time] days.");
+	Locale.infoleasewillend = getLocale().getString("info.leasewillend", "Lease will end in [time] days!");
+	Locale.inforenter = getLocale().getString("info.renter", "Renter [nickname] ([name])");
+	Locale.inforenterstrusted = getLocale().getString("info.renterstrusted", "[Renter's trusted players]");
+	Locale.infoad = getLocale().getString("info.ad", "This greenhouse can be leased for [price]");
+	Locale.recipehint = getLocale().getString("recipe.hint", "Use /greenhouse list to see a list of recipe numbers!");
+	Locale.recipewrongnumber = getLocale().getString("recipe.wrongnumber", "Recipe number must be between 1 and [size]");
+	Locale.recipetitle = getLocale().getString("recipe.title", "[[biome] recipe]");
+	Locale.recipenowater = getLocale().getString("recipe.nowater", "No water allowed.");
+	Locale.recipenoice = getLocale().getString("recipe.noice", "No ice allowed.");
+	Locale.recipenolava = getLocale().getString("recipe.nolava", "No lava allowed.");
+	Locale.recipewatermustbe = getLocale().getString("recipe.watermustbe", "Water > [coverage]% of floor area.");
+	Locale.recipeicemustbe = getLocale().getString("recipe.icemustbe", "Ice blocks > [coverage]% of floor area.");
+	Locale.recipelavamustbe = getLocale().getString("recipe.lavamustbe", "Lava > [coverage]% of floor area.");
+	Locale.recipeminimumblockstitle = getLocale().getString("recipe.minimumblockstitle", "[Minimum blocks required]");
+	Locale.recipenootherblocks = getLocale().getString("recipe.nootherblocks", "No other blocks required.");
+	Locale.eventbroke = getLocale().getString("event.broke", "You broke this greenhouse! Reverting biome to [biome]!");
+	Locale.eventfix = getLocale().getString("event.fix", "Fix the greenhouse and then make it again.");
+	Locale.eventcannotplace = getLocale().getString("event.cannotplace", "Blocks cannot be placed above a greenhouse!");
+	Locale.eventpistonerror = getLocale().getString("event.pistonerror", "Pistons cannot push blocks over a greenhouse!");
+	Locale.createnoroof = getLocale().getString("create.noroof", "There seems to be no roof!");
+	Locale.createmissingwall = getLocale().getString("create.missingwall", "A wall is missing!");
+	Locale.createnothingabove = getLocale().getString("create.nothingabove", "There can be no blocks above the greenhouse!");
+	Locale.createholeinroof = getLocale().getString("create.holeinroof", "There is a hole in the roof or it is not flat!");
+	Locale.createholeinwall = getLocale().getString("create.holeinwall", "There is a hole in the wall or they are not the same height all the way around!");
+	Locale.createhoppererror = getLocale().getString("create.hoppererror", "Only one hopper is allowed in the walls or roof.");
+	Locale.createdoorerror = getLocale().getString("create.doorerror", "You cannot have more than 4 doors in the greenhouse!");
+	Locale.createsuccess = getLocale().getString("create.success", "You succesfully made a [biome] biome greenhouse!");
+	Locale.adminHelpreload = getLocale().getString("adminHelp.reload", "reload configuration from file.");
+	Locale.adminHelpinfo = getLocale().getString("adminHelp.info", "provides info on the greenhouse you are in");
+	Locale.reloadconfigReloaded = getLocale().getString("reload.configReloaded", "Configuration reloaded from file.");
+	Locale.admininfoerror = getLocale().getString("admininfo.error", "Greenhouse info only available in-game");
+	Locale.admininfoerror2 = getLocale().getString("admininfo.error2", "Put yourself in a greenhouse to see info.");
+	Locale.admininfoflags = getLocale().getString("admininfo.flags", "[Greenhouse Flags]");
+	Locale.newsheadline = getLocale().getString("news.headline", "[Greenhouse News]");
+	Locale.controlpaneltitle = getLocale().getString("controlpanel.title", "&AGreenhouses");
+	
+	
+	
 	// Assign settings
 	Settings.allowPvP = getConfig().getBoolean("greenhouses.allowPvP",false);
 	Settings.allowBreakBlocks = getConfig().getBoolean("greenhouses.allowbreakblocks", false);

@@ -1,8 +1,5 @@
 package com.wasteofplastic.greenhouses;
 
-import java.util.Date;
-import java.util.UUID;
-
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -33,7 +30,7 @@ public class AdminCmd implements CommandExecutor {
 	// Check for permissions
 	if (sender instanceof Player) {
 	    if (!VaultHelper.checkPerm(((Player)sender), "greenhouses.admin")) {
-		sender.sendMessage(ChatColor.RED + Locale.errorNoPermission);
+		sender.sendMessage(ChatColor.RED + Locale.errornoPermission);
 		return true;
 	    }
 	}
@@ -41,7 +38,7 @@ public class AdminCmd implements CommandExecutor {
 	switch (split.length) {
 	case 0:
 	    sender.sendMessage(ChatColor.YELLOW + "/gadmin reload:" + ChatColor.WHITE + " " + Locale.adminHelpreload);
-	    sender.sendMessage(ChatColor.YELLOW + "/gadmin info:" + ChatColor.WHITE + " provides info on the greenhouse you are in");
+	    sender.sendMessage(ChatColor.YELLOW + "/gadmin info:" + ChatColor.WHITE + Locale.adminHelpinfo);
 	    return true;
 	case 1:
 	    if (split[0].equalsIgnoreCase("reload")) {
@@ -53,40 +50,40 @@ public class AdminCmd implements CommandExecutor {
 		return true;
 	    } else if (split[0].equalsIgnoreCase("info")) {
 		if (!(sender instanceof Player)) {
-		    sender.sendMessage(ChatColor.RED + "Greenhouse info only available in-game");
+		    sender.sendMessage(ChatColor.RED + Locale.admininfoerror);
 		    return true;
 		}
 		Player player = (Player)sender;
 		Greenhouse d = players.getInGreenhouse(player.getUniqueId());
 		if (d == null) {
-		    sender.sendMessage(ChatColor.RED + "Put yourself in a greenhouse to see info.");
+		    sender.sendMessage(ChatColor.RED + Locale.admininfoerror2);
 		    return true;
 		}
-		sender.sendMessage(ChatColor.GREEN + "[Greenhouse Info]");
-		sender.sendMessage(ChatColor.GREEN + "Owner:" + players.getName(d.getOwner()));
+		sender.sendMessage(ChatColor.GREEN + Locale.infoinfo);
+		sender.sendMessage(ChatColor.GREEN + Locale.generalowner + ":" + players.getName(d.getOwner()));
 		String trusted = "";
 		for (String name : d.getOwnerTrusted()) {
 		   trusted += name + ",";
 		}
 		if (!trusted.isEmpty()) {
-		    sender.sendMessage(ChatColor.GREEN + "Owner trustees: " + ChatColor.WHITE + trusted.substring(0, trusted.length() - 1));
+		    sender.sendMessage(ChatColor.GREEN + Locale.infoownerstrusted + ChatColor.WHITE + trusted.substring(0, trusted.length() - 1));
 		}
 		if (d.getRenter() != null)
-		    sender.sendMessage(ChatColor.GREEN + "Renter:" + players.getName(d.getRenter()));
+		    sender.sendMessage(ChatColor.GREEN + Locale.generalrenter + ":" + players.getName(d.getRenter()));
 		trusted = "";
 		for (String name : d.getRenterTrusted()) {
 		   trusted += name + ",";
 		}
 		if (!trusted.isEmpty()) {
-		    sender.sendMessage(ChatColor.GREEN + "Renter trustees: " + ChatColor.WHITE + trusted.substring(0, trusted.length() - 1));
+		    sender.sendMessage(ChatColor.GREEN + Locale.inforenterstrusted + ChatColor.WHITE + trusted.substring(0, trusted.length() - 1));
 		}
-		sender.sendMessage(ChatColor.GREEN + "Greenhouse Flags:");
+		sender.sendMessage(ChatColor.GREEN + Locale.admininfoflags);
 		for (String flag : d.getFlags().keySet()) {
 		    sender.sendMessage(flag + ": " + d.getFlags().get(flag));
 		}
 		return true;
 	    } else {
-		sender.sendMessage(ChatColor.RED + Locale.errorUnknownCommand);
+		sender.sendMessage(ChatColor.RED + Locale.errorunknownCommand);
 		return false;
 	    }
 	default:
