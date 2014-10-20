@@ -183,7 +183,7 @@ public class Greenhouses extends JavaPlugin {
 	try {
 	    // Loop through all the entries
 	    for (String type: biomeSection.getValues(false).keySet()) {
-		getLogger().info("Loading biome recipe for "+type);
+		getLogger().info("Loading "+type + " biome recipe:");
 		Biome thisBiome = Biome.valueOf(type);
 		if (thisBiome != null) {
 		    int priority = biomeSection.getInt(type + ".priority", 0);
@@ -335,7 +335,7 @@ public class Greenhouses extends JavaPlugin {
 	Locale.adminHelpinfo = getLocale().getString("adminHelp.info","display information for the given player.");
 	Locale.reloadconfigReloaded = getLocale().getString("reload.configurationReloaded", "Configuration reloaded from file.");	//delete
 	Locale.deleteremoving = getLocale().getString("delete.removing","Greenhouse removed.");
-	*/
+	 */
 	Locale.generalnotavailable = getLocale().getString("general.notavailable", "Greenhouses are not available in this world");
 	Locale.generalgreenhouses = getLocale().getString("general.greenhouses", "Greenhouses");
 	Locale.generalbiome = getLocale().getString("general.biome", "Biome");
@@ -400,7 +400,7 @@ public class Greenhouses extends JavaPlugin {
 	Locale.rentforrent = getLocale().getString("rent.forrent", "Putting greenhouse up for rent for [price]");
 	Locale.rentad = getLocale().getString("rent.ad", "This greenhouse is for rent for [price] per week.");
 	Locale.messagesenter = getLocale().getString("messages.enter", "Entering [owner]'s [biome] greenhouse!");
-	Locale.messagesleave = getLocale().getString("messages.leave", "Now leaving [owners]'s greenhouse.");
+	Locale.messagesleave = getLocale().getString("messages.leave", "Now leaving [owner]'s greenhouse.");
 	Locale.messagesrententer = getLocale().getString("messages.rententer", "Entering [player]'s rented [biome] greenhouse!");
 	Locale.messagesrentfarewell = getLocale().getString("messages.rentfarewell", "Now leaving [player]'s rented greenhouse.");
 	Locale.messagesyouarein = getLocale().getString("messages.youarein", "You are now in [owner]'s [biome] greenhouse!");
@@ -446,7 +446,7 @@ public class Greenhouses extends JavaPlugin {
 	Locale.createholeinwall = getLocale().getString("create.holeinwall", "There is a hole in the wall or they are not the same height all the way around!");
 	Locale.createhoppererror = getLocale().getString("create.hoppererror", "Only one hopper is allowed in the walls or roof.");
 	Locale.createdoorerror = getLocale().getString("create.doorerror", "You cannot have more than 4 doors in the greenhouse!");
-	Locale.createsuccess = getLocale().getString("create.success", "You succesfully made a [biome] biome greenhouse!");
+	Locale.createsuccess = getLocale().getString("create.success", "You successfully made a [biome] biome greenhouse!");
 	Locale.adminHelpreload = getLocale().getString("adminHelp.reload", "reload configuration from file.");
 	Locale.adminHelpinfo = getLocale().getString("adminHelp.info", "provides info on the greenhouse you are in");
 	Locale.reloadconfigReloaded = getLocale().getString("reload.configReloaded", "Configuration reloaded from file.");
@@ -455,9 +455,9 @@ public class Greenhouses extends JavaPlugin {
 	Locale.admininfoflags = getLocale().getString("admininfo.flags", "[Greenhouse Flags]");
 	Locale.newsheadline = getLocale().getString("news.headline", "[Greenhouse News]");
 	Locale.controlpaneltitle = getLocale().getString("controlpanel.title", "&AGreenhouses");
-	
-	
-	
+
+
+
 	// Assign settings
 	Settings.allowPvP = getConfig().getBoolean("greenhouses.allowPvP",false);
 	Settings.allowBreakBlocks = getConfig().getBoolean("greenhouses.allowbreakblocks", false);
@@ -484,7 +484,7 @@ public class Greenhouses extends JavaPlugin {
 	if (Settings.worldName.isEmpty()) {
 	    Settings.worldName.add("world");
 	}
-	getLogger().info("World name is: " + Settings.worldName );
+	getLogger().info("Greenhouse worlds are: " + Settings.worldName );
 	Settings.useProtection = getConfig().getBoolean("greenhouses.useProtection", false);
 	Settings.snowChanceGlobal = getConfig().getDouble("greenhouses.snowchance", 0.5D);
 	Settings.snowDensity = getConfig().getDouble("greenhouses.snowdensity", 0.1D);
@@ -654,6 +654,11 @@ public class Greenhouses extends JavaPlugin {
 			    g.convertBlocks();
 			} catch (Exception e) {
 			    getLogger().severe("Problem found with greenhouse during block conversion. Skipping...");
+			    getLogger().severe("[Greenhouse info]");
+			    getLogger().severe("Owner: " + g.getOwner());
+			    getLogger().severe("ID: " + g.getId());
+			    getLogger().severe("Location " + g.getPos1().toString() + " to " + g.getPos2().toString());
+			    e.printStackTrace();
 			}
 
 			//getLogger().info("DEBUG: Servicing greenhouse biome : " + g.getBiome().toString());
@@ -679,6 +684,7 @@ public class Greenhouses extends JavaPlugin {
 			checkEco();
 		    } catch (Exception e) {
 			getLogger().severe("Problem found with greenhouse during eco check. Skipping...");
+			e.printStackTrace();
 		    }
 
 		    //}
@@ -793,33 +799,33 @@ public class Greenhouses extends JavaPlugin {
 			    d.setLastPayment(currentDate.getTime());
 
 			    if (getServer().getPlayer(d.getRenter()) != null) {
-				getServer().getPlayer(d.getRenter()).sendMessage("You paid a rent of " + VaultHelper.econ.format(d.getPrice()) + " to " + getServer().getOfflinePlayer(d.getOwner()).getName() );
+				getServer().getPlayer(d.getRenter()).sendMessage(Locale.leaserentpaid.replace("[price]",VaultHelper.econ.format(d.getPrice())).replace("[owner]", getServer().getOfflinePlayer(d.getOwner()).getName()));
 			    } else {
-				plugin.setMessage(d.getRenter(), "You paid a rent of " + VaultHelper.econ.format(d.getPrice()) + " to " + getServer().getOfflinePlayer(d.getOwner()).getName());
+				plugin.setMessage(d.getRenter(), Locale.leaserentpaid.replace("[price]",VaultHelper.econ.format(d.getPrice())).replace("[owner]", getServer().getOfflinePlayer(d.getOwner()).getName()));
 			    }
 			    if (getServer().getPlayer(d.getOwner()) != null) {
-				getServer().getPlayer(d.getOwner()).sendMessage(getServer().getOfflinePlayer(d.getRenter()).getName() + " paid you a rent of " + VaultHelper.econ.format(d.getPrice()));
+				getServer().getPlayer(d.getRenter()).sendMessage(Locale.leaserentpaidowner.replace("[price]",VaultHelper.econ.format(d.getPrice())).replace("[player]", getServer().getOfflinePlayer(d.getRenter()).getName()));
 			    } else {
-				plugin.setMessage(d.getOwner(), getServer().getOfflinePlayer(d.getRenter()).getName() + " paid you a rent of " + VaultHelper.econ.format(d.getPrice()));
+				plugin.setMessage(d.getRenter(), Locale.leaserentpaidowner.replace("[price]",VaultHelper.econ.format(d.getPrice())).replace("[player]", getServer().getOfflinePlayer(d.getRenter()).getName()));
 			    }
 			} else {
 			    // evict!
 			    getLogger().info("Could not withdraw rent of " + VaultHelper.econ.format(d.getPrice()) + " from " + getServer().getOfflinePlayer(d.getRenter()).getName() + " account.");
 
 			    if (getServer().getPlayer(d.getRenter()) != null) {
-				getServer().getPlayer(d.getRenter()).sendMessage("You could not pay a rent of " + VaultHelper.econ.format(d.getPrice()) + " so you were evicted from " + getServer().getOfflinePlayer(d.getOwner()).getName() + "'s greenhouse!");
+				getServer().getPlayer(d.getRenter()).sendMessage((Locale.leasecannotpay.replace("[price]", VaultHelper.econ.format(d.getPrice())).replace("[owner]", getServer().getOfflinePlayer(d.getOwner()).getName())));
 			    } else {
-				plugin.setMessage(d.getRenter(),"You could not pay a rent of " + VaultHelper.econ.format(d.getPrice()) + " so you were evicted from " + getServer().getOfflinePlayer(d.getOwner()).getName() + "'s greenhouse!");
+				plugin.setMessage(d.getRenter(),(Locale.leasecannotpay.replace("[price]", VaultHelper.econ.format(d.getPrice())).replace("[owner]", getServer().getOfflinePlayer(d.getOwner()).getName())));
 			    }
 			    if (getServer().getPlayer(d.getOwner()) != null) {
-				getServer().getPlayer(d.getOwner()).sendMessage(getServer().getOfflinePlayer(d.getRenter()).getName() + " could not pay you a rent of " + VaultHelper.econ.format(d.getPrice()) + " so they were evicted from a propery!");
+				getServer().getPlayer(d.getOwner()).sendMessage((Locale.leasecannotpayowner.replace("[player]", getServer().getOfflinePlayer(d.getRenter()).getName())).replace("[price]", VaultHelper.econ.format(d.getPrice()) ));
 			    } else {
-				plugin.setMessage(d.getOwner(), getServer().getOfflinePlayer(d.getRenter()).getName() + " could not pay you a rent of " + VaultHelper.econ.format(d.getPrice()) + " so they were evicted from a propery!");			
+				plugin.setMessage(d.getOwner(), (Locale.leasecannotpayowner.replace("[player]", getServer().getOfflinePlayer(d.getRenter()).getName())).replace("[price]", VaultHelper.econ.format(d.getPrice()) ));			
 			    }
 			    d.setRenter(null);
 			    d.setRenterTrusted(new ArrayList<UUID>());
-			    d.setEnterMessage("Entering " + players.getName(d.getOwner()) + "'s " + prettifyText(d.getBiome().toString()) + " greenhouse!");
-			    d.setFarewellMessage("Now leaving " + players.getName(d.getOwner()) + "'s greenhouse.");
+			    d.setEnterMessage((Locale.messagesenter.replace("[owner]", players.getName(d.getOwner())).replace("[biome]", prettifyText(d.getBiome().toString()))));
+			    d.setFarewellMessage(Locale.messagesleave.replace("[owner]", players.getName(d.getOwner())));
 			}
 		    } else {
 			// No longer for rent
@@ -827,19 +833,20 @@ public class Greenhouses extends JavaPlugin {
 
 			// evict!
 			if (getServer().getPlayer(d.getRenter()) != null) {
-			    getServer().getPlayer(d.getRenter()).sendMessage("The lease on a greenhouse you were renting from " + players.getName(d.getOwner()) + " ended.");
+			    getServer().getPlayer(d.getRenter()).sendMessage(Locale.leaseleaseended.replace("[owner]", players.getName(d.getOwner())));
 			} else {
-			    plugin.setMessage(d.getRenter(),"The lease on a greenhouse you were renting from " + players.getName(d.getOwner()) + " ended.");
+			    plugin.setMessage(d.getRenter(),Locale.leaseleaseended.replace("[owner]", players.getName(d.getOwner())));
 			}
 			if (getServer().getPlayer(d.getOwner()) != null) {
-			    getServer().getPlayer(d.getOwner()).sendMessage(getServer().getOfflinePlayer(d.getRenter()).getName() + "'s lease ended.");
+			    getServer().getPlayer(d.getOwner()).sendMessage(Locale.leaseleaseendedowner.replace("player]", getServer().getOfflinePlayer(d.getRenter()).getName()));	
 			} else {
-			    plugin.setMessage(d.getOwner(), getServer().getOfflinePlayer(d.getRenter()).getName() + "'s lease ended.");			
+			    plugin.setMessage(d.getOwner(), Locale.leaseleaseendedowner.replace("player]", getServer().getOfflinePlayer(d.getRenter()).getName()));			
 			}
 			d.setRenter(null);
 			d.setRenterTrusted(new ArrayList<UUID>());
-			d.setEnterMessage("Entering " + players.getName(d.getOwner()) + "'s " + prettifyText(d.getBiome().toString()) +" greenhouse!");
-			d.setFarewellMessage("Now leaving " + players.getName(d.getOwner()) + "'s greenhouse.");	
+			d.setEnterMessage((Locale.messagesenter.replace("[owner]", players.getName(d.getOwner())).replace("[biome]", prettifyText(d.getBiome().toString()))));
+			d.setFarewellMessage(Locale.messagesleave.replace("[owner]", players.getName(d.getOwner())));
+
 		    }
 		}
 	    }
@@ -868,6 +875,7 @@ public class Greenhouses extends JavaPlugin {
 		}
 	    }
 	}
+	getLogger().info("Loaded " + getGreenhouses().size() + " greenhouses.");
 	// Put all online players in greenhouses
 	for (Player p : getServer().getOnlinePlayers()) {
 	    for (Greenhouse d: greenhouses) {
@@ -1102,8 +1110,8 @@ public class Greenhouses extends JavaPlugin {
      */
     public Greenhouse createNewGreenhouse(Location pos1, Location pos2, Player owner) {
 	Greenhouse d = new Greenhouse(plugin, pos1, pos2, owner.getUniqueId());
-	d.setEnterMessage("Entering " + owner.getDisplayName() + "'s " + prettifyText(d.getBiome().toString()) +" greenhouse!");
-	d.setFarewellMessage("Now leaving " + owner.getDisplayName() + "'s greenhouse.");
+	d.setEnterMessage((Locale.messagesenter.replace("[owner]", owner.getDisplayName())).replace("[biome]", prettifyText(d.getBiome().toString())));
+	d.setFarewellMessage(Locale.messagesleave.replace("[owner]", owner.getDisplayName()));
 	getGreenhouses().add(d);
 	getPos1s().remove(owner.getUniqueId());
 	players.save(owner.getUniqueId());
@@ -1111,7 +1119,7 @@ public class Greenhouses extends JavaPlugin {
 	for (Player p : getServer().getOnlinePlayers()) {
 	    if (d.insideGreenhouse(p.getLocation())) {
 		if (!p.equals(owner)) {
-		    p.sendMessage("You are now in " + owner.getDisplayName() + "'s greenhouse!");
+		    p.sendMessage((Locale.messagesyouarein.replace("[owner]", owner.getDisplayName())).replace("[biome]", prettifyText(d.getBiome().toString())));
 		}
 		players.setInGreenhouse(p.getUniqueId(), d);
 		visualize(d,p);
@@ -1275,14 +1283,14 @@ public class Greenhouses extends JavaPlugin {
 	    if (g.insideGreenhouse(p.getLocation())) {
 		players.setInGreenhouse(p.getUniqueId(), null);
 		// TODO messages.removed
-		p.sendMessage(ChatColor.RED + "This greenhouse is no more...");
+		p.sendMessage(ChatColor.RED + Locale.messagesremoved);
 		devisualize(p);
 	    }
 	}
 	if (!ownerOnline)
-	    setMessage(g.getOwner(), "A " + g.getBiome() + " greenhouse of yours is no more!");
+	    setMessage(g.getOwner(), Locale.messagesremovedmessage.replace("[biome]", g.getBiome().toString()));
 	World world = g.getPos1().getWorld();
-	getLogger().info("DEBUG: Returning biome to original state: " + g.getOriginalBiome().toString());
+	//getLogger().info("DEBUG: Returning biome to original state: " + g.getOriginalBiome().toString());
 	g.setBiome(g.getOriginalBiome()); // just in case
 	g.endBiome();
 	if (g.getBiome().equals(Biome.HELL) || g.getBiome().equals(Biome.DESERT)
@@ -1380,12 +1388,16 @@ public class Greenhouses extends JavaPlugin {
 	    Player owner = plugin.getServer().getPlayer(gg.getOwner());
 	    if (owner == null)  {
 		// TODO messages.ecolost
-		setMessage(gg.getOwner(), "Your greenhouse at " + Greenhouses.getStringLocation(gg.getPos1()) + " lost its eco system and was removed.");
+		setMessage(gg.getOwner(), Locale.messagesecolost.replace("[location]", Greenhouses.getStringLocation(gg.getPos1())));
 	    } else {
-		owner.sendMessage(ChatColor.RED + "Your greenhouse at " + Greenhouses.getStringLocation(gg.getPos1()) + " lost its eco system and was removed.");
+		owner.sendMessage(ChatColor.RED + Locale.messagesecolost.replace("[location]", Greenhouses.getStringLocation(gg.getPos1())));
 	    }
-	    removeGreenhouse(gg);
+
 	    getLogger().info("Greenhouse at " + Greenhouses.getStringLocation(gg.getPos1()) + " lost its eco system and was removed.");
+	    getLogger().info("Greenhouse biome was " + prettifyText(gg.getBiome().toString()) + " - reverted to " + prettifyText(gg.getOriginalBiome().toString()));
+	    UUID ownerUUID = gg.getOwner();
+	    removeGreenhouse(gg);
+	    players.save(ownerUUID);
 
 	}
     }
@@ -1460,7 +1472,7 @@ public class Greenhouses extends JavaPlugin {
 	    height.add(new Vector(0,1,0));
 	    if (height.getBlockY() > 255) {
 		// TODO create.noroof
-		player.sendMessage(ChatColor.RED + "There seems to be no roof!");
+		player.sendMessage(ChatColor.RED + Locale.createnoroof);
 		return null;
 	    }
 	}
@@ -1475,7 +1487,7 @@ public class Greenhouses extends JavaPlugin {
 	    sidex.add(new Vector(-1,0,0));
 	    limit--;
 	    if (limit ==0) {
-		player.sendMessage(ChatColor.RED + "A wall is missing!");
+		player.sendMessage(ChatColor.RED + Locale.createmissingwall);
 		return null;
 	    }
 	}
@@ -1488,7 +1500,7 @@ public class Greenhouses extends JavaPlugin {
 	    sidex.add(new Vector(1,0,0));
 	    limit--;
 	    if (limit ==0) {
-		player.sendMessage(ChatColor.RED + "A wall is missing!");
+		player.sendMessage(ChatColor.RED + Locale.createmissingwall);
 		return null;
 	    }
 	}
@@ -1500,7 +1512,7 @@ public class Greenhouses extends JavaPlugin {
 	    sidez.add(new Vector(0,0,-1));
 	    limit--;
 	    if (limit ==0) {
-		player.sendMessage(ChatColor.RED + "A wall is missing!");
+		player.sendMessage(ChatColor.RED + Locale.createmissingwall);
 		return null;
 	    }
 	}
@@ -1512,7 +1524,7 @@ public class Greenhouses extends JavaPlugin {
 	    sidez.add(new Vector(0,0,1));
 	    limit--;
 	    if (limit ==0) {
-		player.sendMessage(ChatColor.RED + "A wall is missing!");
+		player.sendMessage(ChatColor.RED + Locale.createmissingwall);
 		return null;
 	    }
 	}
@@ -1550,7 +1562,7 @@ public class Greenhouses extends JavaPlugin {
 	}
 	if (blockAbove && world.getEnvironment().equals(Environment.NORMAL)) {
 	    // TODO create.nothingabove
-	    player.sendMessage(ChatColor.RED + "There can be no blocks above the greenhouse!");
+	    player.sendMessage(ChatColor.RED + Locale.createnothingabove);
 	    return null;
 	}
 	int roofArea = Math.abs((maxx-minx+1) * (maxz-minz+1));
@@ -1558,7 +1570,7 @@ public class Greenhouses extends JavaPlugin {
 	//plugin.getLogger().info("DEBUG: roofglass = " + roofGlass + " glowstone = " + roofGlowstone);
 	if (roofArea != (roofGlass+roofGlowstone+ghHopper)) {
 	    // TODO create.holeinroof
-	    player.sendMessage(ChatColor.RED + "There is a hole in the roof or it is not flat!");
+	    player.sendMessage(ChatColor.RED + Locale.createholeinroof);
 	    return null;
 	}
 	// Roof is now ok - need to check for hopper later
@@ -1600,7 +1612,7 @@ public class Greenhouses extends JavaPlugin {
 	}
 	if (fault) {
 	    // TODO create.holeinwall
-	    player.sendMessage(ChatColor.RED + "There is a hole in the wall or they are not the same height all the way around!");
+	    player.sendMessage(ChatColor.RED + Locale.createholeinwall);
 	    return null;
 	}
 	// Side #2 - maxx is constant
@@ -1638,7 +1650,7 @@ public class Greenhouses extends JavaPlugin {
 		break;
 	}
 	if (fault) {
-	    player.sendMessage(ChatColor.RED + "There is a hole in the wall or they are not the same height all the way around!");
+	    player.sendMessage(ChatColor.RED + Locale.createholeinwall);
 	    return null;
 	}
 
@@ -1677,7 +1689,7 @@ public class Greenhouses extends JavaPlugin {
 		break;
 	}
 	if (fault) {
-	    player.sendMessage(ChatColor.RED + "There is a hole in the wall or they are not the same height all the way around!");
+	    player.sendMessage(ChatColor.RED + Locale.createholeinwall);
 	    return null;
 	}
 
@@ -1715,13 +1727,13 @@ public class Greenhouses extends JavaPlugin {
 		break;
 	}
 	if (fault) {
-	    player.sendMessage(ChatColor.RED + "There is a hole in the wall or they are not the same height all the way around!");
+	    player.sendMessage(ChatColor.RED + Locale.createholeinwall);
 	    return null;
 	}
 	// Only one hopper allowed
 	if (ghHopper>1) {
 	    // Todo create.hoppererror
-	    player.sendMessage(ChatColor.RED + "Only one hopper is allowed in the walls or roof.");
+	    player.sendMessage(ChatColor.RED + Locale.createhoppererror);
 	    return null;  
 	}
 	// So all the walls are even and we have our counts
@@ -1735,7 +1747,7 @@ public class Greenhouses extends JavaPlugin {
 	// Place some limits
 	if (wallDoors > 8) {
 	    // TODO: create.doorerror
-	    player.sendMessage(ChatColor.RED + "You cannot have more than 4 doors in the greenhouse!");
+	    player.sendMessage(ChatColor.RED + Locale.createdoorerror);
 	    return null;
 	}
 	// We now have most of the corner coordinates. We need to find the lowest floor block, which is one below the lowest AIR block
@@ -1769,7 +1781,7 @@ public class Greenhouses extends JavaPlugin {
 	    Greenhouse g = createNewGreenhouse(pos1, pos2, player);
 	    g.setOriginalBiome(originalBiome);
 	    g.setBiome(winner);
-	    g.setEnterMessage("Entering " + player.getDisplayName() + "'s " + Greenhouses.prettifyText(winner.getType().toString()) + " greenhouse!");
+	    g.setEnterMessage((Locale.messagesenter.replace("[owner]", player.getDisplayName())).replace("[biome]", Greenhouses.prettifyText(winner.getType().toString())));
 	    // Store the roof hopper location so it can be tapped in the future
 	    if (ghHopper == 1) {
 		g.setRoofHopperLocation(roofHopperLoc);
@@ -1777,7 +1789,7 @@ public class Greenhouses extends JavaPlugin {
 	    // Store the contents of the greenhouse so it can be audited later
 	    //g.setOriginalGreenhouseContents(contents);
 	    g.startBiome();
-	    player.sendMessage(ChatColor.GREEN + "You succesfully made a "+ Greenhouses.prettifyText(winner.getType().toString()) + " biome greenhouse!");
+	    player.sendMessage(ChatColor.GREEN + Locale.createsuccess.replace("[biome]", Greenhouses.prettifyText(winner.getType().toString())));
 	    return g;
 	}
 	return null;

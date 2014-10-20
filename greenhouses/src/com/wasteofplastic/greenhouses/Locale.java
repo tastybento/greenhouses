@@ -129,7 +129,13 @@ public class Locale {
     public static String  admininfoerror2;
     public static String  admininfoflags;
     public static String  newsheadline;
-    public static String  controlpaneltitle;    
+    public static String  controlpaneltitle;
+    public static String leaserentpaid;   
+    public static String leaserentpaidowner;
+    public static String leasecannotpay;
+    public static String leasecannotpayowner;
+    public static String leaseleaseended;
+    public static String leaseleaseendedowner;
     
     
    

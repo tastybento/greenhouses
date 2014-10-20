@@ -785,7 +785,16 @@ public class Greenhouse {
      */
     public boolean checkEco() {
 	//plugin.getLogger().info("DEBUG: checking the ecology of the greenhouse.");
-	return this.biomeRecipe.checkRecipe(getPos1(), getPos2());
+	if (biomeRecipe != null) {
+	    return this.biomeRecipe.checkRecipe(getPos1(), getPos2());
+	} else {
+	    plugin.getLogger().info("DEBUG: biomeRecipe is null! ");
+	    plugin.getLogger().warning("[Greenhouse info]");
+	    plugin.getLogger().warning("Owner: " + getOwner());
+	    plugin.getLogger().warning("Greenhouse ID (in yml file): " + getId());
+	    plugin.getLogger().warning("Location :" + getPos1().toString() + " to " + getPos2().toString());
+	    return false;
+	}
     }
 
 
@@ -793,6 +802,9 @@ public class Greenhouse {
      * Starts the biome in the greenhouse
      */
     public void startBiome() {
+	if (greenhouseBiome == null) {
+	    return;
+	}
 	//plugin.getLogger().info("DEBUG: start biome - setting to " + greenhouseBiome.toString());
 	for (int x = pos1.getBlockX();x<pos2.getBlockX();x++) {
 	    for (int z = pos1.getBlockZ();z<pos2.getBlockZ();z++) {
@@ -809,6 +821,9 @@ public class Greenhouse {
      * @param to 
      */
     public void endBiome() {
+	if (originalBiome == null) {
+	    return;
+	}
 	//plugin.getLogger().info("DEBUG: end biome - reseting to " + originalBiome.toString());
 	for (int x = pos1.getBlockX();x<pos2.getBlockX();x++) {
 	    for (int z = pos1.getBlockZ();z<pos2.getBlockZ();z++) {
@@ -828,6 +843,9 @@ public class Greenhouse {
      * Spawns friendly mobs according to the type of biome
      */
     public void populateGreenhouse() {
+	if (biomeRecipe == null) {
+	    return;
+	}
 	//plugin.getLogger().info("DEBUG: populating mobs in greenhouse");
 	// Make sure no players are around
 	if (plugin.players.getNumberInGreenhouse(this) > 0)
@@ -892,9 +910,10 @@ public class Greenhouse {
 	    if ((b.getType().equals(type) && h.getType().equals(Material.AIR))
 		    || (h.getType().equals(type) && a.getType().equals(Material.AIR)) ) {
 		Location midBlock = new Location(world, h.getLocation().getX()+0.5D, h.getLocation().getY(), h.getLocation().getZ()+0.5D);
-		plugin.getLogger().info("Trying to spawn a "+mob.toString() + " on "+ type.toString() + " at " + midBlock);
 		Entity e = world.spawnEntity(midBlock, mob);
 		if (e != null)
+		    plugin.getLogger().info("Spawned a "+ Greenhouses.prettifyText(mob.toString()) + " on "+ Greenhouses.prettifyText(type.toString()) + " at " 
+				+ midBlock.getBlockX() + "," + midBlock.getBlockY() + "," + midBlock.getBlockZ());
 		    return;
 	    }
 	}
@@ -938,6 +957,9 @@ public class Greenhouse {
     }
 
     public void growFlowers() {
+	if (biomeRecipe == null) {
+	    return;
+	}
 	Location hopper = roofHopperLocation;
 	if (hopper != null) {
 	    //plugin.getLogger().info("DEBUG: Hopper location:" + hopper.toString());
@@ -1004,6 +1026,9 @@ public class Greenhouse {
      * Depends on the biome recipe
      */
     public void convertBlocks() {
+	if (biomeRecipe == null) {
+	    return;
+	}
 	if (biomeRecipe.getBlockConvert()) {
 	    // Check biome recipe
 	    int minx = Math.min(pos1.getBlockX(), pos2.getBlockX());
