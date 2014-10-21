@@ -1,11 +1,6 @@
 package com.wasteofplastic.greenhouses;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -26,9 +21,6 @@ public class Players {
     private UUID uuid;
     private String playerName;
     private Greenhouse inGreenhouse;
-    private boolean visualize;
-    // The number of blocks I have to use on greenhouses
-    private int blocks;
 
     /**
      * @param uuid
@@ -41,7 +33,6 @@ public class Players {
 	this.hasGreenhouses = false;
 	this.playerName = "";
 	this.inGreenhouse = null;
-	this.visualize = true;
 	load(uuid);
     }
 
@@ -67,7 +58,6 @@ public class Players {
 	}
 	//plugin.getLogger().info("Loading player..." + playerName);
 	this.hasGreenhouses = playerInfo.getBoolean("hasGreenhouses", false);
-	this.visualize = playerInfo.getBoolean("visualize",true);
 	ConfigurationSection myHouses = playerInfo.getConfigurationSection("greenhouses");
 	if (myHouses != null) {
 	    // Get a list of all the greenhouses
@@ -128,52 +118,7 @@ public class Players {
 			    }
 			    // Load all the flags
 			    HashMap<String,Object> flags = (HashMap<String, Object>) playerInfo.getConfigurationSection("greenhouses." + key + ".flags").getValues(false);
-			    //d.setEnterMessage(playerInfo.getString("greenhouses." + key + ".entermessage",""));
-			    //d.setFarewellMessage(playerInfo.getString("greenhouses." + key + ".farewellmessage",""));
 			    g.setFlags(flags);
-			    // Load the various other flags here
-			    String tempUUID = playerInfo.getString("greenhouses." + key + ".renter");
-			    if (tempUUID != null) {
-				g.setRenter(UUID.fromString(tempUUID));
-			    }
-			    g.setForSale(playerInfo.getBoolean("greenhouses." + key + ".forSale", false));
-			    g.setForRent(playerInfo.getBoolean("greenhouses." + key + ".forRent", false));
-			    g.setPrice(playerInfo.getDouble("greenhouses." + key + ".price", 0D));
-			    SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
-			    String dateInString = playerInfo.getString("greenhouses." + key + ".lastPayment");
-			    if (dateInString != null) {		 
-				try {		 
-				    Date date = formatter.parse(dateInString);
-				    g.setLastPayment(date);
-				} catch (ParseException e) {
-				    e.printStackTrace();
-				}
-			    }
-			    // Get the trusted players
-			    List<UUID> ownerTrustedUUID = new ArrayList<UUID>();
-			    List<String> ownerTrusted = playerInfo.getStringList("greenhouses." + key + ".ownerTrusted");
-			    if (ownerTrusted != null) {
-				for (String temp : ownerTrusted) {
-				    try {
-					ownerTrustedUUID.add(UUID.fromString(temp));
-				    } catch (Exception e) {
-					e.printStackTrace();
-				    }
-				}
-				g.setOwnerTrusted(ownerTrustedUUID);
-			    } 
-			    List<UUID> renterTrustedUUID = new ArrayList<UUID>();
-			    List<String> renterTrusted = playerInfo.getStringList("greenhouses." + key + ".renterTrusted");
-			    if (renterTrusted != null) {
-				for (String temp : renterTrusted) {
-				    try {
-					renterTrustedUUID.add(UUID.fromString(temp));
-				    } catch (Exception e) {
-					e.printStackTrace();
-				    }
-				}
-				g.setRenterTrusted(renterTrustedUUID);
-			    }	    
 			    plugin.getGreenhouses().add(g);
 			}
 		    } else {
@@ -197,8 +142,6 @@ public class Players {
 	// Save the variables
 	playerInfo.set("playerName", playerName);
 	playerInfo.set("hasGreenhouses", hasGreenhouses);
-	playerInfo.set("blocks", blocks);
-	playerInfo.set("visualize", isVisualize());
 	// Wipe out any old greenhouses in the file
 	playerInfo.createSection("greenhouses");
 	if (!plugin.getGreenhouses().isEmpty()) {
@@ -213,21 +156,8 @@ public class Players {
 		    playerInfo.set("greenhouses." + index + ".originalBiome", greenhouse.getOriginalBiome().toString());
 		    playerInfo.set("greenhouses." + index + ".greenhouseBiome", greenhouse.getBiome().toString());
 		    playerInfo.set("greenhouses." + index + ".roofHopperLocation", getStringLocation(greenhouse.getRoofHopperLocation()));
-		    if (greenhouse.getRenter() != null)
-			playerInfo.set("greenhouses." + index + ".renter", greenhouse.getRenter().toString());
-		    playerInfo.set("greenhouses." + index + ".forSale", greenhouse.isForSale());
-		    playerInfo.set("greenhouses." + index + ".forRent", greenhouse.isForRent());
-		    playerInfo.set("greenhouses." + index + ".price",  greenhouse.getPrice());
-		    if (greenhouse.getLastPayment() != null) {
-			SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");		    
-			playerInfo.set("greenhouses." + index + ".lastPayment",  formatter.format(greenhouse.getLastPayment()));
-		    }
-		    // Get the trusted players
-		    playerInfo.set("greenhouses." + index + ".ownerTrusted", greenhouse.getOwnerTrustedUUIDString());
-		    playerInfo.set("greenhouses." + index + ".renterTrusted", greenhouse.getRenterTrustedUUIDString());		   		    
 		    // Save the various other flags here
-		    playerInfo.createSection("greenhouses." + index + ".flags", greenhouse.getFlags());		    
-		    // TODO
+		    playerInfo.createSection("greenhouses." + index + ".flags", greenhouse.getFlags());		
 		    index++;
 		}
 	    }
@@ -249,10 +179,6 @@ public class Players {
 	}
 	final String[] parts = s.split(":");
 	if (parts.length == 4) {
-	    for (World w : Bukkit.getServer().getWorlds()) {
-		//Bukkit.getLogger().info("DEBUG: Worlds are " + w.getName());
-	    }
-	    //Bukkit.getLogger().info("DEBUG: Looking for : " + parts[0]);
 	    final World w = Bukkit.getServer().getWorld(parts[0]);
 	    final int x = Integer.parseInt(parts[1]);
 	    final int y = Integer.parseInt(parts[2]);
@@ -314,61 +240,4 @@ public class Players {
     public void setInGreenhouse(Greenhouse inGreenhouse) {
 	this.inGreenhouse = inGreenhouse;
     }
-
-    /**
-     * @return how many blocks a player has
-     */
-    public int getBlockBalance() {
-	return blocks;
-    }
-
-    /**
-     * @param blocks the blocks to set
-     * @return 
-     */
-    public int setBlocks(int blocks) {
-	this.blocks = blocks;
-	return blocks;
-    }
-
-    /**
-     * Adds blocks to the player's balance
-     * @param blocks
-     * @return the player's balance
-     */
-    public int addBlocks(int blocks) {
-	this.blocks += blocks;
-	return this.blocks;
-    }
-
-    /**
-     * Removes a number of blocks from a player's balance.
-     * If the balance becomes negative, the blocks are not removed
-     * and instead the number required are returned as a negative number
-     * @param blocks
-     * @return
-     */
-    public int removeBlocks(int blocks) {
-	int balance = this.blocks - blocks;
-	if (balance < 0) {
-	    return balance;
-	}
-	this.blocks -= blocks;
-	return this.blocks;
-    }
-
-    /**
-     * @return the visualize
-     */
-    public boolean isVisualize() {
-	return visualize;
-    }
-
-    /**
-     * @param visualize the visualize to set
-     */
-    public void setVisualize(boolean visualize) {
-	this.visualize = visualize;
-    }
-
 }

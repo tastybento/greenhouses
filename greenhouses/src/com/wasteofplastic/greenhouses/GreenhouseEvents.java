@@ -199,11 +199,6 @@ public class GreenhouseEvents implements Listener {
 		//plugin.visualize(toGreenhouse, player);
 	    }
 	    toGreenhouse.startBiome();
-	    if (toGreenhouse.isForSale()) {
-		player.sendMessage("This greenhouse is for sale for " + VaultHelper.econ.format(toGreenhouse.getPrice()) + "!");
-	    } else if (toGreenhouse.isForRent() && toGreenhouse.getRenter() == null) {
-		player.sendMessage("This greenhouse is for rent for " + VaultHelper.econ.format(toGreenhouse.getPrice()) + " per week.");
-	    } 
 	    plugin.players.setInGreenhouse(player.getUniqueId(), toGreenhouse);	    
 
 	} else if (fromGreenhouse != null && toGreenhouse != null){
@@ -219,11 +214,6 @@ public class GreenhouseEvents implements Listener {
 	    if (!toGreenhouse.getEnterMessage().isEmpty()) {		
 		player.sendMessage(toGreenhouse.getEnterMessage());
 	    }
-	    if (toGreenhouse.isForSale()) {
-		player.sendMessage(Locale.sellad.replace("[price]", VaultHelper.econ.format(toGreenhouse.getPrice())));
-	    } else if (toGreenhouse.isForRent()) {
-		player.sendMessage(Locale.rentad.replace("[price]", VaultHelper.econ.format(toGreenhouse.getPrice())));
-	    } 
 	}  
 	return false;
     }

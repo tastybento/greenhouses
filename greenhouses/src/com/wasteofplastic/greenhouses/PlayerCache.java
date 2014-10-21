@@ -1,8 +1,4 @@
-/**
- * 
- */
 package com.wasteofplastic.greenhouses;
-
 import java.io.File;
 import java.util.HashMap;
 import java.util.UUID;
@@ -11,7 +7,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 /**
- * @author ben
+ * @author tastybento
  * Provides a memory cache of online player information
  * This is the one-stop-shop of player info
  * If the player is not cached, then a request is made to Players to obtain it
@@ -207,44 +203,6 @@ public class PlayerCache {
 	}
 	return count;
     }
-    
-    /**
-     * @return how many blocks a player has
-     */
-    public int getBlockBalance(UUID playerUUID) {
-	addPlayer(playerUUID);
-        return playerCache.get(playerUUID).getBlockBalance();
-    }
-
-    /**
-     * @param blocks the blocks to set
-     */
-    public int setBlocks(UUID playerUUID, int blocks) {
-	addPlayer(playerUUID);
-	return playerCache.get(playerUUID).setBlocks(blocks);
-    }
-
-    /**
-     * Adds blocks to the player's balance
-     * @param blocks
-     * @return the player's balance
-     */
-    public int addBlocks(UUID playerUUID, int blocks) {
-	addPlayer(playerUUID);
-        return playerCache.get(playerUUID).addBlocks(blocks);
-    }
-
-    /**
-     * Removes a number of blocks from a player's balance.
-     * If the balance becomes negative, the blocks are not removed
-     * and instead the number required are returned as a negative number
-     * @param blocks
-     * @return
-     */
-    public int removeBlocks(UUID playerUUID, int blocks) {
-	addPlayer(playerUUID);
-       return playerCache.get(playerUUID).removeBlocks(blocks);
-    }   
 }
 
 

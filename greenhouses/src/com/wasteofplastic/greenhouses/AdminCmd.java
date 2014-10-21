@@ -61,22 +61,6 @@ public class AdminCmd implements CommandExecutor {
 		}
 		sender.sendMessage(ChatColor.GREEN + Locale.infoinfo);
 		sender.sendMessage(ChatColor.GREEN + Locale.generalowner + ":" + players.getName(d.getOwner()));
-		String trusted = "";
-		for (String name : d.getOwnerTrusted()) {
-		   trusted += name + ",";
-		}
-		if (!trusted.isEmpty()) {
-		    sender.sendMessage(ChatColor.GREEN + Locale.infoownerstrusted + ChatColor.WHITE + trusted.substring(0, trusted.length() - 1));
-		}
-		if (d.getRenter() != null)
-		    sender.sendMessage(ChatColor.GREEN + Locale.generalrenter + ":" + players.getName(d.getRenter()));
-		trusted = "";
-		for (String name : d.getRenterTrusted()) {
-		   trusted += name + ",";
-		}
-		if (!trusted.isEmpty()) {
-		    sender.sendMessage(ChatColor.GREEN + Locale.inforenterstrusted + ChatColor.WHITE + trusted.substring(0, trusted.length() - 1));
-		}
 		sender.sendMessage(ChatColor.GREEN + Locale.admininfoflags);
 		for (String flag : d.getFlags().keySet()) {
 		    sender.sendMessage(flag + ": " + d.getFlags().get(flag));
