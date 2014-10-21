@@ -1,15 +1,37 @@
 # This file lists the recipes for the greenhouse biomes
 biomes:
+  # Biome name - must be a Bukkit biome and be in CAPITALS
   BEACH:
+    # The icon is shown in the panel. It must be a Bukkit Material
     icon: SAND
+    # Priority is used if the greenhouse can be more than one biome. The highest
+    # priority wins
     priority: 0
+    # Contents - The minimum requirement for this biome.
+    # Format is Material:Type/Durability (optional):Number of blocks
+    # So SAND:1:1 would require 1 block of red sand (durability of 1 = red sand)
     contents: SAND:1
+    # The number of blocks in the greenhouse that must be water, ice or lava
+    # Floor area * this % = number of blocks required
     watercoverage: 50
+    # If the value is zero, then NO ice/water/lava is allowed
     icecoverage: 0
+    # Plants that can grow via the hopper/bonemeal system
+    # Format is:
+    # Material: % chance:Block type on which it can grow
+    # Note that with really small greenhouses, melons and pumpkins can change
+    # grass to dirt, which may break the eco system!
     plants:
       DEAD_BUSH: 5:SAND
+    # Mobs that may spawn.
+    # Format:
+    # Entity name: % chance:Block on which the mob will spawn
     mobs:
       SQUID: 10:STATIONARY_WATER
+    # The minimum number of blocks each mob requires.
+    # Mobs will not spawn if there is more than 1 per this number of
+    # blocks in the greenhouse. e.g., in this case only 2 mobs will spawn if the
+    # greenhouse area is 18 blocks
     moblimit: 9
   COLD_BEACH:
     icon: SNOW_BLOCK
@@ -36,6 +58,10 @@ biomes:
     plants:
       DEAD_BUSH: 10:SAND
       CACTUS: 10:SAND
+    # Conversions (see below for another variation)
+    # Format is:
+    # Original Block Material:Durability:Chance of change:New Block Material:Durability
+    # So, for below, regular dirt (durability 0) has a 30% chance of changing into regular sand.
     conversions: DIRT:0:30:SAND:0
   FLOWER_FOREST:
     icon: RED_ROSE
@@ -103,6 +129,10 @@ biomes:
     contents: SAND:1
     watercoverage: 50
     icecoverage: 0
+    # Conversions - in this case, an adjacent block is required to convert
+    # Format is:
+    # Original Block:Durability:% chance:New Block:Durability:Adjacent Block:Durability
+    # So, for below, dirt has a 50% chance of changing into clay if it is next to water!
     conversions: DIRT:0:50:CLAY:0:STATIONARY_WATER:0
   SAVANNA:
     icon: LEAVES

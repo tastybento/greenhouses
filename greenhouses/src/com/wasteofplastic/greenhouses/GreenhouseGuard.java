@@ -5,10 +5,6 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockFromToEvent;
 
-/**
- * @author ben
- * Provides protection to islands
- */
 public class GreenhouseGuard implements Listener {
     private final Greenhouses plugin;
     public GreenhouseGuard(final Greenhouses plugin) {

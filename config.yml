@@ -4,10 +4,7 @@ greenhouses:
      - world
      - creative
 
-   # Use built-in protection? Not needed if other protection plugins are available
-   useProtection: false
-
-   # Weather and ecosystem
+   ### Weather and ecosystem settings
 
    # How often it should snow in the g/h when the weather is raining, in seconds
    snowspeed: 30
@@ -29,44 +26,7 @@ greenhouses:
    mobtick: 5
 
 
-   ### Default settings for greenhouse protection 
-
-   #[true/false] PVP is allowed or denied.
-   allowPvP: false
-   # Other players can break blocks or not or generally damage things
-   allowbreakblocks: false
-   # Other players can place blocks
-   allowplaceblocks: false
-   # Allow players to be able to sleep in beds not on their island
-   allowbeduse: false
-   # Allow players to use buckets, either fill or dump them
-   allowbucketuse: false
-   # Allow players to shear sheep
-   allowshearing: false
-   # Allow players to throw enderpearls and teleport
-   allowenderpearls: false
-   # Allow players to use doors or trapdoors. If a door is operated by a button or redstone, this does not count
-   allowdooruse: false
-   # Allow players to use levers or buttons
-   allowleverbuttonuse: false
-   # Allow players to trample crops
-   allowcroptrample: false
-   # Allow players to access chests of any kind, droppers, dispensers and hoppers
-   allowchestaccess: false
-   # Allow players to access furnaces
-   allowfurnaceuse: false
-   # Allow players to adjust diodes or comparators
-   allowredstone: false
-   # Allow players to use jukeboxes, eject discs and hit note blocks
-   allowmusic: false
-   # Allow players to use crafting benches
-   allowcrafting: true
-   # Allow players to use cauldrons and brewing stands
-   allowbrewing: false
-   # Allow gates to be used
-   allowgateuse: false
-   # Allow non-monster mobs to be hurt
-   allowhurtmobs: false
+   ### Default settings for greenhouse actions 
    # Allow lava or water to flow out of a greenhouse, e.g. through the door, floor
    allowflowout: false
    # Allow lava or water to flow into a greenhouse, e.g., through the door
