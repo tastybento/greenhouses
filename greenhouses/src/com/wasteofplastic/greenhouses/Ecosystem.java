@@ -2,7 +2,9 @@ package com.wasteofplastic.greenhouses;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -63,7 +65,8 @@ public class Ecosystem implements Listener {
 	    public void run() {
 		// Run through each greenhouse - only bother with snow biomes
 		//plugin.getLogger().info("DEBUG: started scheduler");
-		// Check all the greenhouses and their hoppers and build a list of snow greenhouses that exist now		
+		// Check all the greenhouses and their hoppers and build a list of snow greenhouses that exist now
+		List<Greenhouse> toBeRemoved = new ArrayList<Greenhouse>();
 		for (Greenhouse g : plugin.getGreenhouses()) {
 		    //plugin.getLogger().info("DEBUG: Testing greenhouse biome : " + g.getBiome().toString());
 		    if (snowBiomes.contains(g.getBiome())) {
@@ -80,17 +83,28 @@ public class Ecosystem implements Listener {
 				   // plugin.getLogger().info("DEBUG: Hopper found!");
 				    // Check what is in the hopper
 				    if (h.getInventory().contains(Material.WATER_BUCKET)) {
-					//plugin.getLogger().info("DEBUG: Water bucket found!");
 					// Remove the water in the bucket
-					h.getInventory().removeItem(new ItemStack(Material.WATER_BUCKET));
-					h.getInventory().addItem(new ItemStack(Material.BUCKET));
+					// We cannot remove an itemstack the easy way because on acid island the bucket is changed to acid
+					for (ItemStack item : h.getInventory().getContents()) {
+					    if (item != null && item.getType().equals(Material.WATER_BUCKET)) {
+						// Remove one from this item stack
+						// Water buckets in theory do no stack...
+						ItemStack i = item.clone();
+						i.setAmount(1);
+						h.getInventory().removeItem(i);
+						h.getInventory().addItem(new ItemStack(Material.BUCKET));
+						break;
+					    }
+					}
 					// Add to list
 					snowGlobes.add(g);
 				    }
 				} else {
 				    // Greenhouse is broken or no longer has a hopper when it should
-				    // TODO remove the greenhouse
-				    plugin.getLogger().warning("Hopper is not there anymore...");
+				    plugin.getLogger().warning("Hopper missing from greenhouse at " + g.getRoofHopperLocation().getBlockX() + " "
+					    + g.getRoofHopperLocation().getBlockY() + " " + g.getRoofHopperLocation().getBlockZ());
+				    plugin.getLogger().warning("Removing greenhouse");
+				    toBeRemoved.add(g);
 				}
 			    }
 			}
@@ -98,6 +112,12 @@ public class Ecosystem implements Listener {
 		}
 		if (!snowGlobes.isEmpty()) {
 		    snowOn(snowGlobes);
+		}
+		// Remove any greenhouses that need it
+		for (Greenhouse g : toBeRemoved) {
+		    UUID owner = g.getOwner();
+		    plugin.removeGreenhouse(g);
+		    plugin.players.save(owner);
 		}
 	    }
 	}, 0L, (Settings.snowSpeed * 20L)); // Every 30 seconds

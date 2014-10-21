@@ -87,7 +87,8 @@ rent:
 
 messages:
    enter: "Entering [owner]'s [biome] greenhouse!"
-   leave: "Now leaving [owners]'s greenhouse."
+   leave: "Now leaving [owner
+I]'s greenhouse."
    rententer: "Entering [player]'s rented [biome] greenhouse!"
    rentfarewell: "Now leaving [player]'s rented greenhouse."
    youarein: "You are now in [owner]'s [biome] greenhouse!"
@@ -152,7 +153,15 @@ create:
    holeinwall: "There is a hole in the wall or they are not the same height all the way around!"
    hoppererror: "Only one hopper is allowed in the walls or roof."
    doorerror: "You cannot have more than 4 doors in the greenhouse!"
-   success: "You succesfully made a [biome] biome greenhouse!"
+   success: "You successfully made a [biome] biome greenhouse!"
+
+lease:
+   rentpaid: "You paid a rent of [price] to [owner]."
+   rentpaidowner: "[player] paid you a rent of [price]."
+   cannotpay: "You could not pay a rent of [price] so you were evicted from [owner]'s greenhouse"
+   cannotpayowner: "[player] could not pay rent of [price] so was evicted"
+   leaseended: "The lease on a greenhouse you were renting from [owner] ended."
+   leaseendedowner: "[player]'s lease ended."
 
 ##################################
 #Admin commands that use /gadmin #

@@ -65,7 +65,7 @@ public class Players {
 		playerName = "";		
 	    }
 	}
-	plugin.getLogger().info("Loading player..." + playerName);
+	//plugin.getLogger().info("Loading player..." + playerName);
 	this.hasGreenhouses = playerInfo.getBoolean("hasGreenhouses", false);
 	this.visualize = playerInfo.getBoolean("visualize",true);
 	ConfigurationSection myHouses = playerInfo.getConfigurationSection("greenhouses");
@@ -78,89 +78,107 @@ public class Players {
 		    final Location pos2 = getLocationString(playerInfo.getString("greenhouses." + key + ".pos-two"));
 		    //plugin.getLogger().info("DEBUG: File pos1: " + pos1.toString());
 		    //plugin.getLogger().info("DEBUG: File pos1: " + pos2.toString());
-		    // Check if this greenhouse already exists
-		    if (plugin.checkGreenhouseIntersection(pos1, pos2)) {
-			//plugin.getLogger().info("DEBUG: Greenhouse already exists or overlaps - ignoring");
+		    if (pos1 != null && pos2 !=null) {
+			// Check if this greenhouse already exists
+			if (plugin.checkGreenhouseIntersection(pos1, pos2)) {
+			    //plugin.getLogger().info("DEBUG: Greenhouse already exists or overlaps - ignoring");
 
+			} else {
+			    Greenhouse g = new Greenhouse(plugin, pos1, pos2, uuid);
+			    g.setId(UUID.fromString(playerInfo.getString("greenhouses." + key + ".id")));
+			    //plugin.getLogger().info("DEBUG: Greenhouse pos1: " + g.getPos1().toString());
+			    //plugin.getLogger().info("DEBUG: Greenhouse pos2: " + g.getPos2().toString());
+			    // Set biome
+			    String oBiome = playerInfo.getString("greenhouses." + key + ".originalBiome", "SUNFLOWER_PLAINS");
+			    Biome originalBiome = Biome.valueOf(oBiome);
+			    if (originalBiome == null) {
+				originalBiome = Biome.SUNFLOWER_PLAINS;
+			    }
+			    g.setOriginalBiome(originalBiome);
+			    String gBiome = playerInfo.getString("greenhouses." + key + ".greenhouseBiome", "SUNFLOWER_PLAINS");
+			    Biome greenhouseBiome = Biome.valueOf(gBiome);
+			    if (greenhouseBiome == null) {
+				greenhouseBiome = Biome.SUNFLOWER_PLAINS;
+			    }
+
+			    // Check to see if this biome has a recipe
+			    boolean success = false;
+			    for (BiomeRecipe br : plugin.getBiomeRecipes()) {
+				if (br.getType().equals(greenhouseBiome)) {
+				    success = true;
+				    g.setBiome(br);
+				    break;
+				}
+			    }
+			    // Check to see if it was set properly
+			    if (!success) {
+				plugin.getLogger().warning("*****************************************");
+				plugin.getLogger().warning("WARNING: No known recipe for biome " + greenhouseBiome.toString());
+				plugin.getLogger().warning("[Greenhouse info]");
+				plugin.getLogger().warning("Owner: " + plugin.players.getName(g.getOwner()) + " UUID:" + g.getOwner());
+				plugin.getLogger().warning("Greenhouse ID (in yml file): " + g.getId());
+				plugin.getLogger().warning("Location :" + g.getPos1().getWorld().getName() + " " + g.getPos1().getBlockX() + "," + g.getPos1().getBlockZ());
+				plugin.getLogger().warning("Greenhouse will be removed next eco-tick!");
+				plugin.getLogger().warning("*****************************************");
+			    }
+			    //g.setBiome(greenhouseBiome);			
+			    Location hopperLoc = getLocationString(playerInfo.getString("greenhouses." + key + ".roofHopperLocation"));
+			    if (hopperLoc != null) {
+				g.setRoofHopperLocation(hopperLoc);
+			    }
+			    // Load all the flags
+			    HashMap<String,Object> flags = (HashMap<String, Object>) playerInfo.getConfigurationSection("greenhouses." + key + ".flags").getValues(false);
+			    //d.setEnterMessage(playerInfo.getString("greenhouses." + key + ".entermessage",""));
+			    //d.setFarewellMessage(playerInfo.getString("greenhouses." + key + ".farewellmessage",""));
+			    g.setFlags(flags);
+			    // Load the various other flags here
+			    String tempUUID = playerInfo.getString("greenhouses." + key + ".renter");
+			    if (tempUUID != null) {
+				g.setRenter(UUID.fromString(tempUUID));
+			    }
+			    g.setForSale(playerInfo.getBoolean("greenhouses." + key + ".forSale", false));
+			    g.setForRent(playerInfo.getBoolean("greenhouses." + key + ".forRent", false));
+			    g.setPrice(playerInfo.getDouble("greenhouses." + key + ".price", 0D));
+			    SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+			    String dateInString = playerInfo.getString("greenhouses." + key + ".lastPayment");
+			    if (dateInString != null) {		 
+				try {		 
+				    Date date = formatter.parse(dateInString);
+				    g.setLastPayment(date);
+				} catch (ParseException e) {
+				    e.printStackTrace();
+				}
+			    }
+			    // Get the trusted players
+			    List<UUID> ownerTrustedUUID = new ArrayList<UUID>();
+			    List<String> ownerTrusted = playerInfo.getStringList("greenhouses." + key + ".ownerTrusted");
+			    if (ownerTrusted != null) {
+				for (String temp : ownerTrusted) {
+				    try {
+					ownerTrustedUUID.add(UUID.fromString(temp));
+				    } catch (Exception e) {
+					e.printStackTrace();
+				    }
+				}
+				g.setOwnerTrusted(ownerTrustedUUID);
+			    } 
+			    List<UUID> renterTrustedUUID = new ArrayList<UUID>();
+			    List<String> renterTrusted = playerInfo.getStringList("greenhouses." + key + ".renterTrusted");
+			    if (renterTrusted != null) {
+				for (String temp : renterTrusted) {
+				    try {
+					renterTrustedUUID.add(UUID.fromString(temp));
+				    } catch (Exception e) {
+					e.printStackTrace();
+				    }
+				}
+				g.setRenterTrusted(renterTrustedUUID);
+			    }	    
+			    plugin.getGreenhouses().add(g);
+			}
 		    } else {
-			Greenhouse g = new Greenhouse(plugin, pos1, pos2, uuid);
-			g.setId(UUID.fromString(playerInfo.getString("greenhouses." + key + ".id")));
-			//plugin.getLogger().info("DEBUG: Greenhouse pos1: " + g.getPos1().toString());
-			//plugin.getLogger().info("DEBUG: Greenhouse pos2: " + g.getPos2().toString());
-			// Set biome
-			String oBiome = playerInfo.getString("greenhouses." + key + ".originalBiome", "SUNFLOWER_PLAINS");
-			Biome originalBiome = Biome.valueOf(oBiome);
-			if (originalBiome == null) {
-			    originalBiome = Biome.SUNFLOWER_PLAINS;
-			}
-			g.setOriginalBiome(originalBiome);
-			String gBiome = playerInfo.getString("greenhouses." + key + ".greenhouseBiome", "SUNFLOWER_PLAINS");
-			Biome greenhouseBiome = Biome.valueOf(gBiome);
-			if (greenhouseBiome == null) {
-			    greenhouseBiome = Biome.SUNFLOWER_PLAINS;
-			}
-
-			// Check to see if this biome has a recipe
-			for (BiomeRecipe br : plugin.getBiomeRecipes()) {
-			    if (br.getType().equals(greenhouseBiome)) {
-				g.setBiome(br);
-				break;
-			    }
-			}
-			//g.setBiome(greenhouseBiome);			
-			Location hopperLoc = getLocationString(playerInfo.getString("greenhouses." + key + ".roofHopperLocation"));
-			if (hopperLoc != null) {
-			    g.setRoofHopperLocation(hopperLoc);
-			}
-			// Load all the flags
-			HashMap<String,Object> flags = (HashMap<String, Object>) playerInfo.getConfigurationSection("greenhouses." + key + ".flags").getValues(false);
-			//d.setEnterMessage(playerInfo.getString("greenhouses." + key + ".entermessage",""));
-			//d.setFarewellMessage(playerInfo.getString("greenhouses." + key + ".farewellmessage",""));
-			g.setFlags(flags);
-			// Load the various other flags here
-			String tempUUID = playerInfo.getString("greenhouses." + key + ".renter");
-			if (tempUUID != null) {
-			    g.setRenter(UUID.fromString(tempUUID));
-			}
-			g.setForSale(playerInfo.getBoolean("greenhouses." + key + ".forSale", false));
-			g.setForRent(playerInfo.getBoolean("greenhouses." + key + ".forRent", false));
-			g.setPrice(playerInfo.getDouble("greenhouses." + key + ".price", 0D));
-			SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
-			String dateInString = playerInfo.getString("greenhouses." + key + ".lastPayment");
-			if (dateInString != null) {		 
-			    try {		 
-				Date date = formatter.parse(dateInString);
-				g.setLastPayment(date);
-			    } catch (ParseException e) {
-				e.printStackTrace();
-			    }
-			}
-			// Get the trusted players
-			List<UUID> ownerTrustedUUID = new ArrayList<UUID>();
-			List<String> ownerTrusted = playerInfo.getStringList("greenhouses." + key + ".ownerTrusted");
-			if (ownerTrusted != null) {
-			    for (String temp : ownerTrusted) {
-				try {
-				    ownerTrustedUUID.add(UUID.fromString(temp));
-				} catch (Exception e) {
-				    e.printStackTrace();
-				}
-			    }
-			    g.setOwnerTrusted(ownerTrustedUUID);
-			} 
-			List<UUID> renterTrustedUUID = new ArrayList<UUID>();
-			List<String> renterTrusted = playerInfo.getStringList("greenhouses." + key + ".renterTrusted");
-			if (renterTrusted != null) {
-			    for (String temp : renterTrusted) {
-				try {
-				    renterTrustedUUID.add(UUID.fromString(temp));
-				} catch (Exception e) {
-				    e.printStackTrace();
-				}
-			    }
-			    g.setRenterTrusted(renterTrustedUUID);
-			}	    
-			plugin.getGreenhouses().add(g);
+			plugin.getLogger().severe("Problem loading greenhouse with locations " + playerInfo.getString("greenhouses." + key + ".pos-one") + " and " + playerInfo.getString("greenhouses." + key + ".pos-two") + " skipping.");
+			plugin.getLogger().severe("Has this world been deleted?");
 		    }
 		} catch (Exception e) {
 		    plugin.getLogger().severe("Problem loading player files");
@@ -168,7 +186,7 @@ public class Players {
 		}
 
 	    }
-	    plugin.getLogger().info("Loaded " + plugin.getGreenhouses().size() + " greenhouses.");
+	    //plugin.getLogger().info("Loaded " + plugin.getGreenhouses().size() + " greenhouses.");
 	}
     }
     /**
@@ -232,7 +250,7 @@ public class Players {
 	final String[] parts = s.split(":");
 	if (parts.length == 4) {
 	    for (World w : Bukkit.getServer().getWorlds()) {
-	    //Bukkit.getLogger().info("DEBUG: Worlds are " + w.getName());
+		//Bukkit.getLogger().info("DEBUG: Worlds are " + w.getName());
 	    }
 	    //Bukkit.getLogger().info("DEBUG: Looking for : " + parts[0]);
 	    final World w = Bukkit.getServer().getWorld(parts[0]);

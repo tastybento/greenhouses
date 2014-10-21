@@ -61,7 +61,11 @@ public class BiomeRecipe {
     }
 
     public void addReqBlocks(Material blockMaterial, int blockType, long blockQty) {
-	//plugin.getLogger().info("DEBUG: adding required block " + blockMaterial.toString() + " type " + blockType + " x " + blockQty);
+	String type = "";
+	if (blockType >= 0) {
+	    type = "type " + blockType;
+	}
+	plugin.getLogger().info("   " + Greenhouses.prettifyText(blockMaterial.toString()) + type + " x " + blockQty);
 	this.blockMaterial.add(blockMaterial);
 	this.blockType.add(blockType);
 	this.blockQty.add(blockQty);
@@ -203,7 +207,7 @@ public class BiomeRecipe {
     }
 
     public void addPlants(Material plantMaterial, int plantType, int plantProbability, Material plantGrowOn) {
-	plugin.getLogger().info("Plant added to " + type.toString() + " " + plantMaterial + " probability " + plantProbability);
+	plugin.getLogger().info("   " + plantProbability + "% chance for " + Greenhouses.prettifyText(plantMaterial.toString()) + " to grow.");
 	this.plantMaterial.add(plantMaterial);
 	this.plantType.add(plantType);
 	this.plantProbability.add(plantProbability);
@@ -211,7 +215,7 @@ public class BiomeRecipe {
     }
 
     public void addMobs(EntityType mobType, int mobProbability, Material mobSpawnOn) {
-	plugin.getLogger().info("Mob added: " + mobType.toString() + " probability " + mobProbability + " spawn on " + mobSpawnOn.toString());
+	plugin.getLogger().info("   " + mobProbability + "% chance for " + Greenhouses.prettifyText(mobType.toString()) + " to spawn on " + Greenhouses.prettifyText(mobSpawnOn.toString())+ ".");
 	this.mobType.add(mobType);
 	double probability = ((double)mobProbability/100);
 	//this.mobProbability.add(((double)mobProbability/100));
@@ -224,7 +228,7 @@ public class BiomeRecipe {
 	if ((1D - totalProb) >= probability) {
 	    this.mobProbability.add(probability);
 	} else {
-	    plugin.getLogger().warning("Mob chances add up to >100% in " + type.toString() + " biome recipe!");
+	    plugin.getLogger().warning("   Mob chances add up to >100% in " + type.toString() + " biome recipe!");
 	}
     }
 
@@ -412,6 +416,11 @@ public class BiomeRecipe {
      * @param waterCoverage the waterCoverage to set
      */
     public void setWatercoverage(int watercoverage) {
+	if (watercoverage == 0) {
+	    plugin.getLogger().info("   No Water Allowed");
+	} else if (watercoverage > 0) {
+	    plugin.getLogger().info("   Water > " + watercoverage + "%");
+	}
 	this.waterCoverage = watercoverage;
     }
 
@@ -419,6 +428,11 @@ public class BiomeRecipe {
      * @param icecoverage the icecoverage to set
      */
     public void setIcecoverage(int icecoverage) {
+	if (icecoverage == 0) {
+	    plugin.getLogger().info("   No Ice Allowed");
+	} else if (icecoverage > 0) {
+	    plugin.getLogger().info("   Ice > " + icecoverage + "%");
+	}
 	this.iceCoverage = icecoverage;
     }
 
@@ -426,6 +440,11 @@ public class BiomeRecipe {
      * @param lavaCoverage the lavaCoverage to set
      */
     public void setLavacoverage(int lavacoverage) {
+	if (lavacoverage == 0) {
+	    plugin.getLogger().info("   No Lava Allowed");
+	} else if (lavacoverage > 0) {
+	    plugin.getLogger().info("   Lava > " + lavacoverage + "%");
+	}
 	this.lavaCoverage = lavacoverage;
     }
 
