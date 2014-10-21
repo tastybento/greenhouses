@@ -101,7 +101,6 @@ public class Ecosystem implements Listener {
 				    }
 				} else {
 				    // Greenhouse is broken or no longer has a hopper when it should
-				    // TODO remove the greenhouse
 				    plugin.getLogger().warning("Hopper missing from greenhouse at " + g.getRoofHopperLocation().getBlockX() + " "
 					    + g.getRoofHopperLocation().getBlockY() + " " + g.getRoofHopperLocation().getBlockZ());
 				    plugin.getLogger().warning("Removing greenhouse");
