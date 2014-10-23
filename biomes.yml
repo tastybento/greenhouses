@@ -82,6 +82,7 @@ biomes:
     mobs:
       PIG_ZOMBIE: 10:NETHERRACK
     moblimit: 9
+    permission: greenhouses.biome.nether
   JUNGLE:
     icon: VINE
     priority: 6

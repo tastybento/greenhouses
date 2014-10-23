@@ -47,6 +47,8 @@ public class BiomeRecipe {
     private int waterCoverage;
     private int iceCoverage;
     private int lavaCoverage;
+    
+    private String permission = "";
 
     /**
      * @param type
@@ -494,6 +496,20 @@ public class BiomeRecipe {
      */
     public void setIcon(Material icon) {
 	this.icon = icon;
+    }
+
+    /**
+     * @return the permission
+     */
+    public String getPermission() {
+        return permission;
+    }
+
+    /**
+     * @param permission the permission to set
+     */
+    public void setPermission(String permission) {
+        this.permission = permission;
     }
 
 }

@@ -70,7 +70,7 @@ public class GreenhouseCmd implements CommandExecutor {
 		return true;
 	    } else if (split[0].equalsIgnoreCase("recipe")) {
 		// Show control panel
-		player.openInventory(plugin.getRecipeInv());
+		player.openInventory(plugin.getRecipeInv(player));
 		return true;
 	    } else if (split[0].equalsIgnoreCase("list")) {
 		// List all the biomes that can be made

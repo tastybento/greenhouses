@@ -8,7 +8,6 @@ general:
    greenhouses: "Greenhouses"
    biome: "Biome"
    owner: "Owner"
-   renter: "Renter"
 
 help:
    help: "help"
@@ -17,14 +16,6 @@ help:
    info: "Shows info on the greenhouse you and general info"
    list: "Lists all the greenhouse biomes that can be made"
    recipe: "Tells you how to make greenhouse biome"
-   trust: "Gives player full access to your greenhouse"
-   untrust: "Revokes trust to your greenhouse"
-   untrustall: "Removes all trusted parties from your greenhouse"
-   buy: "Attempts to buy the greenhouse you are in"
-   rent: "Attempts to rent the greenhouse you are in"
-   rentprice: "Puts the greenhouse you are in up for rent for a weekly rent"
-   sell: "Puts the greenhouse you are in up for sale"
-   cancel: "Cancels a For Sale, For Rent or a Lease"
 
 list:
    title: "[Greenhouse Biome Recipes]"
@@ -42,68 +33,22 @@ error:
    offlinePlayer: "That player is offline or doesn't exist."
    unknownCommand: "Unknown command."
    greenhouseProtected: "Greenhouse protected"
-   move: "Move to a greenhouse you own or rent first."
-   notowner: "You must be the owner or renter of this greenhouse to do that."
+   move: "Move to a greenhouse you own first."
+   notowner: "You must be the owner of this greenhouse to do that."
    removing: "Removing greenhouse!"
    notyours: "This is not your greenhouse!"
    notinside: "You are not in a greenhouse!"
    tooexpensive: "You cannot afford [price]" 
    alreadyexists: "Greenhouse already exists!"
    norecipe: "This does not meet any greenhouse recipe!"
-   noPVP: "Target is in a no-PVP greenhouse!"
    
-trust:
-   trust: "[player] trusts you in a greenhouse."
-   untrust: "[player] untrusted you in a greenhouse."
-   title: "[Greenhouse Trusted Players]"
-   owners: "[Owner's]"
-   renters: "[Renter's]"
-   none: "None"
-   notrust: "No one is trusted in this greenhouse."
-   alreadytrusted: "That player is already trusted."
-
-sell:
-   notforsale: "This greenhouse is not for sale!"
-   youareowner: "You already own this greenhouse!" 
-   sold: "You successfully sold a greenhouse for [price] to [player]"
-   bought: "You purchased the greenhouse for [price]!"
-   ecoproblem: "There was an economy problem trying to purchase the greenhouse for [price]!"
-   beingrented: "The greenhouse is being rented at this time. Wait until the lease expires."
-   invalidprice: "The price is invalid (must be >= [price])"
-   forsale: "Putting greenhouse up for sale for [price]"
-   ad: "This greenhouse is for sale for [price]!"
-
-rent:
-   notforrent: "This greenhouse is not for rent!"
-   alreadyrenting: "You are already renting this greenhouse!"
-   alreadyleased: "This greenhouse is already being leased."
-   tip: "To end the renter's lease at the next due date, use the cancel command."
-   leased: "You successfully leased a greenhouse for [price] to [player]"
-   rented: "You rented the greenhouse for [price] for 1 week!"
-   error: "There was an economy problem trying to rent the greenhouse for [price]!"
-   invalidrent: "The rent is invalid (must be >= [price])"
-   forrent: "Putting greenhouse up for rent for [price]"
-   ad: "This greenhouse is for rent for [price] per week."
-
 messages:
    enter: "Entering [owner]'s [biome] greenhouse!"
-   leave: "Now leaving [owner
-I]'s greenhouse."
-   rententer: "Entering [player]'s rented [biome] greenhouse!"
-   rentfarewell: "Now leaving [player]'s rented greenhouse."
+   leave: "Now leaving [owner]'s greenhouse."
    youarein: "You are now in [owner]'s [biome] greenhouse!"
    removed: "This greenhouse is no more..."
    removedmessage: "A [biome] greenhouse of yours is no more!"
    ecolost: "Your greenhouse at [location] lost its eco system and was removed."
-
-cancel:
-   cancelled: "Greenhouse is no longer for sale or rent."
-   leasestatus1: "Greenhouse is currently leased by [player]."
-   leasestatus2: "Lease will not renew and will terminate in [time] days."
-   leasestatus3: "You can put it up for rent again after that date."
-   cancelmessage: "[owner] ended a lease you have on a greenhouse. It will end in [time] days."
-   leaserenewalcancelled: "Lease renewal cancelled. Lease term finishes in [time] days."
-   renewalcancelmessage: "[renter] canceled a lease with you. It will end in [time] days."
 
 info:
    title: "&A[Greenhouse Construction]"
@@ -118,13 +63,7 @@ info:
      - "&A[Snow and fertilizer]"
      - "&EAdd water buckets or bonemeal to the hopper to disperse snow when it rain or fertilize grass automatically."
    info: "[Greenhouse Info]"
-   ownerstrusted: "[Owner's trusted players]"
    none: "None"
-   nextrent: "Next rent of [price] due in [time] days."
-   leasewillend: "Lease will end in [time] days!"
-   renter: "Renter: [nickname] ([name])"
-   renterstrusted: "[Renter's trusted players]"
-   ad: "This greenhouse can be leased for [price]"
 
 recipe:
    hint: "Use /greenhouse list to see a list of recipe numbers!"
@@ -154,14 +93,6 @@ create:
    hoppererror: "Only one hopper is allowed in the walls or roof."
    doorerror: "You cannot have more than 4 doors in the greenhouse!"
    success: "You successfully made a [biome] biome greenhouse!"
-
-lease:
-   rentpaid: "You paid a rent of [price] to [owner]."
-   rentpaidowner: "[player] paid you a rent of [price]."
-   cannotpay: "You could not pay a rent of [price] so you were evicted from [owner]'s greenhouse"
-   cannotpayowner: "[player] could not pay rent of [price] so was evicted"
-   leaseended: "The lease on a greenhouse you were renting from [owner] ended."
-   leaseendedowner: "[player]'s lease ended."
 
 ##################################
 #Admin commands that use /gadmin #

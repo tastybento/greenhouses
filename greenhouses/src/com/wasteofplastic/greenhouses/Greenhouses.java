@@ -59,8 +59,6 @@ public class Greenhouses extends JavaPlugin {
     private YamlConfiguration messageStore;
     // A map of where pos1's are stored
     private HashMap<UUID,Location> pos1s = new HashMap<UUID,Location>();
-    // Where visualization blocks are kept
-    private static HashMap<UUID, List<Location>> visualizations = new HashMap<UUID, List<Location>>();
     // Ecosystem object and random number generator
     private Ecosystem eco = new Ecosystem(this);
     // Tasks
@@ -168,7 +166,9 @@ public class Greenhouses extends JavaPlugin {
 	return config;
     }
 
-    // TODO: Load in the Biome recipes
+    /**
+     * Loads all the biome recipes from the file biomes.yml.
+     */
     public void loadBiomeRecipes() {
 	biomeRecipes.clear();
 	YamlConfiguration biomes = loadYamlFile("biomes.yml");
@@ -185,6 +185,8 @@ public class Greenhouses extends JavaPlugin {
 		if (thisBiome != null) {
 		    int priority = biomeSection.getInt(type + ".priority", 0);
 		    BiomeRecipe b = new BiomeRecipe(this, thisBiome,priority);
+		    // Set the permission
+		    b.setPermission(biomeSection.getString(type + ".permission",""));
 		    // Set the icon
 		    b.setIcon(Material.valueOf(biomeSection.getString(type + ".icon", "SAPLING")));
 		    // A value of zero on these means that there must be NO coverage, e.g., desert. If the value is not present, then the default is -1
@@ -897,119 +899,10 @@ public class Greenhouses extends JavaPlugin {
 		    p.sendMessage((Locale.messagesyouarein.replace("[owner]", owner.getDisplayName())).replace("[biome]", prettifyText(d.getBiome().toString())));
 		}
 		players.setInGreenhouse(p.getUniqueId(), d);
-		visualize(d,p);
 	    }
 	}
 	return d;
     }
-
-    // TODO: Ann snow particle visualization
-    //@SuppressWarnings("deprecation") 
-    void visualize(Greenhouse d, Player player) {
-	return;
-    }
-    /*
-	// Deactivate any previous visualization
-	getLogger().info("DEBUG: visualize");
-	//if (visualizations.containsKey(player.getUniqueId())) {
-	//    devisualize(player);
-	//}
-	// Get the four corners
-	int minx = Math.min(d.getPos1().getBlockX(), d.getPos2().getBlockX());
-	int maxx = Math.max(d.getPos1().getBlockX(), d.getPos2().getBlockX());
-	int minz = Math.min(d.getPos1().getBlockZ(), d.getPos2().getBlockZ());
-	int maxz = Math.max(d.getPos1().getBlockZ(), d.getPos2().getBlockZ());
-
-	// Draw the lines - we do not care in what order
-	List<Location> positions = new ArrayList<Location>();
-
-
-	for (int x = minx; x<= maxx; x++) {
-	    for (int z = minz; z<= maxz; z++) {
-		Location v = new Location(player.getWorld(),x,d.getPos2().getBlockY(),z);
-		//v = player.getWorld().getHighestBlockAt(v).getLocation().subtract(new Vector(0,1,0));
-		player.sendBlockChange(v, Material.GLASS, (byte)0);
-		positions.add(v);
-	    }
-	}
-    /*
-	for (int x = minx; x<= maxx; x++) {
-	    Location v = new Location(player.getWorld(),x,0,minz);
-	    v = player.getWorld().getHighestBlockAt(v).getLocation().subtract(new Vector(0,1,0));
-	    player.sendBlockChange(v, Material.REDSTONE_BLOCK, (byte)0);
-	    positions.add(v);
-	}
-	for (int x = minx; x<= maxx; x++) {
-	    Location v = new Location(player.getWorld(),x,0,maxz);
-	    v = player.getWorld().getHighestBlockAt(v).getLocation().subtract(new Vector(0,1,0));
-	    player.sendBlockChange(v, Material.REDSTONE_BLOCK, (byte)0);
-	    positions.add(v);
-	}
-	for (int z = minz; z<= maxz; z++) {
-	    Location v = new Location(player.getWorld(),minx,0,z);
-	    v = player.getWorld().getHighestBlockAt(v).getLocation().subtract(new Vector(0,1,0));
-	    player.sendBlockChange(v, Material.REDSTONE_BLOCK, (byte)0);
-	    positions.add(v);
-	}
-	for (int z = minz; z<= maxz; z++) {
-	    Location v = new Location(player.getWorld(),maxx,0,z);
-	    v = player.getWorld().getHighestBlockAt(v).getLocation().subtract(new Vector(0,1,0));
-	    player.sendBlockChange(v, Material.REDSTONE_BLOCK, (byte)0);
-	    positions.add(v);
-	}
-     */
-
-    // Save these locations
-    //visualizations.put(player.getUniqueId(), positions);
-    //}
-
-    //@SuppressWarnings("deprecation") 
-    void visualize(Location l, Player player) {
-	return;
-	/*
-	plugin.getLogger().info("Visualize location");
-	// Deactivate any previous visualization
-	if (visualizations.containsKey(player.getUniqueId())) {
-	    devisualize(player);
-	}
-	player.sendBlockChange(l, Material.REDSTONE_BLOCK, (byte)0);
-	// Save these locations
-	List<Location> pos = new ArrayList<Location>();
-	pos.add(l);
-	visualizations.put(player.getUniqueId(), pos);*/
-    }
-
-    //@SuppressWarnings("deprecation")
-    public void devisualize(Player player) {
-	return;
-	/*
-	//Greenhouses.getPlugin().getLogger().info("Removing visualization");
-	if (!visualizations.containsKey(player.getUniqueId())) {
-	    return;
-	}
-	for (Location pos: visualizations.get(player.getUniqueId())) {
-	    Block b = pos.getBlock();	    
-	    player.sendBlockChange(pos, b.getType(), b.getData());
-	}
-	visualizations.remove(player.getUniqueId());*/
-    }
-
-
-    /**
-     * @return the visualizations
-     */
-    public HashMap<UUID, List<Location>> getVisualizations() {
-	return visualizations;
-    }
-
-
-    /**
-     * @param visualizations the visualizations to set
-     */
-    public void setVisualizations(HashMap<UUID, List<Location>> visualizations) {
-	Greenhouses.visualizations = visualizations;
-    }
-
 
     /**
      * Checks if a location is inside a greenhouse (3D space)
@@ -1043,6 +936,10 @@ public class Greenhouses extends JavaPlugin {
 	return null;
     }
 
+    /**
+     * Removes the greenhouse from the world and resets biomes
+     * @param g
+     */
     public void removeGreenhouse(Greenhouse g) {
 	// Remove the greenhouse
 	HashSet<Greenhouse> ds = getGreenhouses();
@@ -1057,14 +954,11 @@ public class Greenhouses extends JavaPlugin {
 		ownerOnline=true;
 	    if (g.insideGreenhouse(p.getLocation())) {
 		players.setInGreenhouse(p.getUniqueId(), null);
-		// TODO messages.removed
 		p.sendMessage(ChatColor.RED + Locale.messagesremoved);
-		devisualize(p);
 	    }
 	}
 	if (!ownerOnline)
 	    setMessage(g.getOwner(), Locale.messagesremovedmessage.replace("[biome]", g.getBiome().toString()));
-	World world = g.getPos1().getWorld();
 	//getLogger().info("DEBUG: Returning biome to original state: " + g.getOriginalBiome().toString());
 	g.setBiome(g.getOriginalBiome()); // just in case
 	g.endBiome();
@@ -1110,29 +1004,36 @@ public class Greenhouses extends JavaPlugin {
     }
 
 
+    /**
+     * Returns the location of the closest greenhouse to this player that they own.
+     * @param player
+     * @return Location or null if none.
+     */
     public Location getClosestGreenhouse(Player player) {
 	// Find closest greenhouse
 	Location closest = null;
 	Double distance = 0D;
 	for (Greenhouse d : greenhouses) {
 	    UUID owner = d.getOwner();
-
+	    // Only look at greenhouses that this player owns
 	    if ((owner !=null && owner.equals(player.getUniqueId()))) {
-		//plugin.getLogger().info(owner + "  -  " + renter);
-		if (closest == null) {
-		    //plugin.getLogger().info(owner + "  -  " + renter);
-		    Vector mid = d.getPos1().toVector().midpoint(d.getPos2().toVector());
-		    closest = mid.toLocation(d.getPos1().getWorld());
-		    distance = player.getLocation().distanceSquared(closest);
-		    //getLogger().info("DEBUG: first greenhouse found at " + d.getPos1().toString() + " distance " + distance);
-		} else {
-		    // Find out if this location is closer to player
-		    Double newDist = player.getLocation().distanceSquared(d.getPos1());
-		    if (newDist < distance) {
+		// Only check if this greenhouse is in the same world as the player
+		if (d.getWorld().equals(player.getWorld())) {
+		    // First time check
+		    if (closest == null) {
 			Vector mid = d.getPos1().toVector().midpoint(d.getPos2().toVector());
 			closest = mid.toLocation(d.getPos1().getWorld());
 			distance = player.getLocation().distanceSquared(closest);
-			//getLogger().info("DEBUG: closer greenhouse found at " + d.getPos1().toString() + " distance " + distance);
+			//getLogger().info("DEBUG: first greenhouse found at " + d.getPos1().toString() + " distance " + distance);
+		    } else {
+			// Find out if this location is closer to player
+			Double newDist = player.getLocation().distanceSquared(d.getPos1());
+			if (newDist < distance) {
+			    Vector mid = d.getPos1().toVector().midpoint(d.getPos2().toVector());
+			    closest = mid.toLocation(d.getPos1().getWorld());
+			    distance = player.getLocation().distanceSquared(closest);
+			    //getLogger().info("DEBUG: closer greenhouse found at " + d.getPos1().toString() + " distance " + distance);
+			}
 		    }
 		}
 	    }
@@ -1206,9 +1107,10 @@ public class Greenhouses extends JavaPlugin {
     }
 
 
-    public Inventory getRecipeInv() {
-	return biomeInv.biomePanel;
+    public Inventory getRecipeInv(Player player) {
+	return biomeInv.getPanel(player);
     }
+
 
     /**
      * Checks that a greenhouse meets specs and makes it
@@ -1538,7 +1440,7 @@ public class Greenhouses extends JavaPlugin {
 		    winner = r;
 		    priority = r.getPriority();
 		} else {
-		    //getLogger().info("Debug: No luck");
+		    getLogger().info("Debug: No luck");
 		}
 	    } else {
 		// Only check higher priority ones
