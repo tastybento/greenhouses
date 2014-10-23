@@ -941,10 +941,11 @@ public class Greenhouses extends JavaPlugin {
      * @param g
      */
     public void removeGreenhouse(Greenhouse g) {
+	players.get(g.getOwner());
 	// Remove the greenhouse
-	HashSet<Greenhouse> ds = getGreenhouses();
-	ds.remove(g);
-	setGreenhouses(ds);
+	getLogger().info("DEBUG: greenhouses size " + greenhouses.size());
+	greenhouses.remove(g);
+	getLogger().info("DEBUG: greenhouses size after " + greenhouses.size());
 	// Stop any eco action
 	eco.remove(g);
 	boolean ownerOnline = false;
@@ -980,6 +981,9 @@ public class Greenhouses extends JavaPlugin {
 		}
 	    }
 	}
+	// Save the owner
+	getLogger().info("DEBUG: Saving player in remove greenhouse method.");
+	players.save(g.getOwner());
 	/*
 	// Set the biome
 	for (int y = g.getPos1().getBlockY(); y< g.getPos2().getBlockY();y++) {
@@ -1120,15 +1124,46 @@ public class Greenhouses extends JavaPlugin {
     public Greenhouse checkGreenhouse(final Player player) {
 	return checkGreenhouse(player, null);
     }
+    /**
+     * Checks that a greenhouse meets specs and makes it
+     * If type is stated then only this specific type will be checked
+     * @param player
+     * @param type
+     * @return
+     */
     public Greenhouse checkGreenhouse(final Player player, Biome type) {
+	// Do an immediate permissions check of the biome recipe if the type is declared
+	BiomeRecipe greenhouseRecipe = null;
+	if (type != null) {
+	    for (BiomeRecipe br: plugin.getBiomeRecipes()) {
+		if (br.getType().equals(type)) {
+		    if (!br.getPermission().isEmpty()) {
+			if (!VaultHelper.checkPerm(player, br.getPermission())) {
+			    player.sendMessage(ChatColor.RED + Locale.errornoPermission);
+			    getLogger().info("DEBUG: no permssions to use this biome");
+			    return null;
+			}
+		    }
+		    greenhouseRecipe = br;
+		    break;
+		}
+	    }
+	    if (greenhouseRecipe == null) {
+		player.sendMessage(ChatColor.RED + Locale.errornoPermission);
+		getLogger().info("DEBUG: no biomes were allowed to be used");
+		// This biome is unknown
+		return null;
+	    } else {
+		player.sendMessage(ChatColor.GOLD + "Trying to make a " + plugin.prettifyText(type.name()) + " biome greenhouse...");
+	    }
+	}
+	// Proceed to check the greenhouse
 	final Location location = player.getLocation().add(new Vector(0,1,0));
 	//plugin.getLogger().info("DEBUG: Player location is " + location.getBlockX() + " " + location.getBlockY() + " " + location.getBlockZ());
 	final Biome originalBiome = location.getBlock().getBiome();
 	// Define the blocks
 	final List<Material> roofBlocks = Arrays.asList(new Material[]{Material.GLASS, Material.STAINED_GLASS, Material.HOPPER});
 	final List<Material> wallBlocks = Arrays.asList(new Material[]{Material.HOPPER, Material.GLASS, Material.THIN_GLASS, Material.GLOWSTONE, Material.WOODEN_DOOR, Material.IRON_DOOR_BLOCK,Material.STAINED_GLASS,Material.STAINED_GLASS_PANE});
-	//final List<Material> groundBlocks = Arrays.asList(new Material[]{Material.GRASS, Material.DIRT, Material.SAND, Material.STATIONARY_WATER, Material.WATER, Material.LOG, Material.LOG_2});
-	//final List<Material> waterBlocks = Arrays.asList(new Material[]{Material.WATER, Material.STATIONARY_WATER});
 
 	final World world = location.getWorld();
 	// Counts
@@ -1140,8 +1175,6 @@ public class Greenhouses extends JavaPlugin {
 	int wallDoors = 0;
 	// Floor coordinate
 	int groundY = 0;
-
-
 	// Try up
 	Location height = location.clone();
 	while (!roofBlocks.contains(height.getBlock().getType())) {
@@ -1430,28 +1463,39 @@ public class Greenhouses extends JavaPlugin {
 
 	Location insideOne = new Location(world,minx,groundY,minz);
 	Location insideTwo = new Location(world,maxx,height.getBlockY(),maxz);
-	// Loop through biomes to see which ones match
-	// Int is the priority. Higher priority ones win
-	int priority = 0;
 	BiomeRecipe winner = null;
-	for (BiomeRecipe r : plugin.getBiomeRecipes()) {
-	    if (type != null && r.getType().equals(type)) {
-		if (r.checkRecipe(insideOne, insideTwo)) {
-		    winner = r;
-		    priority = r.getPriority();
-		} else {
-		    getLogger().info("Debug: No luck");
-		}
+	// Now check for the greenhouse biomes
+	if (greenhouseRecipe != null) {
+	    if (greenhouseRecipe.checkRecipe(insideOne, insideTwo, player)) {
+		winner = greenhouseRecipe;
 	    } else {
-		// Only check higher priority ones
-		if (r.getPriority()>priority) {
-		    if (r.checkRecipe(insideOne, insideTwo)) {
-			winner = r;
-			priority = r.getPriority();
+		return null;
+	    }
+	}
+	if (winner == null) {
+	    // Loop through biomes to see which ones match
+	    // Int is the priority. Higher priority ones win
+	    int priority = 0;
+	    for (BiomeRecipe r : plugin.getBiomeRecipes()) {
+		// Only check ones that this player has permission to use
+		if (r.getPermission().isEmpty() || (!r.getPermission().isEmpty() && VaultHelper.checkPerm(player, r.getPermission()))) {
+		    // Only check higher priority ones
+		    if (r.getPriority()>priority) {
+			player.sendMessage(ChatColor.GOLD + "Trying " + r.getType().toString());
+			if (r.checkRecipe(insideOne, insideTwo, null)) {
+			    player.sendMessage(ChatColor.GOLD + "Maybe...");
+			    winner = r;
+			    priority = r.getPriority();
+			} else {
+			    player.sendMessage(ChatColor.GOLD + "No.");
+			}
 		    }
+		} else {
+		    player.sendMessage(ChatColor.RED + "No permission for " + r.getType().toString());
 		}
 	    }
 	}
+
 	if (winner != null) {
 	    //plugin.getLogger().info("DEBUG: biome winner is " + winner.toString());
 	    Greenhouse g = createNewGreenhouse(pos1, pos2, player);

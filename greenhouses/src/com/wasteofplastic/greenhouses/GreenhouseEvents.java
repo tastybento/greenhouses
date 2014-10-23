@@ -2,6 +2,7 @@ package com.wasteofplastic.greenhouses;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -243,7 +244,7 @@ public class GreenhouseEvents implements Listener {
 	    e.getPlayer().sendMessage(ChatColor.RED + Locale.eventfix);
 	    plugin.removeGreenhouse(g);
 	    return;
-	}
+	}	
     }
 
     /**

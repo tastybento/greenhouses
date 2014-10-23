@@ -3,12 +3,14 @@ package com.wasteofplastic.greenhouses;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 public class BiomeRecipe {
@@ -47,7 +49,7 @@ public class BiomeRecipe {
     private int waterCoverage;
     private int iceCoverage;
     private int lavaCoverage;
-    
+
     private String permission = "";
 
     /**
@@ -77,12 +79,14 @@ public class BiomeRecipe {
 
     // Check required blocks
     /**
-     * Returns true if a cube defined by pos1 and pos2 meet this biome recipe
+     * Returns true if a cube defined by pos1 and pos2 meet this biome recipe. If player is not null, a explaination of
+     * any failures will be provided.
      * @param pos1
      * @param pos2
+     * @param player
      * @return
      */
-    public boolean checkRecipe(Location pos1, Location pos2) {
+    public boolean checkRecipe(Location pos1, Location pos2, Player player) {
 	//plugin.getLogger().info("DEBUG: Checking for biome " + type.toString());
 	// Calculate floor area
 	long area = (pos2.getBlockX()-pos1.getBlockX()-1) * (pos2.getBlockZ()-pos1.getBlockZ()-1);
@@ -144,16 +148,41 @@ public class BiomeRecipe {
 
 
 	// Check required ratios - a zero means none of these are allowed, e.g.desert has no water
-	if ((waterCoverage == 0 && waterRatio > 0) ||
-		(lavaCoverage == 0 && lavaRatio > 0) ||
-		(iceCoverage == 0 && iceRatio > 0)) {
-	    //plugin.getLogger().info("DEBUG: water, lava or ice must be zero but are not");
+	if (waterCoverage == 0 && waterRatio > 0) {
+	    if (player != null) {
+		player.sendMessage(ChatColor.RED + "No water allowed in this biome!");
+	    }
 	    pass=false;
 	}
-	if ((waterCoverage > 0 && waterRatio < waterCoverage) ||
-		(lavaCoverage > 0 && lavaRatio < lavaCoverage) ||
-		(iceCoverage > 0 && iceRatio < iceCoverage)) {
-	    //plugin.getLogger().info("DEBUG: not enough water, lava or ice for this biome");
+	if (lavaCoverage == 0 && lavaRatio > 0) {
+	    if (player != null) {
+		player.sendMessage(ChatColor.RED + "No lava allowed in this biome!");
+	    }
+	    pass=false;
+	}
+	if (iceCoverage == 0 && iceRatio > 0) {
+	    if (player != null) {
+		player.sendMessage(ChatColor.RED + "No ice allowed in this biome!");
+	    }
+	    pass=false;
+	}
+	if (waterCoverage > 0 && waterRatio < waterCoverage) {
+	    if (player != null) {
+		player.sendMessage(ChatColor.RED + "Not enough water in the greenhouse!");
+	    }
+	    pass=false;
+	}
+	if (lavaCoverage > 0 && lavaRatio < lavaCoverage) {
+	    if (player != null) {
+		player.sendMessage(ChatColor.RED + "Not enough lava in the greenhouse!");
+	    }
+	    pass=false;
+
+	}
+	if (iceCoverage > 0 && iceRatio < iceCoverage) {
+	    if (player != null) {
+		player.sendMessage(ChatColor.RED + "Not enough ice in the greenhouse!");
+	    }
 	    pass=false;
 	}
 	// Every value in the blockQtyCheck list should be zero or negative
@@ -163,6 +192,15 @@ public class BiomeRecipe {
 	    if (this.blockQtyCheck.get(i) > 0L) {
 		//plugin.getLogger().info("DEBUG: missing: " + blockQtyCheck.get(i) + " x " + blockMaterial.get(i) + ":" + blockType.get(i));
 		pass = false;
+		if (player != null) {
+		    ItemStack missingBlock = new ItemStack(blockMaterial.get(i));
+		    if (blockType.get(i) > 0) {
+			missingBlock.setDurability(blockType.get(i).shortValue());
+		    }
+		    player.sendMessage(ChatColor.RED + "Greenhouse is missing " + blockQtyCheck.get(i) + " x " + Util.getName(missingBlock));
+		}
+		pass=false;
+
 	    }
 
 	    // reset the list
@@ -502,14 +540,14 @@ public class BiomeRecipe {
      * @return the permission
      */
     public String getPermission() {
-        return permission;
+	return permission;
     }
 
     /**
      * @param permission the permission to set
      */
     public void setPermission(String permission) {
-        this.permission = permission;
+	this.permission = permission;
     }
 
 }

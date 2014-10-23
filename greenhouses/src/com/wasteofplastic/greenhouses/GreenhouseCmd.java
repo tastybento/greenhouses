@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.bukkit.ChatColor;
+import org.bukkit.block.Biome;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -148,7 +149,34 @@ public class GreenhouseCmd implements CommandExecutor {
 	    }
 	    break;
 	case 2:
-	    if (split[0].equalsIgnoreCase("recipe")) {
+	    if (split[0].equalsIgnoreCase("make")) {
+		// Sets up a greenhouse for a specific biome
+		if (players.getInGreenhouse(playerUUID) != null) {
+		    // alreadyexists
+		    player.sendMessage(ChatColor.RED + Locale.erroralreadyexists);
+		    return true;
+		}
+		// Check we are in a greenhouse
+		Biome b = null;
+		try {
+		    b = Biome.valueOf(split[1].toUpperCase());
+		} catch (Exception e) {
+		    player.sendMessage(ChatColor.RED + Locale.errornorecipe);
+		    return true;
+		}
+		if (b == null) {
+		    player.sendMessage(ChatColor.RED + Locale.errornorecipe);
+		    return true;
+		}
+		Greenhouse g = plugin.checkGreenhouse(player,b);
+		if (g == null) {
+		    // norecipe
+		    player.sendMessage(ChatColor.RED + Locale.errornorecipe);
+		    return true;
+		}
+		// Greenhouse is made
+		return true;
+	    } else if (split[0].equalsIgnoreCase("recipe")) {
 		int recipeNumber = 0;
 		try {
 		    recipeNumber = Integer.valueOf(split[1]);

@@ -277,7 +277,7 @@ public class Greenhouse {
     public boolean checkEco() {
 	//plugin.getLogger().info("DEBUG: checking the ecology of the greenhouse.");
 	if (biomeRecipe != null) {
-	    return this.biomeRecipe.checkRecipe(getPos1(), getPos2());
+	    return this.biomeRecipe.checkRecipe(getPos1(), getPos2(), null);
 	} else {
 	    plugin.getLogger().info("DEBUG: biomeRecipe is null! ");
 	    plugin.getLogger().warning("[Greenhouse info]");

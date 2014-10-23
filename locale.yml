@@ -40,7 +40,7 @@ error:
    notinside: "You are not in a greenhouse!"
    tooexpensive: "You cannot afford [price]" 
    alreadyexists: "Greenhouse already exists!"
-   norecipe: "This does not meet any greenhouse recipe!"
+   norecipe: "Cannot make a greenhouse!"
    
 messages:
    enter: "Entering [owner]'s [biome] greenhouse!"

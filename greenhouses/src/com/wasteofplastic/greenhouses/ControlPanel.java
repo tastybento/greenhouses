@@ -87,7 +87,7 @@ public class ControlPanel implements Listener {
 	// Run through biomes and add to the inventory if this player is allowed to use them
 	for (BiomeRecipe br : plugin.getBiomeRecipes()) {
 	    // Gather the info
-	    if (VaultHelper.checkPerm(player, br.getPermission())) {
+	    if (br.getPermission().isEmpty() || VaultHelper.checkPerm(player, br.getPermission())) {
 		// Add this biome recipe to the list
 		store.put(index++, br);
 	    }
@@ -96,7 +96,6 @@ public class ControlPanel implements Listener {
 	int panelSize = store.size() + 9 - 1;
 	panelSize -= ( panelSize % 9);
 	Inventory biomePanel = Bukkit.createInventory(player, panelSize, ChatColor.translateAlternateColorCodes('&', Locale.controlpaneltitle));
-	index = 0;
 	for (BiomeRecipe br : store.values()) {
 	    // Create an itemStack
 	    ItemStack item = new ItemStack(br.getIcon());
@@ -132,7 +131,7 @@ public class ControlPanel implements Listener {
 
 	    meta.setLore(lore);
 	    item.setItemMeta(meta);
-	    biomePanel.setItem(index++, item);
+	    biomePanel.addItem(item);
 	}
 	// Put a hint if no biomes are available
 	if (store.size() == 0) {
@@ -141,7 +140,7 @@ public class ControlPanel implements Listener {
 	    ItemMeta meta = i.getItemMeta();
 	    meta.setDisplayName(Locale.errornoPermission);
 	    i.setItemMeta(meta);
-	    biomePanel.setItem(0, i);
+	    biomePanel.addItem(i);
 	}
 	// Stash the panel for later use when clicked
 	biomePanels.put(player.getUniqueId(), store);
