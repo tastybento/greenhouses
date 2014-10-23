@@ -240,7 +240,7 @@ public class GreenhouseEvents implements Listener {
 	}
 	// Check to see if this causes the greenhouse to break
 	if ((e.getBlock().getLocation().getBlockY() == g.getHeightY()) || (g.isAWall(e.getBlock().getLocation()))) {
-	    e.getPlayer().sendMessage(ChatColor.RED + Locale.eventbroke.replace("[biome]",Greenhouses.prettifyText(g.getOriginalBiome().toString())));
+	    e.getPlayer().sendMessage(ChatColor.RED + Locale.eventbroke.replace("[biome]",Util.prettifyText(g.getOriginalBiome().toString())));
 	    e.getPlayer().sendMessage(ChatColor.RED + Locale.eventfix);
 	    plugin.removeGreenhouse(g);
 	    return;

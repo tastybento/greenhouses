@@ -65,11 +65,11 @@ public class BiomeRecipe {
     }
 
     public void addReqBlocks(Material blockMaterial, int blockType, long blockQty) {
-	String type = "";
+	ItemStack i = new ItemStack(blockMaterial);
 	if (blockType >= 0) {
-	    type = "type " + blockType;
+	    i.setDurability((short)blockType);
 	}
-	plugin.getLogger().info("   " + Greenhouses.prettifyText(blockMaterial.toString()) + type + " x " + blockQty);
+	plugin.getLogger().info("   " + Util.getName(i) + " x " + blockQty);
 	this.blockMaterial.add(blockMaterial);
 	this.blockType.add(blockType);
 	this.blockQty.add(blockQty);
@@ -247,7 +247,11 @@ public class BiomeRecipe {
     }
 
     public void addPlants(Material plantMaterial, int plantType, int plantProbability, Material plantGrowOn) {
-	plugin.getLogger().info("   " + plantProbability + "% chance for " + Greenhouses.prettifyText(plantMaterial.toString()) + " to grow.");
+	ItemStack i = new ItemStack(plantMaterial);
+	if (plantType > 0) {
+	    i.setDurability((short)plantType);
+	}
+	plugin.getLogger().info("   " + plantProbability + "% chance for " + Util.getName(i) + " to grow.");
 	this.plantMaterial.add(plantMaterial);
 	this.plantType.add(plantType);
 	this.plantProbability.add(plantProbability);
@@ -255,7 +259,7 @@ public class BiomeRecipe {
     }
 
     public void addMobs(EntityType mobType, int mobProbability, Material mobSpawnOn) {
-	plugin.getLogger().info("   " + mobProbability + "% chance for " + Greenhouses.prettifyText(mobType.toString()) + " to spawn on " + Greenhouses.prettifyText(mobSpawnOn.toString())+ ".");
+	plugin.getLogger().info("   " + mobProbability + "% chance for " + Util.prettifyText(mobType.toString()) + " to spawn on " + Util.prettifyText(mobSpawnOn.toString())+ ".");
 	this.mobType.add(mobType);
 	double probability = ((double)mobProbability/100);
 	//this.mobProbability.add(((double)mobProbability/100));

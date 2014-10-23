@@ -403,7 +403,7 @@ public class Greenhouse {
 		Location midBlock = new Location(world, h.getLocation().getX()+0.5D, h.getLocation().getY(), h.getLocation().getZ()+0.5D);
 		Entity e = world.spawnEntity(midBlock, mob);
 		if (e != null)
-		    plugin.getLogger().info("Spawned a "+ Greenhouses.prettifyText(mob.toString()) + " on "+ Greenhouses.prettifyText(type.toString()) + " at " 
+		    plugin.getLogger().info("Spawned a "+ Util.prettifyText(mob.toString()) + " on "+ Util.prettifyText(type.toString()) + " at " 
 				+ midBlock.getBlockX() + "," + midBlock.getBlockY() + "," + midBlock.getBlockZ());
 		    return;
 	    }

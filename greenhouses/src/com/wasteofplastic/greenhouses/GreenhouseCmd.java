@@ -79,7 +79,7 @@ public class GreenhouseCmd implements CommandExecutor {
 		player.sendMessage(Locale.listinfo);
 		int index = 1;
 		for (BiomeRecipe br : plugin.getBiomeRecipes()) {
-		    player.sendMessage(ChatColor.YELLOW + Integer.toString(index++) + ": " + Greenhouses.prettifyText(br.getType().toString()));
+		    player.sendMessage(ChatColor.YELLOW + Integer.toString(index++) + ": " + Util.prettifyText(br.getType().toString()));
 		}
 		return true;
 	    } else if (split[0].equalsIgnoreCase("remove")) {
@@ -135,7 +135,7 @@ public class GreenhouseCmd implements CommandExecutor {
 		}
 		player.sendMessage(ChatColor.GOLD + Locale.infoinfo);
 		// general.biome
-		player.sendMessage(ChatColor.GREEN + Locale.generalbiome + ": " + Greenhouses.prettifyText(d.getBiome().toString()));
+		player.sendMessage(ChatColor.GREEN + Locale.generalbiome + ": " + Util.prettifyText(d.getBiome().toString()));
 		if (d.getOwner() != null) {
 		    Player owner = plugin.getServer().getPlayer(d.getOwner());
 		    if (owner != null) {
@@ -190,7 +190,7 @@ public class GreenhouseCmd implements CommandExecutor {
 		    return true;
 		}
 		BiomeRecipe br = recipeList.get(recipeNumber-1);
-		player.sendMessage(ChatColor.GREEN + "[" + Greenhouses.prettifyText(br.getType().toString()) + " recipe]");
+		player.sendMessage(ChatColor.GREEN + "[" + Util.prettifyText(br.getType().toString()) + " recipe]");
 		if (br.getWaterCoverage() == 0) {
 		    player.sendMessage(Locale.recipenowater);
 		} else if (br.getWaterCoverage() > 0) {

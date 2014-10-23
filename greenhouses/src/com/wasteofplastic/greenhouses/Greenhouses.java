@@ -887,7 +887,7 @@ public class Greenhouses extends JavaPlugin {
      */
     public Greenhouse createNewGreenhouse(Location pos1, Location pos2, Player owner) {
 	Greenhouse d = new Greenhouse(plugin, pos1, pos2, owner.getUniqueId());
-	d.setEnterMessage((Locale.messagesenter.replace("[owner]", owner.getDisplayName())).replace("[biome]", prettifyText(d.getBiome().toString())));
+	d.setEnterMessage((Locale.messagesenter.replace("[owner]", owner.getDisplayName())).replace("[biome]", Util.prettifyText(d.getBiome().toString())));
 	d.setFarewellMessage(Locale.messagesleave.replace("[owner]", owner.getDisplayName()));
 	getGreenhouses().add(d);
 	getPos1s().remove(owner.getUniqueId());
@@ -896,7 +896,7 @@ public class Greenhouses extends JavaPlugin {
 	for (Player p : getServer().getOnlinePlayers()) {
 	    if (d.insideGreenhouse(p.getLocation())) {
 		if (!p.equals(owner)) {
-		    p.sendMessage((Locale.messagesyouarein.replace("[owner]", owner.getDisplayName())).replace("[biome]", prettifyText(d.getBiome().toString())));
+		    p.sendMessage((Locale.messagesyouarein.replace("[owner]", owner.getDisplayName())).replace("[biome]", Util.prettifyText(d.getBiome().toString())));
 		}
 		players.setInGreenhouse(p.getUniqueId(), d);
 	    }
@@ -1073,43 +1073,13 @@ public class Greenhouses extends JavaPlugin {
 	    }
 
 	    getLogger().info("Greenhouse at " + Greenhouses.getStringLocation(gg.getPos1()) + " lost its eco system and was removed.");
-	    getLogger().info("Greenhouse biome was " + prettifyText(gg.getBiome().toString()) + " - reverted to " + prettifyText(gg.getOriginalBiome().toString()));
+	    getLogger().info("Greenhouse biome was " + Util.prettifyText(gg.getBiome().toString()) + " - reverted to " + Util.prettifyText(gg.getOriginalBiome().toString()));
 	    UUID ownerUUID = gg.getOwner();
 	    removeGreenhouse(gg);
 	    players.save(ownerUUID);
 
 	}
     }
-
-    /**
-     * Converts a name like IRON_INGOT into Iron Ingot to improve readability
-     * 
-     * @param ugly
-     *            The string such as IRON_INGOT
-     * @return A nicer version, such as Iron Ingot
-     * 
-     *         Credits to mikenon on GitHub!
-     */
-    public static String prettifyText(String ugly) {
-	if (!ugly.contains("_") && (!ugly.equals(ugly.toUpperCase())))
-	    return ugly;
-	String fin = "";
-	ugly = ugly.toLowerCase();
-	if (ugly.contains("_")) {
-	    String[] splt = ugly.split("_");
-	    int i = 0;
-	    for (String s : splt) {
-		i += 1;
-		fin += Character.toUpperCase(s.charAt(0)) + s.substring(1);
-		if (i < splt.length)
-		    fin += " ";
-	    }
-	} else {
-	    fin += Character.toUpperCase(ugly.charAt(0)) + ugly.substring(1);
-	}
-	return fin;
-    }
-
 
     public Inventory getRecipeInv(Player player) {
 	return biomeInv.getPanel(player);
@@ -1154,7 +1124,7 @@ public class Greenhouses extends JavaPlugin {
 		// This biome is unknown
 		return null;
 	    } else {
-		player.sendMessage(ChatColor.GOLD + "Trying to make a " + plugin.prettifyText(type.name()) + " biome greenhouse...");
+		player.sendMessage(ChatColor.GOLD + "Trying to make a " + Util.prettifyText(type.name()) + " biome greenhouse...");
 	    }
 	}
 	// Proceed to check the greenhouse
@@ -1481,7 +1451,7 @@ public class Greenhouses extends JavaPlugin {
 		if (r.getPermission().isEmpty() || (!r.getPermission().isEmpty() && VaultHelper.checkPerm(player, r.getPermission()))) {
 		    // Only check higher priority ones
 		    if (r.getPriority()>priority) {
-			player.sendMessage(ChatColor.GOLD + "Trying " + r.getType().toString());
+			player.sendMessage(ChatColor.GOLD + "Trying " + Util.prettifyText(r.getType().toString()));
 			if (r.checkRecipe(insideOne, insideTwo, null)) {
 			    player.sendMessage(ChatColor.GOLD + "Maybe...");
 			    winner = r;
@@ -1501,7 +1471,7 @@ public class Greenhouses extends JavaPlugin {
 	    Greenhouse g = createNewGreenhouse(pos1, pos2, player);
 	    g.setOriginalBiome(originalBiome);
 	    g.setBiome(winner);
-	    g.setEnterMessage((Locale.messagesenter.replace("[owner]", player.getDisplayName())).replace("[biome]", Greenhouses.prettifyText(winner.getType().toString())));
+	    g.setEnterMessage((Locale.messagesenter.replace("[owner]", player.getDisplayName())).replace("[biome]", Util.prettifyText(winner.getType().toString())));
 	    // Store the roof hopper location so it can be tapped in the future
 	    if (ghHopper == 1) {
 		g.setRoofHopperLocation(roofHopperLoc);
@@ -1509,7 +1479,7 @@ public class Greenhouses extends JavaPlugin {
 	    // Store the contents of the greenhouse so it can be audited later
 	    //g.setOriginalGreenhouseContents(contents);
 	    g.startBiome();
-	    player.sendMessage(ChatColor.GREEN + Locale.createsuccess.replace("[biome]", Greenhouses.prettifyText(winner.getType().toString())));
+	    player.sendMessage(ChatColor.GREEN + Locale.createsuccess.replace("[biome]", Util.prettifyText(winner.getType().toString())));
 	    return g;
 	}
 	return null;

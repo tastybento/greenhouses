@@ -100,7 +100,7 @@ public class ControlPanel implements Listener {
 	    // Create an itemStack
 	    ItemStack item = new ItemStack(br.getIcon());
 	    ItemMeta meta = item.getItemMeta();
-	    meta.setDisplayName(Greenhouses.prettifyText(br.getType().toString()));
+	    meta.setDisplayName(Util.prettifyText(br.getType().toString()));
 	    ArrayList<String> lore = new ArrayList<String>();
 
 	    List<String> reqBlocks = br.getRecipeBlocks();
