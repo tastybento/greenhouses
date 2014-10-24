@@ -150,38 +150,38 @@ public class BiomeRecipe {
 	// Check required ratios - a zero means none of these are allowed, e.g.desert has no water
 	if (waterCoverage == 0 && waterRatio > 0) {
 	    if (player != null) {
-		player.sendMessage(ChatColor.RED + "No water allowed in this biome!");
+		player.sendMessage(ChatColor.RED + Locale.recipenowater);
 	    }
 	    pass=false;
 	}
 	if (lavaCoverage == 0 && lavaRatio > 0) {
 	    if (player != null) {
-		player.sendMessage(ChatColor.RED + "No lava allowed in this biome!");
+		player.sendMessage(ChatColor.RED + Locale.recipenolava);
 	    }
 	    pass=false;
 	}
 	if (iceCoverage == 0 && iceRatio > 0) {
 	    if (player != null) {
-		player.sendMessage(ChatColor.RED + "No ice allowed in this biome!");
+		player.sendMessage(ChatColor.RED + Locale.recipenoice);
 	    }
 	    pass=false;
 	}
 	if (waterCoverage > 0 && waterRatio < waterCoverage) {
 	    if (player != null) {
-		player.sendMessage(ChatColor.RED + "Not enough water in the greenhouse!");
+		player.sendMessage(ChatColor.RED + Locale.recipewatermustbe.replace("[coverage]", String.valueOf(waterCoverage)));
 	    }
 	    pass=false;
 	}
 	if (lavaCoverage > 0 && lavaRatio < lavaCoverage) {
 	    if (player != null) {
-		player.sendMessage(ChatColor.RED + "Not enough lava in the greenhouse!");
+		player.sendMessage(ChatColor.RED + Locale.recipelavamustbe.replace("[coverage]", String.valueOf(lavaCoverage)));
 	    }
 	    pass=false;
 
 	}
 	if (iceCoverage > 0 && iceRatio < iceCoverage) {
 	    if (player != null) {
-		player.sendMessage(ChatColor.RED + "Not enough ice in the greenhouse!");
+		player.sendMessage(ChatColor.RED + Locale.recipeicemustbe.replace("[coverage]", String.valueOf(iceCoverage)));
 	    }
 	    pass=false;
 	}
@@ -197,7 +197,7 @@ public class BiomeRecipe {
 		    if (blockType.get(i) > 0) {
 			missingBlock.setDurability(blockType.get(i).shortValue());
 		    }
-		    player.sendMessage(ChatColor.RED + "Greenhouse is missing " + blockQtyCheck.get(i) + " x " + Util.getName(missingBlock));
+		    player.sendMessage(ChatColor.RED + Locale.recipemissing + " " + blockQtyCheck.get(i) + " x " + Util.getName(missingBlock));
 		}
 		pass=false;
 

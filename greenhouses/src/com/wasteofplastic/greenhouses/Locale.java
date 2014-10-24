@@ -3,6 +3,8 @@ package com.wasteofplastic.greenhouses;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bukkit.ChatColor;
+
 
 
 /**
@@ -76,5 +78,6 @@ public class Locale {
     public static String  admininfoerror2;
     public static String  admininfoflags;
     public static String  newsheadline;
-    public static String  controlpaneltitle;     
+    public static String  controlpaneltitle;
+    public static String recipemissing;     
 }

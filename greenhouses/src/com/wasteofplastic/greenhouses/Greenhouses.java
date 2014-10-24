@@ -366,6 +366,7 @@ public class Greenhouses extends JavaPlugin {
 	Locale.recipelavamustbe = getLocale().getString("recipe.lavamustbe", "Lava > [coverage]% of floor area.");
 	Locale.recipeminimumblockstitle = getLocale().getString("recipe.minimumblockstitle", "[Minimum blocks required]");
 	Locale.recipenootherblocks = getLocale().getString("recipe.nootherblocks", "No other blocks required.");
+	Locale.recipemissing = getLocale().getString("recipe.missing", "Greenhouse is missing");
 	Locale.eventbroke = getLocale().getString("event.broke", "You broke this greenhouse! Reverting biome to [biome]!");
 	Locale.eventfix = getLocale().getString("event.fix", "Fix the greenhouse and then make it again.");
 	Locale.eventcannotplace = getLocale().getString("event.cannotplace", "Blocks cannot be placed above a greenhouse!");
