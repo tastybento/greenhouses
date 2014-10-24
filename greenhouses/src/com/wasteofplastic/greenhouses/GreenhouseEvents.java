@@ -2,7 +2,6 @@ package com.wasteofplastic.greenhouses;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -224,7 +223,7 @@ public class GreenhouseEvents implements Listener {
      * Prevents blocks from being broken
      * @param e
      */
-    @EventHandler(priority = EventPriority.HIGH)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled=true)
     public void onBlockBreak(final BlockBreakEvent e) {
 	if (!Settings.worldName.contains(e.getPlayer().getWorld().getName())) {
 	    return;

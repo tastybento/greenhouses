@@ -2,6 +2,7 @@ package com.wasteofplastic.greenhouses;
 
 import java.awt.geom.Rectangle2D;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -21,6 +22,7 @@ import org.bukkit.World.Environment;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.EntityType;
@@ -54,6 +56,8 @@ public class Greenhouses extends JavaPlugin {
     public PlayerCache players;
     // Greenhouses
     private HashSet<Greenhouse> greenhouses = new HashSet<Greenhouse>();
+    private File greenhouseFile;
+    private YamlConfiguration greenhouseConfig;
     // Offline Messages
     private HashMap<UUID, List<String>> messages = new HashMap<UUID, List<String>>();
     private YamlConfiguration messageStore;
@@ -431,6 +435,7 @@ public class Greenhouses extends JavaPlugin {
      */
     @Override
     public void onDisable() {
+	saveGreenhouses();
 	// Reset biomes back
 	for (Greenhouse g: plugin.getGreenhouses()) {
 	    g.endBiome();
@@ -495,7 +500,7 @@ public class Greenhouses extends JavaPlugin {
 			getLogger().info("Success!");
 		    };
 		}
-		// Load players and check leases
+		// Load greenhouses
 		loadGreenhouses();
 	    }
 	});
@@ -632,27 +637,175 @@ public class Greenhouses extends JavaPlugin {
     }
 
 
+    /**
+     * Load all known greenhouses
+     */
     protected void loadGreenhouses() {
 	// Load all known greenhouses
 	// Clear them first
 	greenhouses.clear();
-	// Load all the players
-	for (final File f : playersFolder.listFiles()) {
-	    // Need to remove the .yml suffix
-	    String fileName = f.getName();
-	    if (fileName.endsWith(".yml")) {
-		try {
-		    final UUID playerUUID = UUID.fromString(fileName.substring(0, fileName.length() - 4));
-		    if (playerUUID == null) {
-			getLogger().warning("Player file contains erroneous UUID data.");
-			getLogger().info("Looking at " + fileName.substring(0, fileName.length() - 4));
+	// Check for updated file
+	greenhouseFile = new File(this.getDataFolder(),"greenhouses.yml");
+	// See if the new file exists or not, if not make it
+	if (!greenhouseFile.exists()) {
+	    getLogger().info("Converting from old greenhouse storage to new greenhouse storage");
+	    greenhouseConfig = new YamlConfiguration();
+	    ConfigurationSection greenhouseSection = greenhouseConfig.createSection("greenhouses");
+	    int greenhouseNum = 0;
+	    // Load all the players
+	    File backup = new File(this.getDataFolder(),"backup");
+	    if (!playersFolder.renameTo(backup)) {
+		getLogger().severe("Could not rename players folder to backup!"); 
+	    }
+	    File newPlayersFolder = new File(this.getDataFolder(),"plyrs");
+	    newPlayersFolder.mkdir();
+	    for (final File f : backup.listFiles()) {
+		// Need to remove the .yml suffix
+		String fileName = f.getName();
+		if (fileName.endsWith(".yml")) {
+		    try {
+			getLogger().info("Converting " + fileName.substring(0, fileName.length() - 4));
+			final UUID playerUUID = UUID.fromString(fileName.substring(0, fileName.length() - 4));
+			if (playerUUID == null) {
+			    getLogger().warning("Player file contains erroneous UUID data.");
+			    getLogger().info("Looking at " + fileName.substring(0, fileName.length() - 4));
+			}
+			//new Players(this, playerUUID);
+			YamlConfiguration playerInfo = new YamlConfiguration();
+			playerInfo.load(f);
+			// Save the player file - just name for now
+			File newPlayerFile = new File(newPlayersFolder,f.getName());
+			YamlConfiguration newPlayerInfo = new YamlConfiguration();
+			newPlayerInfo.set("playerName", playerInfo.getString("playerName",""));
+			newPlayerInfo.save(newPlayerFile);
+			// Copy over greenhouses
+			ConfigurationSection myHouses = playerInfo.getConfigurationSection("greenhouses");
+			if (myHouses != null) {
+			    // Get a list of all the greenhouses
+			    for (String key : myHouses.getKeys(false)) {
+				try {
+				    // Copy over the info
+				    greenhouseSection.set(greenhouseNum + ".owner", playerUUID.toString());
+				    greenhouseSection.set(greenhouseNum + ".playerName", playerInfo.getString("playerName",""));
+				    greenhouseSection.set(greenhouseNum + ".pos-one", playerInfo.getString("greenhouses." + key + ".pos-one",""));
+				    greenhouseSection.set(greenhouseNum + ".pos-two", playerInfo.getString("greenhouses." + key + ".pos-two",""));
+				    greenhouseSection.set(greenhouseNum + ".originalBiome", playerInfo.getString("greenhouses." + key + ".originalBiome", "SUNFLOWER_PLAINS"));
+				    greenhouseSection.set(greenhouseNum + ".greenhouseBiome", playerInfo.getString("greenhouses." + key + ".greenhouseBiome", "SUNFLOWER_PLAINS"));
+				    greenhouseSection.set(greenhouseNum + ".roofHopperLocation", playerInfo.getString("greenhouses." + key + ".roofHopperLocation"));
+				    greenhouseSection.set(greenhouseNum + ".farewellMessage", playerInfo.getString("greenhouses." + key + ".flags.farewellMessage",""));
+				    greenhouseSection.set(greenhouseNum + ".enterMessage", playerInfo.getString("greenhouses." + key + ".flags.enterMessage",""));
+				} catch (Exception e) {
+				    plugin.getLogger().severe("Problem copying player files");
+				    e.printStackTrace();
+				}
+				greenhouseNum++;
+			    }
+			}
+
+		    } catch (Exception e) {
+			e.printStackTrace();
 		    }
-		    new Players(this, playerUUID);    
-		} catch (Exception e) {
-		    e.printStackTrace();
 		}
+	    } 
+	    // Save the greenhouse file
+	    try {
+		greenhouseConfig.save(greenhouseFile);
+	    } catch (IOException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	    }
+	} else {
+	    // Load greenhouses from new file
+	    greenhouseConfig = new YamlConfiguration();
+	    try {
+		greenhouseConfig.load(greenhouseFile);
+	    } catch (FileNotFoundException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	    } catch (IOException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	    } catch (InvalidConfigurationException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
 	    }
 	}
+	if (greenhouseConfig.isConfigurationSection("greenhouses")) {
+	    ConfigurationSection myHouses = greenhouseConfig.getConfigurationSection("greenhouses");
+	    if (myHouses != null) {
+		// Get a list of all the greenhouses
+		for (String key : myHouses.getKeys(false)) {
+		    try {
+			String playerName = myHouses.getString(key + ".playerName", "");
+			// Load all the values
+			Location pos1 = getLocationString(myHouses.getString(key + ".pos-one"));
+			Location pos2 = getLocationString(myHouses.getString(key + ".pos-two"));
+			UUID owner = UUID.fromString(myHouses.getString(key + ".owner"));
+			//plugin.getLogger().info("DEBUG: File pos1: " + pos1.toString());
+			//plugin.getLogger().info("DEBUG: File pos1: " + pos2.toString());
+			if (pos1 != null && pos2 !=null) {
+			    // Check if this greenhouse already exists
+			    if (!checkGreenhouseIntersection(pos1, pos2)) {
+				Greenhouse g = new Greenhouse(this, pos1, pos2, owner);
+				//plugin.getLogger().info("DEBUG: Greenhouse pos1: " + g.getPos1().toString());
+				//plugin.getLogger().info("DEBUG: Greenhouse pos2: " + g.getPos2().toString());
+				// Set biome
+				String oBiome = myHouses.getString(key + ".originalBiome", "SUNFLOWER_PLAINS");
+				Biome originalBiome = Biome.valueOf(oBiome);
+				if (originalBiome == null) {
+				    originalBiome = Biome.SUNFLOWER_PLAINS;
+				}
+				g.setOriginalBiome(originalBiome);
+				String gBiome = myHouses.getString(key + ".greenhouseBiome", "SUNFLOWER_PLAINS");
+				Biome greenhouseBiome = Biome.valueOf(gBiome);
+				if (greenhouseBiome == null) {
+				    greenhouseBiome = Biome.SUNFLOWER_PLAINS;
+				}
+
+				// Check to see if this biome has a recipe
+				boolean success = false;
+				for (BiomeRecipe br : getBiomeRecipes()) {
+				    if (br.getType().equals(greenhouseBiome)) {
+					success = true;
+					g.setBiome(br);
+					break;
+				    }
+				}
+				// Check to see if it was set properly
+				if (!success) {
+				    getLogger().warning("*****************************************");
+				    getLogger().warning("WARNING: No known recipe for biome " + greenhouseBiome.toString());
+				    getLogger().warning("[Greenhouse info]");
+				    getLogger().warning("Owner: " + playerName + " UUID:" + g.getOwner());
+				    getLogger().warning("Location :" + g.getPos1().getWorld().getName() + " " + g.getPos1().getBlockX() + "," + g.getPos1().getBlockZ());
+				    getLogger().warning("Greenhouse will be removed next eco-tick!");
+				    getLogger().warning("*****************************************");
+				}
+				//g.setBiome(greenhouseBiome);			
+				Location hopperLoc = getLocationString(myHouses.getString(key + ".roofHopperLocation"));
+				if (hopperLoc != null) {
+				    g.setRoofHopperLocation(hopperLoc);
+				}
+				// Load farewell and hello messages
+				g.setEnterMessage(myHouses.getString(key +".enterMessage",Locale.messagesenter.replace("[owner]", playerName ).replace("[biome]", Util.prettifyText(gBiome))));
+				g.setEnterMessage(myHouses.getString(key +".farewellMessage",Locale.messagesleave.replace("[owner]", playerName)));
+				// Add to the cache
+				greenhouses.add(g);
+			    }
+			} else {
+			    getLogger().severe("Problem loading greenhouse with locations " + myHouses.getString(key + ".pos-one") + " and " + myHouses.getString(key + ".pos-two") + " skipping.");
+			    getLogger().severe("Has this world been deleted?");
+			}
+		    } catch (Exception e) {
+			getLogger().severe("Problem loading greenhouse file");
+			e.printStackTrace();
+		    }
+
+		}
+		//plugin.getLogger().info("Loaded " + plugin.getGreenhouses().size() + " greenhouses.");
+	    }
+	}
+
 	getLogger().info("Loaded " + getGreenhouses().size() + " greenhouses.");
 	// Put all online players in greenhouses
 	for (Player p : getServer().getOnlinePlayers()) {
@@ -892,8 +1045,8 @@ public class Greenhouses extends JavaPlugin {
 	d.setFarewellMessage(Locale.messagesleave.replace("[owner]", owner.getDisplayName()));
 	getGreenhouses().add(d);
 	getPos1s().remove(owner.getUniqueId());
-	players.save(owner.getUniqueId());
-	// Find everyone who is in this greenhouse and visualize them
+	//players.save(owner.getUniqueId());
+	// Find everyone who is in this greenhouse and tell them they are in a greenhouse now
 	for (Player p : getServer().getOnlinePlayers()) {
 	    if (d.insideGreenhouse(p.getLocation())) {
 		if (!p.equals(owner)) {
@@ -983,8 +1136,8 @@ public class Greenhouses extends JavaPlugin {
 	    }
 	}
 	// Save the owner
-	getLogger().info("DEBUG: Saving player in remove greenhouse method.");
-	players.save(g.getOwner());
+	//getLogger().info("DEBUG: Saving player in remove greenhouse method.");
+	//players.save(g.getOwner());
 	/*
 	// Set the biome
 	for (int y = g.getPos1().getBlockY(); y< g.getPos2().getBlockY();y++) {
@@ -1075,11 +1228,11 @@ public class Greenhouses extends JavaPlugin {
 
 	    getLogger().info("Greenhouse at " + Greenhouses.getStringLocation(gg.getPos1()) + " lost its eco system and was removed.");
 	    getLogger().info("Greenhouse biome was " + Util.prettifyText(gg.getBiome().toString()) + " - reverted to " + Util.prettifyText(gg.getOriginalBiome().toString()));
-	    UUID ownerUUID = gg.getOwner();
+	    //UUID ownerUUID = gg.getOwner();
 	    removeGreenhouse(gg);
-	    players.save(ownerUUID);
-
+	    //players.save(ownerUUID);
 	}
+	saveGreenhouses();
     }
 
     public Inventory getRecipeInv(Player player) {
@@ -1499,6 +1652,43 @@ public class Greenhouses extends JavaPlugin {
 	 Peony		No	No	No	Gen	Gen	No
 	 */
     }
+
+
+    /**
+     * Saves all the greenhouses to greenhouse.yml
+     */
+    public void saveGreenhouses() {
+	getLogger().info("Saving greenhouses...");
+	ConfigurationSection greenhouseSection = greenhouseConfig.createSection("greenhouses");
+	// Get a list of all the greenhouses
+	int greenhouseNum = 0;
+	for (Greenhouse g: greenhouses) {
+	    try {
+		// Copy over the info
+		greenhouseSection.set(greenhouseNum + ".owner", g.getOwner().toString());
+		greenhouseSection.set(greenhouseNum + ".playerName", players.getName(g.getOwner()));
+		greenhouseSection.set(greenhouseNum + ".pos-one", getStringLocation(g.getPos1()));
+		greenhouseSection.set(greenhouseNum + ".pos-two", getStringLocation(g.getPos2()));
+		greenhouseSection.set(greenhouseNum + ".originalBiome", g.getOriginalBiome().toString());
+		greenhouseSection.set(greenhouseNum + ".greenhouseBiome", g.getBiome().toString());
+		greenhouseSection.set(greenhouseNum + ".roofHopperLocation", getStringLocation(g.getRoofHopperLocation()));
+		greenhouseSection.set(greenhouseNum + ".farewellMessage", g.getFarewellMessage());
+		greenhouseSection.set(greenhouseNum + ".enterMessage", g.getEnterMessage());
+	    } catch (Exception e) {
+		plugin.getLogger().severe("Problem copying player files");
+		e.printStackTrace();
+	    }
+	    greenhouseNum++;
+	}
+	try {
+	    greenhouseConfig.save(greenhouseFile);
+	} catch (IOException e) {
+	    getLogger().severe("Could not save greenhouse.yml!");
+	    e.printStackTrace();
+	}
+    }
+
+
 
 
 }

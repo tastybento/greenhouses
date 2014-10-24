@@ -1,13 +1,10 @@
 package com.wasteofplastic.greenhouses;
 
-import java.util.HashMap;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.block.Biome;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
@@ -41,7 +38,7 @@ public class Players {
      * @param uuid
      */
     public void load(UUID uuid) {
-	playerInfo = plugin.loadYamlFile("players/" + uuid.toString() + ".yml");
+	playerInfo = plugin.loadYamlFile("plyrs/" + uuid.toString() + ".yml");
 	// Load in from YAML file
 	this.playerName = playerInfo.getString("playerName", "");
 	if (playerName.isEmpty()) {
@@ -57,7 +54,8 @@ public class Players {
 	    }
 	}
 	//plugin.getLogger().info("Loading player..." + playerName);
-	this.hasGreenhouses = playerInfo.getBoolean("hasGreenhouses", false);
+	//this.hasGreenhouses = playerInfo.getBoolean("hasGreenhouses", false);
+	/*
 	ConfigurationSection myHouses = playerInfo.getConfigurationSection("greenhouses");
 	if (myHouses != null) {
 	    // Get a list of all the greenhouses
@@ -131,8 +129,9 @@ public class Players {
 		}
 
 	    }
+	    
 	    //plugin.getLogger().info("Loaded " + plugin.getGreenhouses().size() + " greenhouses.");
-	}
+	}*/
     }
     /**
      * Saves the player info to the file system
@@ -141,8 +140,9 @@ public class Players {
 	plugin.getLogger().info("Saving player..." + playerName);
 	// Save the variables
 	playerInfo.set("playerName", playerName);
-	playerInfo.set("hasGreenhouses", hasGreenhouses);
+	//playerInfo.set("hasGreenhouses", hasGreenhouses);
 	// Wipe out any old greenhouses in the file
+	/*
 	playerInfo.createSection("greenhouses");
 	if (!plugin.getGreenhouses().isEmpty()) {
 	    // Get a list of all my greenhouses
@@ -161,8 +161,8 @@ public class Players {
 		    index++;
 		}
 	    }
-	}
-	Greenhouses.saveYamlFile(playerInfo, "players/" + uuid.toString() + ".yml");
+	}*/
+	Greenhouses.saveYamlFile(playerInfo, "plyrs/" + uuid.toString() + ".yml");
     }
 
 

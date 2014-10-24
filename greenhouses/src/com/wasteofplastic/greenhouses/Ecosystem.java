@@ -114,10 +114,11 @@ public class Ecosystem implements Listener {
 		}
 		// Remove any greenhouses that need it
 		for (Greenhouse g : toBeRemoved) {
-		    UUID owner = g.getOwner();
+		    //UUID owner = g.getOwner();
 		    plugin.removeGreenhouse(g);
-		    plugin.players.save(owner);
+		    //plugin.players.save(owner);
 		}
+		plugin.saveGreenhouses();
 	    }
 	}, 0L, (Settings.snowSpeed * 20L)); // Every 30 seconds
 
