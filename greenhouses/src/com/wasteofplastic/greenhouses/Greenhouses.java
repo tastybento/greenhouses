@@ -73,6 +73,8 @@ public class Greenhouses extends JavaPlugin {
     // Biomes
     private List<BiomeRecipe> biomeRecipes = new ArrayList<BiomeRecipe>();
     private ControlPanel biomeInv;
+    // Debug level (0 = none, 1 = important ones, 2 = level 2, 3 = level 3
+    private int debug = 1;
     /**
      * @return plugin object instance
      */
@@ -153,7 +155,7 @@ public class Greenhouses extends JavaPlugin {
 	} else {
 	    // Create the missing file
 	    config = new YamlConfiguration();
-	    getPlugin().getLogger().info("No " + file + " found. Creating it...");
+	    logger(1,"No " + file + " found. Creating it...");
 	    try {
 		// Look for defaults in the jar
 		InputStream definJarStream = this.getResource(file);
@@ -184,7 +186,7 @@ public class Greenhouses extends JavaPlugin {
 	try {
 	    // Loop through all the entries
 	    for (String type: biomeSection.getValues(false).keySet()) {
-		getLogger().info("Loading "+type + " biome recipe:");
+		logger(1,"Loading "+type + " biome recipe:");
 		Biome thisBiome = Biome.valueOf(type);
 		if (thisBiome != null) {
 		    int priority = biomeSection.getInt(type + ".priority", 0);
@@ -200,7 +202,7 @@ public class Greenhouses extends JavaPlugin {
 		    b.setMobLimit(biomeSection.getInt(type + ".moblimit", 9));
 		    // Set the needed blocks
 		    String contents = biomeSection.getString(type + ".contents", "");
-		    //getLogger().info("DEBUG: contents = '" + contents + "'");
+		    logger(3,"contents = '" + contents + "'");
 		    if (!contents.isEmpty()) {
 			String[] split = contents.split(" ");
 			// Format is MATERIAL: Qty or MATERIAL: Type:Quantity
@@ -269,7 +271,7 @@ public class Greenhouses extends JavaPlugin {
 		    }
 		    // Load block conversions
 		    String conversions = biomeSection.getString(type + ".conversions", "");
-		    //getLogger().info("DEBUG: conversions = '" + conversions + "'");
+		    logger(3,"conversions = '" + conversions + "'");
 		    if (!conversions.isEmpty()) {
 			String[] split = conversions.split(" ");
 			for (String s : split) {
@@ -301,7 +303,7 @@ public class Greenhouses extends JavaPlugin {
 	} catch (Exception e) {
 	    e.printStackTrace();
 	}
-	getLogger().info("Loaded " + biomeRecipes.size() + " biome recipes.");
+	logger(1,"Loaded " + biomeRecipes.size() + " biome recipes.");
     }
 
 
@@ -395,6 +397,7 @@ public class Greenhouses extends JavaPlugin {
 
 
 	// Assign settings
+	this.debug = getConfig().getInt("greenhouses.debug",1);
 	Settings.allowFlowIn = getConfig().getBoolean("greenhouses.allowflowin", false);
 	Settings.allowFlowOut = getConfig().getBoolean("greenhouses.allowflowout", false);
 	// Other settings
@@ -402,7 +405,7 @@ public class Greenhouses extends JavaPlugin {
 	if (Settings.worldName.isEmpty()) {
 	    Settings.worldName.add("world");
 	}
-	getLogger().info("Greenhouse worlds are: " + Settings.worldName );
+	logger(1,"Greenhouse worlds are: " + Settings.worldName );
 	Settings.snowChanceGlobal = getConfig().getDouble("greenhouses.snowchance", 0.5D);
 	Settings.snowDensity = getConfig().getDouble("greenhouses.snowdensity", 0.1D);
 	Settings.snowSpeed = getConfig().getLong("greenhouses.snowspeed", 30L);
@@ -412,9 +415,9 @@ public class Greenhouses extends JavaPlugin {
 	Settings.plantTick = getConfig().getInt("greenhouses.planttick", 5);
 	Settings.blockTick = getConfig().getInt("greenhouses.blocktick", 10);
 
-	//getLogger().info("Debug: Snowchance " + Settings.snowChanceGlobal);
-	//getLogger().info("Debug: Snowdensity " + Settings.snowDensity);
-	//getLogger().info("Debug: Snowspeed " + Settings.snowSpeed);
+	logger(3,"Snowchance " + Settings.snowChanceGlobal);
+	logger(3,"Snowdensity " + Settings.snowDensity);
+	logger(3,"Snowspeed " + Settings.snowSpeed);
 
 
 	Settings.checkLeases = getConfig().getInt("greenhouses.checkleases",12);
@@ -492,12 +495,12 @@ public class Greenhouses extends JavaPlugin {
 	    public void run() {
 		final PluginManager manager = Bukkit.getServer().getPluginManager();
 		if (manager.isPluginEnabled("Vault")) {
-		    Greenhouses.getPlugin().getLogger().info("Trying to use Vault for permissions...");
+		    Greenhouses.getPlugin().logger(1,"Trying to use Vault for permissions...");
 		    if (!VaultHelper.setupPermissions()) {
 			getLogger().severe("Cannot link with Vault for permissions! Disabling plugin!");
 			manager.disablePlugin(Greenhouses.getPlugin());
 		    } else {
-			getLogger().info("Success!");
+			logger(1,"Success!");
 		    };
 		}
 		// Load greenhouses
@@ -522,12 +525,12 @@ public class Greenhouses extends JavaPlugin {
 	// Kick off flower growing
 	long plantTick = Settings.plantTick * 60 * 20; // In minutes
 	if (plantTick > 0) {
-	    getLogger().info("Kicking off flower growing scheduler every " + Settings.plantTick + " minutes");
+	    logger(1,"Kicking off flower growing scheduler every " + Settings.plantTick + " minutes");
 	    plantTask = getServer().getScheduler().runTaskTimer(plugin, new Runnable() {
 		@Override
 		public void run() {
 		    for (Greenhouse g : getGreenhouses()) {
-			//getLogger().info("DEBUG: Servicing greenhouse biome : " + g.getBiome().toString());
+			logger(3,"Servicing greenhouse biome : " + g.getBiome().toString());
 			//checkEco();
 			try {
 			    g.growFlowers();
@@ -540,13 +543,13 @@ public class Greenhouses extends JavaPlugin {
 	    }, 80L, plantTick);
 
 	} else {
-	    getLogger().info("Flower growth disabled.");
+	    logger(1,"Flower growth disabled.");
 	}
 
 	// Kick off flower growing
 	long blockTick = Settings.blockTick * 60 * 20; // In minutes
 	if (blockTick > 0) {
-	    getLogger().info("Kicking off block conversion scheduler every " + Settings.blockTick + " minutes");
+	    logger(1,"Kicking off block conversion scheduler every " + Settings.blockTick + " minutes");
 	    blockTask = getServer().getScheduler().runTaskTimer(plugin, new Runnable() {
 		@Override
 		public void run() {		    
@@ -562,25 +565,21 @@ public class Greenhouses extends JavaPlugin {
 			    e.printStackTrace();
 			}
 
-			//getLogger().info("DEBUG: Servicing greenhouse biome : " + g.getBiome().toString());
+			logger(3,"Servicing greenhouse biome : " + g.getBiome().toString());
 		    }
 		}
 	    }, 60L, blockTick);
 
 	} else {
-	    getLogger().info("Block conversion disabled.");
+	    logger(1,"Block conversion disabled.");
 	}
 	// Kick off g/h verification
 	long ecoTick = Settings.plantTick * 60 * 20; // In minutes
 	if (ecoTick > 0) {
-	    getLogger().info("Kicking off greenhouse verify scheduler every " + Settings.ecoTick + " minutes");
+	    logger(1,"Kicking off greenhouse verify scheduler every " + Settings.ecoTick + " minutes");
 	    ecoTask = getServer().getScheduler().runTaskTimer(plugin, new Runnable() {
 		@Override
 		public void run() {
-		    //for (Greenhouse g : getGreenhouses()) {
-		    //getLogger().info("DEBUG: Servicing greenhouse biome : " + g.getBiome().toString());
-		    // TODO: Bug here - the checkEco removes greenhouses that do not meet spec - that causes a problem
-		    // with getGreenhouses!
 		    try {
 			checkEco();
 		    } catch (Exception e) {
@@ -593,12 +592,12 @@ public class Greenhouses extends JavaPlugin {
 	    }, ecoTick, ecoTick);
 
 	} else {
-	    getLogger().info("Greenhouse verification disabled.");
+	    logger(1,"Greenhouse verification disabled.");
 	}
 	// Kick off mob population
 	long mobTick = Settings.mobTick * 60 * 20; // In minutes
 	if (mobTick > 0) {
-	    getLogger().info("Kicking off mob populator scheduler every " + Settings.plantTick + " minutes");
+	    logger(1,"Kicking off mob populator scheduler every " + Settings.plantTick + " minutes");
 	    mobTask = getServer().getScheduler().runTaskTimer(plugin, new Runnable() {
 		@Override
 		public void run() {
@@ -609,7 +608,7 @@ public class Greenhouses extends JavaPlugin {
 	    }, 120L, mobTick);
 
 	} else {
-	    getLogger().info("Mob disabled.");
+	    logger(1,"Mob disabled.");
 	}
 
 
@@ -632,7 +631,7 @@ public class Greenhouses extends JavaPlugin {
 	// so add 1 to make it inclusive
 	Random rand = new Random();
 	int randomNum = rand.nextInt((max - min) + 1) + min;
-	//Bukkit.getLogger().info("Random number = " + randomNum);
+	//Bukkit.logger(1,"Random number = " + randomNum);
 	return randomNum;
     }
 
@@ -648,7 +647,7 @@ public class Greenhouses extends JavaPlugin {
 	greenhouseFile = new File(this.getDataFolder(),"greenhouses.yml");
 	// See if the new file exists or not, if not make it
 	if (!greenhouseFile.exists()) {
-	    getLogger().info("Converting from old greenhouse storage to new greenhouse storage");
+	    logger(1,"Converting from old greenhouse storage to new greenhouse storage");
 	    greenhouseConfig = new YamlConfiguration();
 	    ConfigurationSection greenhouseSection = greenhouseConfig.createSection("greenhouses");
 	    int greenhouseNum = 0;
@@ -664,11 +663,11 @@ public class Greenhouses extends JavaPlugin {
 		String fileName = f.getName();
 		if (fileName.endsWith(".yml")) {
 		    try {
-			getLogger().info("Converting " + fileName.substring(0, fileName.length() - 4));
+			logger(1,"Converting " + fileName.substring(0, fileName.length() - 4));
 			final UUID playerUUID = UUID.fromString(fileName.substring(0, fileName.length() - 4));
 			if (playerUUID == null) {
 			    getLogger().warning("Player file contains erroneous UUID data.");
-			    getLogger().info("Looking at " + fileName.substring(0, fileName.length() - 4));
+			    getLogger().warning("Looking at " + fileName.substring(0, fileName.length() - 4));
 			}
 			//new Players(this, playerUUID);
 			YamlConfiguration playerInfo = new YamlConfiguration();
@@ -741,14 +740,14 @@ public class Greenhouses extends JavaPlugin {
 			Location pos1 = getLocationString(myHouses.getString(key + ".pos-one"));
 			Location pos2 = getLocationString(myHouses.getString(key + ".pos-two"));
 			UUID owner = UUID.fromString(myHouses.getString(key + ".owner"));
-			//plugin.getLogger().info("DEBUG: File pos1: " + pos1.toString());
-			//plugin.getLogger().info("DEBUG: File pos1: " + pos2.toString());
+			logger(3,"File pos1: " + pos1.toString());
+			logger(3,"File pos1: " + pos2.toString());
 			if (pos1 != null && pos2 !=null) {
 			    // Check if this greenhouse already exists
 			    if (!checkGreenhouseIntersection(pos1, pos2)) {
 				Greenhouse g = new Greenhouse(this, pos1, pos2, owner);
-				//plugin.getLogger().info("DEBUG: Greenhouse pos1: " + g.getPos1().toString());
-				//plugin.getLogger().info("DEBUG: Greenhouse pos2: " + g.getPos2().toString());
+				logger(3,"Greenhouse pos1: " + g.getPos1().toString());
+				logger(3,"Greenhouse pos2: " + g.getPos2().toString());
 				// Set biome
 				String oBiome = myHouses.getString(key + ".originalBiome", "SUNFLOWER_PLAINS");
 				Biome originalBiome = Biome.valueOf(oBiome);
@@ -787,8 +786,8 @@ public class Greenhouses extends JavaPlugin {
 				    g.setRoofHopperLocation(hopperLoc);
 				}
 				// Load farewell and hello messages
-				g.setEnterMessage(myHouses.getString(key +".enterMessage",Locale.messagesenter.replace("[owner]", playerName ).replace("[biome]", Util.prettifyText(gBiome))));
-				g.setEnterMessage(myHouses.getString(key +".farewellMessage",Locale.messagesleave.replace("[owner]", playerName)));
+				g.setEnterMessage(myHouses.getString(key +".enterMessage",(Locale.messagesenter.replace("[owner]", playerName )).replace("[biome]", Util.prettifyText(gBiome))));
+				g.setFarewellMessage(myHouses.getString(key +".farewellMessage",Locale.messagesleave.replace("[owner]", playerName)));
 				// Add to the cache
 				greenhouses.add(g);
 			    }
@@ -802,11 +801,11 @@ public class Greenhouses extends JavaPlugin {
 		    }
 
 		}
-		//plugin.getLogger().info("Loaded " + plugin.getGreenhouses().size() + " greenhouses.");
+		logger(3,"Loaded " + plugin.getGreenhouses().size() + " greenhouses.");
 	    }
 	}
 
-	getLogger().info("Loaded " + getGreenhouses().size() + " greenhouses.");
+	logger(1,"Loaded " + getGreenhouses().size() + " greenhouses.");
 	// Put all online players in greenhouses
 	for (Player p : getServer().getOnlinePlayers()) {
 	    for (Greenhouse d: greenhouses) {
@@ -900,7 +899,7 @@ public class Greenhouses extends JavaPlugin {
      * @return true if player is offline, false if online
      */
     public boolean setMessage(UUID playerUUID, String message) {
-	//getLogger().info("DEBUG: received message - " + message);
+	logger(3,"received message - " + message);
 	Player player = getServer().getPlayer(playerUUID);
 	// Check if player is online
 	if (player != null) {
@@ -934,7 +933,7 @@ public class Greenhouses extends JavaPlugin {
     }
 
     public boolean saveMessages() {
-	plugin.getLogger().info("Saving offline messages...");
+	logger(1,"Saving offline messages...");
 	try {
 	    // Convert to a serialized string
 	    final HashMap<String,Object> offlineMessages = new HashMap<String,Object>();
@@ -952,7 +951,7 @@ public class Greenhouses extends JavaPlugin {
     }
 
     public boolean loadMessages() {
-	getLogger().info("Loading offline messages...");
+	logger(1,"Loading offline messages...");
 	try {
 	    messageStore = loadYamlFile("messages.yml");
 	    if (messageStore.getConfigurationSection("messages") == null) {
@@ -1065,7 +1064,7 @@ public class Greenhouses extends JavaPlugin {
      */
     public Greenhouse getInGreenhouse(Location location) {
 	for (Greenhouse g : greenhouses) {
-	    //plugin.getLogger().info("Debug: greenhouse check");
+	    logger(3,"greenhouse check");
 	    if (g.insideGreenhouse(location)) {
 		return g;
 	    }
@@ -1081,7 +1080,7 @@ public class Greenhouses extends JavaPlugin {
      */
     public Greenhouse aboveAGreenhouse(Location location) {
 	for (Greenhouse g : greenhouses) {
-	    //plugin.getLogger().info("Debug: greenhouse check");
+	    logger(3,"greenhouse check");
 	    if (g.aboveGreenhouse(location)) {
 		return g;
 	    }
@@ -1097,9 +1096,7 @@ public class Greenhouses extends JavaPlugin {
     public void removeGreenhouse(Greenhouse g) {
 	players.get(g.getOwner());
 	// Remove the greenhouse
-	getLogger().info("DEBUG: greenhouses size " + greenhouses.size());
 	greenhouses.remove(g);
-	getLogger().info("DEBUG: greenhouses size after " + greenhouses.size());
 	// Stop any eco action
 	eco.remove(g);
 	boolean ownerOnline = false;
@@ -1114,7 +1111,7 @@ public class Greenhouses extends JavaPlugin {
 	}
 	if (!ownerOnline)
 	    setMessage(g.getOwner(), Locale.messagesremovedmessage.replace("[biome]", g.getBiome().toString()));
-	//getLogger().info("DEBUG: Returning biome to original state: " + g.getOriginalBiome().toString());
+	logger(3,"Returning biome to original state: " + g.getOriginalBiome().toString());
 	g.setBiome(g.getOriginalBiome()); // just in case
 	g.endBiome();
 	if (g.getBiome().equals(Biome.HELL) || g.getBiome().equals(Biome.DESERT)
@@ -1136,7 +1133,7 @@ public class Greenhouses extends JavaPlugin {
 	    }
 	}
 	// Save the owner
-	//getLogger().info("DEBUG: Saving player in remove greenhouse method.");
+	logger(3,"Saving player in remove greenhouse method.");
 	//players.save(g.getOwner());
 	/*
 	// Set the biome
@@ -1182,7 +1179,7 @@ public class Greenhouses extends JavaPlugin {
 			Vector mid = d.getPos1().toVector().midpoint(d.getPos2().toVector());
 			closest = mid.toLocation(d.getPos1().getWorld());
 			distance = player.getLocation().distanceSquared(closest);
-			//getLogger().info("DEBUG: first greenhouse found at " + d.getPos1().toString() + " distance " + distance);
+			logger(3,"first greenhouse found at " + d.getPos1().toString() + " distance " + distance);
 		    } else {
 			// Find out if this location is closer to player
 			Double newDist = player.getLocation().distanceSquared(d.getPos1());
@@ -1190,13 +1187,13 @@ public class Greenhouses extends JavaPlugin {
 			    Vector mid = d.getPos1().toVector().midpoint(d.getPos2().toVector());
 			    closest = mid.toLocation(d.getPos1().getWorld());
 			    distance = player.getLocation().distanceSquared(closest);
-			    //getLogger().info("DEBUG: closer greenhouse found at " + d.getPos1().toString() + " distance " + distance);
+			    logger(3,"closer greenhouse found at " + d.getPos1().toString() + " distance " + distance);
 			}
 		    }
 		}
 	    }
 	}
-	//getLogger().info("DEBUG: Greenhouse " + closest.getBlockX() + "," + closest.getBlockY() + "," + closest.getBlockZ() + " distance " + distance);
+	logger(3,"Greenhouse " + closest.getBlockX() + "," + closest.getBlockY() + "," + closest.getBlockZ() + " distance " + distance);
 	return closest;
 
     }
@@ -1206,11 +1203,11 @@ public class Greenhouses extends JavaPlugin {
      */
     public void checkEco() {
 	// Run through each greenhouse
-	//plugin.getLogger().info("DEBUG: started eco check");
+	logger(3,"started eco check");
 	// Check all the greenhouses to see if they still meet the g/h recipe
 	List<Greenhouse> onesToRemove = new ArrayList<Greenhouse>();
 	for (Greenhouse g : getGreenhouses()) {
-	    //plugin.getLogger().info("DEBUG: Testing greenhouse owned by " + g.getOwner().toString());
+	    logger(3,"Testing greenhouse owned by " + g.getOwner().toString());
 	    if (!g.checkEco()) {
 		// The greenhouse failed an eco check - remove it
 		onesToRemove.add(g);
@@ -1226,8 +1223,8 @@ public class Greenhouses extends JavaPlugin {
 		owner.sendMessage(ChatColor.RED + Locale.messagesecolost.replace("[location]", Greenhouses.getStringLocation(gg.getPos1())));
 	    }
 
-	    getLogger().info("Greenhouse at " + Greenhouses.getStringLocation(gg.getPos1()) + " lost its eco system and was removed.");
-	    getLogger().info("Greenhouse biome was " + Util.prettifyText(gg.getBiome().toString()) + " - reverted to " + Util.prettifyText(gg.getOriginalBiome().toString()));
+	    logger(1,"Greenhouse at " + Greenhouses.getStringLocation(gg.getPos1()) + " lost its eco system and was removed.");
+	    logger(1,"Greenhouse biome was " + Util.prettifyText(gg.getBiome().toString()) + " - reverted to " + Util.prettifyText(gg.getOriginalBiome().toString()));
 	    //UUID ownerUUID = gg.getOwner();
 	    removeGreenhouse(gg);
 	    //players.save(ownerUUID);
@@ -1264,7 +1261,7 @@ public class Greenhouses extends JavaPlugin {
 		    if (!br.getPermission().isEmpty()) {
 			if (!VaultHelper.checkPerm(player, br.getPermission())) {
 			    player.sendMessage(ChatColor.RED + Locale.errornoPermission);
-			    getLogger().info("DEBUG: no permssions to use this biome");
+			    logger(2,"no permssions to use this biome");
 			    return null;
 			}
 		    }
@@ -1274,7 +1271,7 @@ public class Greenhouses extends JavaPlugin {
 	    }
 	    if (greenhouseRecipe == null) {
 		player.sendMessage(ChatColor.RED + Locale.errornoPermission);
-		getLogger().info("DEBUG: no biomes were allowed to be used");
+		logger(2,"no biomes were allowed to be used");
 		// This biome is unknown
 		return null;
 	    } else {
@@ -1283,7 +1280,7 @@ public class Greenhouses extends JavaPlugin {
 	}
 	// Proceed to check the greenhouse
 	final Location location = player.getLocation().add(new Vector(0,1,0));
-	//plugin.getLogger().info("DEBUG: Player location is " + location.getBlockX() + " " + location.getBlockY() + " " + location.getBlockZ());
+	logger(3,"Player location is " + location.getBlockX() + " " + location.getBlockY() + " " + location.getBlockZ());
 	final Biome originalBiome = location.getBlock().getBiome();
 	// Define the blocks
 	final List<Material> roofBlocks = Arrays.asList(new Material[]{Material.GLASS, Material.STAINED_GLASS, Material.HOPPER});
@@ -1310,13 +1307,13 @@ public class Greenhouses extends JavaPlugin {
 	    }
 	}
 	final int roofY = height.getBlockY();
-	//plugin.getLogger().info("DEBUG: roof block found " + roofY + " of type " + height.getBlock().getType().toString());
+	logger(3,"roof block found " + roofY + " of type " + height.getBlock().getType().toString());
 	// we have the height above this location where a roof block is
 	// Check the sides
 	Location sidex = location.clone();
 	int limit = 100;
 	while (!wallBlocks.contains(sidex.getBlock().getType())) {
-	    //plugin.getLogger().info("DEBUG: wall block type " + sidex.getBlock().getType().toString() + " at x="+sidex.getBlockX());
+	    logger(3,"wall block type " + sidex.getBlock().getType().toString() + " at x="+sidex.getBlockX());
 	    sidex.add(new Vector(-1,0,0));
 	    limit--;
 	    if (limit ==0) {
@@ -1325,7 +1322,7 @@ public class Greenhouses extends JavaPlugin {
 	    }
 	}
 	final int minx = sidex.getBlockX();
-	//plugin.getLogger().info("DEBUG: minx wall block found " + minx + " of type " + sidex.getBlock().getType().toString());
+	logger(3,"minx wall block found " + minx + " of type " + sidex.getBlock().getType().toString());
 	sidex = location.clone();
 	limit = 100;
 
@@ -1338,7 +1335,7 @@ public class Greenhouses extends JavaPlugin {
 	    }
 	}
 	final int maxx = sidex.getBlockX();
-	//plugin.getLogger().info("DEBUG: maxx wall block found " + maxx + " of type " + sidex.getBlock().getType().toString());
+	logger(3,"maxx wall block found " + maxx + " of type " + sidex.getBlock().getType().toString());
 	Location sidez = location.clone();
 	limit = 100;
 	while (!wallBlocks.contains(sidez.getBlock().getType())) {
@@ -1350,7 +1347,7 @@ public class Greenhouses extends JavaPlugin {
 	    }
 	}
 	final int minz = sidez.getBlockZ();
-	//plugin.getLogger().info("DEBUG: minz wall block found " + minz + " of type " + sidez.getBlock().getType().toString());
+	logger(3,"minz wall block found " + minz + " of type " + sidez.getBlock().getType().toString());
 	sidez = location.clone();
 	limit = 100;
 	while (!wallBlocks.contains(sidez.getBlock().getType())) {
@@ -1362,11 +1359,11 @@ public class Greenhouses extends JavaPlugin {
 	    }
 	}
 	final int maxz = sidez.getBlockZ();
-	//plugin.getLogger().info("DEBUG: maxz wall block found " + maxz + " of type " + sidez.getBlock().getType().toString());
+	logger(3,"maxz wall block found " + maxz + " of type " + sidez.getBlock().getType().toString());
 	int ghHopper = 0;
 	Location roofHopperLoc = null;
 	// Check the roof is solid
-	//getLogger().info("Debug: height = " + height.getBlockY());
+	logger(3,"height = " + height.getBlockY());
 	boolean blockAbove = false;
 	for (int x = minx; x <= maxx; x++) {
 	    for (int z = minz; z <= maxz; z++) {
@@ -1382,7 +1379,7 @@ public class Greenhouses extends JavaPlugin {
 		// Check if there are any blocks above the greenhouse
 		for (int y = height.getBlockY()+1; y <255; y++) {
 		    if (!world.getBlockAt(x, y, z).getType().equals(Material.AIR)) {
-			//getLogger().info("Debug: non-air block found at  " + x + "," + y+ "," + z + " which is higher than " + height.getBlockY());
+			logger(3,"non-air block found at  " + x + "," + y+ "," + z + " which is higher than " + height.getBlockY());
 			blockAbove = true;
 			break;
 		    }
@@ -1399,8 +1396,8 @@ public class Greenhouses extends JavaPlugin {
 	    return null;
 	}
 	int roofArea = Math.abs((maxx-minx+1) * (maxz-minz+1));
-	//plugin.getLogger().info("DEBUG: Roof area is " + roofArea + " blocks");
-	//plugin.getLogger().info("DEBUG: roofglass = " + roofGlass + " glowstone = " + roofGlowstone);
+	logger(3,"Roof area is " + roofArea + " blocks");
+	logger(3,"roofglass = " + roofGlass + " glowstone = " + roofGlowstone);
 	if (roofArea != (roofGlass+roofGlowstone+ghHopper)) {
 	    // TODO create.holeinroof
 	    player.sendMessage(ChatColor.RED + Locale.createholeinroof);
@@ -1414,14 +1411,14 @@ public class Greenhouses extends JavaPlugin {
 	    for (int y = roofY; y>0; y--) {
 		if (y< groundY) {
 		    // the walls are not even
-		    //plugin.getLogger().info("DEBUG: Walls are not even!");
+		    logger(3,"Walls are not even!");
 		    fault = true;
 		    break;
 		}
 		Material bt = world.getBlockAt(minx, y, z).getType();
 		if (!wallBlocks.contains(bt)) {
 
-		    //plugin.getLogger().info("DEBUG: "+bt.toString() +" found at y=" + y);
+		    logger(3,""+bt.toString() +" found at y=" + y);
 		    groundY= y;
 		    break;
 		}
@@ -1453,14 +1450,14 @@ public class Greenhouses extends JavaPlugin {
 	    for (int y = roofY; y>0; y--) {
 		if (y< groundY) {
 		    // the walls are not even
-		    //plugin.getLogger().info("DEBUG: Walls are not even!");
+		    logger(3,"Walls are not even!");
 		    fault = true;
 		    break;
 		}
 		Material bt = world.getBlockAt(maxx, y, z).getType();
 		if (!wallBlocks.contains(bt)) {
-		    //plugin.getLogger().info("DEBUG: "+bt.toString() +" found at y=" + y);
-		    //plugin.getLogger().info("DEBUG: Ground level found at y=" + y);
+		    logger(3,""+bt.toString() +" found at y=" + y);
+		    logger(3,"Ground level found at y=" + y);
 		    groundY= y;
 		    break;
 		}
@@ -1492,14 +1489,14 @@ public class Greenhouses extends JavaPlugin {
 	    for (int y = roofY; y>0; y--) {
 		if (y< groundY) {
 		    // the walls are not even
-		    //plugin.getLogger().info("DEBUG: Walls are not even!");
+		    logger(3,"Walls are not even!");
 		    fault = true;
 		    break;
 		}
 		Material bt = world.getBlockAt(x, y, minz).getType();
 		if (!wallBlocks.contains(bt)) {
-		    // plugin.getLogger().info("DEBUG: "+bt.toString() +" found at y=" + y);
-		    //plugin.getLogger().info("DEBUG: Ground level found at y=" + y);
+		    // plugin.logger(1,""+bt.toString() +" found at y=" + y);
+		    logger(3,"Ground level found at y=" + y);
 		    groundY= y;
 		    break;
 		}
@@ -1531,14 +1528,14 @@ public class Greenhouses extends JavaPlugin {
 	    for (int y = roofY; y>0; y--) {
 		if (y< groundY) {
 		    // the walls are not even
-		    //plugin.getLogger().info("DEBUG: Walls are not even!");
+		    logger(3,"Walls are not even!");
 		    fault = true;
 		    break;
 		}
 		Material bt = world.getBlockAt(x, y, maxz).getType();
 		if (!wallBlocks.contains(bt)) {
-		    //plugin.getLogger().info("DEBUG: "+bt.toString() +" found at y=" + y);
-		    //plugin.getLogger().info("DEBUG: Ground level found at y=" + y);
+		    logger(3,""+bt.toString() +" found at y=" + y);
+		    logger(3,"Ground level found at y=" + y);
 		    groundY= y;
 		    break;
 		}
@@ -1570,13 +1567,13 @@ public class Greenhouses extends JavaPlugin {
 	    return null;  
 	}
 	// So all the walls are even and we have our counts
-	//plugin.getLogger().info("DEBUG: glass = " + (wallGlass + roofGlass));
-	//plugin.getLogger().info("DEBUG: glowstone = " + (wallGlowstone + roofGlowstone));
-	//plugin.getLogger().info("DEBUG: doors = " + (wallDoors/2));
-	//plugin.getLogger().info("DEBUG: height = " + height.getBlockY() + " ground = " + groundY);
+	logger(3,"glass = " + (wallGlass + roofGlass));
+	logger(3,"glowstone = " + (wallGlowstone + roofGlowstone));
+	logger(3,"doors = " + (wallDoors/2));
+	logger(3,"height = " + height.getBlockY() + " ground = " + groundY);
 	Location pos1 = new Location(world,minx,groundY,minz);
 	Location pos2 = new Location(world,maxx,height.getBlockY(),maxz);
-	//plugin.getLogger().info("DEBUG: pos1 = " + pos1.toString() + " pos2 = " + pos2.toString());
+	logger(3,"pos1 = " + pos1.toString() + " pos2 = " + pos2.toString());
 	// Place some limits
 	if (wallDoors > 8) {
 	    // TODO: create.doorerror
@@ -1621,7 +1618,7 @@ public class Greenhouses extends JavaPlugin {
 	}
 
 	if (winner != null) {
-	    //plugin.getLogger().info("DEBUG: biome winner is " + winner.toString());
+	    logger(3,"biome winner is " + winner.toString());
 	    Greenhouse g = createNewGreenhouse(pos1, pos2, player);
 	    g.setOriginalBiome(originalBiome);
 	    g.setBiome(winner);
@@ -1658,7 +1655,7 @@ public class Greenhouses extends JavaPlugin {
      * Saves all the greenhouses to greenhouse.yml
      */
     public void saveGreenhouses() {
-	getLogger().info("Saving greenhouses...");
+	logger(1,"Saving greenhouses...");
 	ConfigurationSection greenhouseSection = greenhouseConfig.createSection("greenhouses");
 	// Get a list of all the greenhouses
 	int greenhouseNum = 0;
@@ -1688,7 +1685,18 @@ public class Greenhouses extends JavaPlugin {
 	}
     }
 
-
-
-
+    /**
+     * General purpose logger to reduce console spam
+     * @param level
+     * @param info
+     */
+    public void logger(int level, String info) {
+	if (level <= debug) {
+	    if (level == 1) {
+		getLogger().info(info);
+	    } else {
+		getLogger().info("DEBUG ["+level+"]:"+info);
+	    }
+	}
+    }
 }

@@ -60,7 +60,7 @@ public class BiomeRecipe {
 	this.plugin = plugin;
 	this.type = type;
 	this.priority = priority;
-	//plugin.getLogger().info("DEBUG: " + type.toString() + " priority " + priority);
+	plugin.logger(3,"" + type.toString() + " priority " + priority);
 	mobLimit = 9; // Default
     }
 
@@ -69,7 +69,7 @@ public class BiomeRecipe {
 	if (blockType >= 0) {
 	    i.setDurability((short)blockType);
 	}
-	plugin.getLogger().info("   " + Util.getName(i) + " x " + blockQty);
+	plugin.logger(1,"   " + Util.getName(i) + " x " + blockQty);
 	this.blockMaterial.add(blockMaterial);
 	this.blockType.add(blockType);
 	this.blockQty.add(blockQty);
@@ -87,12 +87,12 @@ public class BiomeRecipe {
      * @return
      */
     public boolean checkRecipe(Location pos1, Location pos2, Player player) {
-	//plugin.getLogger().info("DEBUG: Checking for biome " + type.toString());
+	plugin.logger(3,"Checking for biome " + type.toString());
 	// Calculate floor area
 	long area = (pos2.getBlockX()-pos1.getBlockX()-1) * (pos2.getBlockZ()-pos1.getBlockZ()-1);
-	//plugin.getLogger().info("DEBUG: area =" + area);
-	//plugin.getLogger().info("Pos1 = " + pos1.toString());
-	//plugin.getLogger().info("Pos1 = " + pos2.toString());
+	plugin.logger(3,"area =" + area);
+	plugin.logger(3,"Pos1 = " + pos1.toString());
+	plugin.logger(3,"Pos1 = " + pos2.toString());
 	long water = 0;
 	long lava = 0;
 	long ice = 0;
@@ -106,7 +106,7 @@ public class BiomeRecipe {
 		    int data = b.getData();
 
 		    if (!b.getType().equals(Material.AIR))
-			//plugin.getLogger().info("Checking block " + b.getType() + ":" + b.getData() + "@" + x + " " + y + " " + z);
+			plugin.logger(3,"Checking block " + b.getType() + ":" + b.getData() + "@" + x + " " + y + " " + z);
 			// Log water, lava and ice blocks
 			switch (b.getType()) {
 			case WATER:
@@ -132,7 +132,7 @@ public class BiomeRecipe {
 			}
 		    int index = indexOfReqBlocks(b.getType(),data); 
 		    if (index>=0) {
-			//plugin.getLogger().info("DEBUG: Found block " + b.getType().toString() + " type " + b.getData() + " at index " + index);
+			plugin.logger(3,"Found block " + b.getType().toString() + " type " + b.getData() + " at index " + index);
 			// Decrement the qty
 			this.blockQtyCheck.set(index, this.blockQtyCheck.get(index)-1L);
 		    }
@@ -143,8 +143,8 @@ public class BiomeRecipe {
 	double waterRatio = (double)water/(double)area * 100;
 	double lavaRatio = (double)lava/(double)area * 100;
 	double iceRatio = (double)ice/(double)area * 100;
-	//plugin.getLogger().info("DEBUG: water req=" + waterCoverage + " lava req=" + lavaCoverage + " ice req="+iceCoverage);
-	//plugin.getLogger().info("DEBUG: waterRatio=" + waterRatio + " lavaRatio=" + lavaRatio + " iceRatio="+iceRatio);
+	plugin.logger(3,"water req=" + waterCoverage + " lava req=" + lavaCoverage + " ice req="+iceCoverage);
+	plugin.logger(3,"waterRatio=" + waterRatio + " lavaRatio=" + lavaRatio + " iceRatio="+iceRatio);
 
 
 	// Check required ratios - a zero means none of these are allowed, e.g.desert has no water
@@ -187,10 +187,10 @@ public class BiomeRecipe {
 	}
 	// Every value in the blockQtyCheck list should be zero or negative
 	// Now check if the minimum block qtys are met and reset the check qtys
-	//plugin.getLogger().info("DEBUG: checking blocks - total size is " + blockQty.size());
+	plugin.logger(3,"checking blocks - total size is " + blockQty.size());
 	for (int i = 0; i< this.blockQty.size(); i++) {
 	    if (this.blockQtyCheck.get(i) > 0L) {
-		//plugin.getLogger().info("DEBUG: missing: " + blockQtyCheck.get(i) + " x " + blockMaterial.get(i) + ":" + blockType.get(i));
+		plugin.logger(3,"missing: " + blockQtyCheck.get(i) + " x " + blockMaterial.get(i) + ":" + blockType.get(i));
 		pass = false;
 		if (player != null) {
 		    ItemStack missingBlock = new ItemStack(blockMaterial.get(i));
@@ -217,7 +217,7 @@ public class BiomeRecipe {
     private int indexOfReqBlocks(Material blockMaterial, int blockType) {
 	// TODO: LEAVES are numbered differently to the docs - 5 6 7, odd...
 	// Leaves need special handling because their state can change
-	//plugin.getLogger().info("DEBUG: looking for block " + blockMaterial.toString() + " type " + blockType);
+	plugin.logger(3,"looking for block " + blockMaterial.toString() + " type " + blockType);
 	if (!this.blockMaterial.contains(blockMaterial))
 	    return -1;
 	int index = 0;
@@ -251,7 +251,7 @@ public class BiomeRecipe {
 	if (plantType > 0) {
 	    i.setDurability((short)plantType);
 	}
-	plugin.getLogger().info("   " + plantProbability + "% chance for " + Util.getName(i) + " to grow.");
+	plugin.logger(1,"   " + plantProbability + "% chance for " + Util.getName(i) + " to grow.");
 	this.plantMaterial.add(plantMaterial);
 	this.plantType.add(plantType);
 	this.plantProbability.add(plantProbability);
@@ -259,7 +259,7 @@ public class BiomeRecipe {
     }
 
     public void addMobs(EntityType mobType, int mobProbability, Material mobSpawnOn) {
-	plugin.getLogger().info("   " + mobProbability + "% chance for " + Util.prettifyText(mobType.toString()) + " to spawn on " + Util.prettifyText(mobSpawnOn.toString())+ ".");
+	plugin.logger(1,"   " + mobProbability + "% chance for " + Util.prettifyText(mobType.toString()) + " to spawn on " + Util.prettifyText(mobSpawnOn.toString())+ ".");
 	this.mobType.add(mobType);
 	double probability = ((double)mobProbability/100);
 	//this.mobProbability.add(((double)mobProbability/100));
@@ -279,14 +279,14 @@ public class BiomeRecipe {
     public EntityType getMob() {
 	// Return a random mob that can spawn in the biome or null
 	double rand = Math.random();
-	//plugin.getLogger().info("DEBUG: random number is " + rand);
+	plugin.logger(3,"random number is " + rand);
 	double runningTotal = 0D;
 	int index = 0;
 	for (double prob : mobProbability) {
 	    runningTotal += prob;
-	    //plugin.getLogger().info("DEBUG: running total is " + runningTotal);
+	    plugin.logger(3,"running total is " + runningTotal);
 	    if (rand < runningTotal) {
-		//plugin.getLogger().info("DEBUG: hit! " + mobType.get(index).toString());
+		plugin.logger(3,"hit! " + mobType.get(index).toString());
 		return mobType.get(index);
 	    }
 	    index++;
@@ -341,33 +341,33 @@ public class BiomeRecipe {
 	return true;
     }
     public void convertBlock(Block b) {
-	//plugin.getLogger().info("DEBUG: try to convert block");
+	plugin.logger(3,"try to convert block");
 	// Check if block is in the list
 	@SuppressWarnings("deprecation")
 	byte type = b.getData();
 	if (!oldMaterial.contains(b.getType()) || !oldType.contains(type)) {
-	    //plugin.getLogger().info("DEBUG: no material or type match");
+	    plugin.logger(3,"no material or type match");
 	    return;
 	}
-	//plugin.getLogger().info("DEBUG: material or type match");
+	plugin.logger(3,"material or type match");
 	int index = oldMaterial.indexOf(b.getType());
 	if (!oldType.get(index).equals(type)) {
-	    //plugin.getLogger().info("DEBUG: no type match");
+	    plugin.logger(3,"no type match");
 	    return;
 	}
-	//plugin.getLogger().info("DEBUG: type match");
+	plugin.logger(3,"type match");
 	// Block material and data match
 	// Check the chance
 	double chance = Math.random();
 	double convCh = (double)convChance.get(index)/100D;
 	if (chance > convCh) {
-	    //plugin.getLogger().info("DEBUG: failed the probability check - " + chance + " > " + convCh);
+	    plugin.logger(3,"failed the probability check - " + chance + " > " + convCh);
 	    return;
 	}
-	//plugin.getLogger().info("DEBUG: pass the probability check");
+	plugin.logger(3,"pass the probability check");
 	// Check if the block is in the right area, up, down, n,s,e,w
 	if (localMaterial.get(index) != null) {
-	    //plugin.getLogger().info("DEBUG: Looking for " + localMaterial.get(index).toString() + ":" + localType.get(index));
+	    plugin.logger(3,"Looking for " + localMaterial.get(index).toString() + ":" + localType.get(index));
 	    boolean found = false;
 	    for (BlockFace bf : BlockFace.values()) {
 		switch (bf) {
@@ -377,12 +377,12 @@ public class BiomeRecipe {
 		case SOUTH:
 		case UP:
 		case WEST:
-		    //plugin.getLogger().info("DEBUG:" + bf.toString() + " material is " + b.getRelative(bf).getType().toString());
+		    plugin.logger(3,"DEBUG:" + bf.toString() + " material is " + b.getRelative(bf).getType().toString());
 		    if (b.getRelative(bf).getType().equals(localMaterial.get(index))) {
-			//plugin.getLogger().info("DEBUG: Material matches");
+			plugin.logger(3,"Material matches");
 			byte t = b.getRelative(bf).getData();
 			if (localType.get(index).equals((byte)0) || localType.get(index).equals(t)) {
-			    //plugin.getLogger().info("DEBUG: found adjacent block");
+			    plugin.logger(3,"found adjacent block");
 			    found = true;
 			    break;
 			}
@@ -397,11 +397,11 @@ public class BiomeRecipe {
 	    if (!found)
 		return;
 	} else {
-	    //plugin.getLogger().info("DEBUG: no adjacent block requirement");
+	    plugin.logger(3,"no adjacent block requirement");
 	}
 
 	// Convert!
-	//plugin.getLogger().info("DEBUG: Convert block");
+	plugin.logger(3,"Convert block");
 	b.setType(newMaterial.get(index));
 	b.setData(newType.get(index));
 	return;
@@ -461,9 +461,9 @@ public class BiomeRecipe {
      */
     public void setWatercoverage(int watercoverage) {
 	if (watercoverage == 0) {
-	    plugin.getLogger().info("   No Water Allowed");
+	    plugin.logger(1,"   No Water Allowed");
 	} else if (watercoverage > 0) {
-	    plugin.getLogger().info("   Water > " + watercoverage + "%");
+	    plugin.logger(1,"   Water > " + watercoverage + "%");
 	}
 	this.waterCoverage = watercoverage;
     }
@@ -473,9 +473,9 @@ public class BiomeRecipe {
      */
     public void setIcecoverage(int icecoverage) {
 	if (icecoverage == 0) {
-	    plugin.getLogger().info("   No Ice Allowed");
+	    plugin.logger(1,"   No Ice Allowed");
 	} else if (icecoverage > 0) {
-	    plugin.getLogger().info("   Ice > " + icecoverage + "%");
+	    plugin.logger(1,"   Ice > " + icecoverage + "%");
 	}
 	this.iceCoverage = icecoverage;
     }
@@ -485,9 +485,9 @@ public class BiomeRecipe {
      */
     public void setLavacoverage(int lavacoverage) {
 	if (lavacoverage == 0) {
-	    plugin.getLogger().info("   No Lava Allowed");
+	    plugin.logger(1,"   No Lava Allowed");
 	} else if (lavacoverage > 0) {
-	    plugin.getLogger().info("   Lava > " + lavacoverage + "%");
+	    plugin.logger(1,"   Lava > " + lavacoverage + "%");
 	}
 	this.lavaCoverage = lavacoverage;
     }
@@ -497,16 +497,16 @@ public class BiomeRecipe {
 	// Loop through the possible plants
 	boolean grewPlant = false;
 	int index = 0;
-	//plugin.getLogger().info("DEBUG: growPlant # of plants in biome = " + plantProbability.size());
+	plugin.logger(3,"growPlant # of plants in biome = " + plantProbability.size());
 	for (int prob : plantProbability) {
-	    //plugin.getLogger().info("DEBUG: probability = " + ((double)prob/100));
+	    plugin.logger(3,"probability = " + ((double)prob/100));
 	    if (Math.random() < ((double)prob/100)) {
 		grewPlant = true;
-		//plugin.getLogger().info("DEBUG: trying to grow plant. Index is " + index);
+		plugin.logger(3,"trying to grow plant. Index is " + index);
 		// Okay worth trying to plant something
 		Material belowBl = bl.getRelative(BlockFace.DOWN).getType();
-		//plugin.getLogger().info("DEBUG: material found = " + belowBl.toString());
-		//plugin.getLogger().info("DEBUG: req material = " + plantGrownOn.get(index).toString());
+		plugin.logger(3,"material found = " + belowBl.toString());
+		plugin.logger(3,"req material = " + plantGrownOn.get(index).toString());
 		if (belowBl.equals(plantGrownOn.get(index))) {
 		    Block aboveBl = bl.getRelative(BlockFace.UP);
 		    bl.setType(plantMaterial.get(index));

@@ -54,7 +54,7 @@ public class PlayerCache {
 	if (playerCache.containsKey(player)) {
 	    playerCache.get(player).save();
 	    playerCache.remove(player);
-	    plugin.getLogger().info("Removing player from cache: " + player);
+	    plugin.logger(3,"Removing player from cache: " + player);
 	}
     }
     
@@ -71,20 +71,6 @@ public class PlayerCache {
     /*
      * Player info query methods
      */
-    /**
-     * Returns location of player's greenhouses from cache if available
-     * @param playerUUID
-     * @return List of greenhouses
-     */
-    /*
-    public List<Greenhouse> getPlayersGreenhouses(final UUID playerUUID) {
-	if (playerCache.containsKey(playerUUID)) {
-	    return playerCache.get(playerUUID).get;
-	}
-	final Players player = new Players(plugin, playerUUID);
-	return player.getIslandLocation();
-    }
-*/
     /**
      * Checks if the player is known or not by looking through the filesystem
      * 
@@ -142,7 +128,7 @@ public class PlayerCache {
     public UUID getUUID(String string) {
 	for (UUID id : playerCache.keySet()) {
 	    String name = playerCache.get(id).getPlayerName();
-	    //plugin.getLogger().info("DEBUG: Testing name " + name);
+	    plugin.logger(3,"Testing name " + name);
 	    if (name != null && name.equalsIgnoreCase(string)) {
 		return id;
 	    }

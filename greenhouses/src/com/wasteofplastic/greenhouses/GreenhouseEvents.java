@@ -105,8 +105,8 @@ public class GreenhouseEvents implements Listener {
 		Location closest = plugin.getClosestGreenhouse(player);
 		if (closest != null) {
 		    player.setCompassTarget(closest);
-		    //plugin.getLogger().info("DEBUG: Temp " + player.getLocation().getBlock().getTemperature());
-		    //plugin.getLogger().info("DEBUG: Compass " + closest.getBlockX() + "," + closest.getBlockZ());
+		    plugin.logger(3,"Temp " + player.getLocation().getBlock().getTemperature());
+		    plugin.logger(3,"Compass " + closest.getBlockX() + "," + closest.getBlockZ());
 		}
 	    }
 	}
@@ -153,18 +153,18 @@ public class GreenhouseEvents implements Listener {
 	    // No greenhouses yet
 	    return false;
 	}
-	//plugin.getLogger().info("Checking greenhouses");
-	//plugin.getLogger().info("From : " + from.toString());
-	//plugin.getLogger().info("From: " + from.getBlockX() + "," + from.getBlockZ());
-	//plugin.getLogger().info("To: " + to.getBlockX() + "," + to.getBlockZ());
+	plugin.logger(3,"Checking greenhouses");
+	plugin.logger(3,"From : " + from.toString());
+	plugin.logger(3,"From: " + from.getBlockX() + "," + from.getBlockZ());
+	plugin.logger(3,"To: " + to.getBlockX() + "," + to.getBlockZ());
 	for (Greenhouse d: plugin.getGreenhouses()) {
-	    //plugin.getLogger().info("Greenhouse (" + d.getPos1().getBlockX() + "," + d.getPos1().getBlockZ() + " : " + d.getPos2().getBlockX() + "," + d.getPos2().getBlockZ() + ")");
+	    plugin.logger(3,"Greenhouse (" + d.getPos1().getBlockX() + "," + d.getPos1().getBlockZ() + " : " + d.getPos2().getBlockX() + "," + d.getPos2().getBlockZ() + ")");
 	    if (d.insideGreenhouse(to)) {
-		//plugin.getLogger().info("To intersects d!");
+		plugin.logger(3,"To intersects d!");
 		toGreenhouse = d;
 	    }
 	    if (d.insideGreenhouse(from)) {
-		//plugin.getLogger().info("From intersects d!");
+		plugin.logger(3,"From intersects d!");
 		fromGreenhouse = d;
 	    }
 
@@ -228,13 +228,13 @@ public class GreenhouseEvents implements Listener {
 	if (!Settings.worldName.contains(e.getPlayer().getWorld().getName())) {
 	    return;
 	}
-	//plugin.getLogger().info("Debug: block break");
+	plugin.logger(3,"block break");
 	// Get the greenhouse that this block is in (if any)
 	Greenhouse g = plugin.getInGreenhouse(e.getBlock().getLocation());
 
 	if (g == null) {
 	    // Not in a greenhouse
-	    //plugin.getLogger().info("Debug: not in greenhouse");
+	    plugin.logger(3,"not in greenhouse");
 	    return;
 	}
 	// Check to see if this causes the greenhouse to break
@@ -288,8 +288,8 @@ public class GreenhouseEvents implements Listener {
 	    e.setCancelled(true);
 	    return;
 	}
-	//plugin.getLogger().info("DEBUG: Direction: " + e.getDirection());
-	//plugin.getLogger().info("DEBUG: Location of piston block:" + l);
+	plugin.logger(3,"Direction: " + e.getDirection());
+	plugin.logger(3,"Location of piston block:" + l);
 	// Pistons can push up to 12 blocks - find the end block + 1
 	for (int i = 0; i < 13; i++) {
 	   l = l.getBlock().getRelative(e.getDirection()).getLocation();
@@ -297,7 +297,7 @@ public class GreenhouseEvents implements Listener {
 	       break;
 	   }
 	}
-	//plugin.getLogger().info("DEBUG: Location of end block + 1:" + l);
+	plugin.logger(3,"Location of end block + 1:" + l);
 	// The end block location is now l
 	if (plugin.aboveAGreenhouse(l)  == null) {
 	    return;

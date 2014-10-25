@@ -40,11 +40,11 @@ public class Ecosystem implements Listener {
 	}
 	if (e.toWeatherState()) {
 	    // It's raining
-	    //plugin.getLogger().info("DEBUG: It's raining!");
+	    plugin.logger(3,"It's raining!");
 	    startSnow();
 	} else {
 	    // It's stopped raining!
-	    //plugin.getLogger().info("DEBUG: Stopped raining!");
+	    plugin.logger(3,"Stopped raining!");
 	    if (snow != null)
 		snow.cancel();
 	}
@@ -63,23 +63,23 @@ public class Ecosystem implements Listener {
 	    @Override
 	    public void run() {
 		// Run through each greenhouse - only bother with snow biomes
-		//plugin.getLogger().info("DEBUG: started scheduler");
+		plugin.logger(3,"started scheduler");
 		// Check all the greenhouses and their hoppers and build a list of snow greenhouses that exist now
 		List<Greenhouse> toBeRemoved = new ArrayList<Greenhouse>();
 		for (Greenhouse g : plugin.getGreenhouses()) {
-		    //plugin.getLogger().info("DEBUG: Testing greenhouse biome : " + g.getBiome().toString());
+		    plugin.logger(3,"Testing greenhouse biome : " + g.getBiome().toString());
 		    if (snowBiomes.contains(g.getBiome())) {
-			//plugin.getLogger().info("DEBUG: Snow biome found!");
+			plugin.logger(3,"Snow biome found!");
 			// If it is already on the list, just snow, otherwise check if the hopper has water
 			if (!snowGlobes.contains(g)) {
 			    Location hopper = g.getRoofHopperLocation();
 			    if (hopper != null) {
-				//plugin.getLogger().info("DEBUG: Hopper location:" + hopper.toString());
+				plugin.logger(3,"Hopper location:" + hopper.toString());
 				Block b = hopper.getBlock();
 				// Check the hopper is still there
 				if (b.getType().equals(Material.HOPPER)) {
 				    Hopper h = (Hopper)b.getState();
-				   // plugin.getLogger().info("DEBUG: Hopper found!");
+				   plugin.logger(3,"Hopper found!");
 				    // Check what is in the hopper
 				    if (h.getInventory().contains(Material.WATER_BUCKET)) {
 					// Remove the water in the bucket
@@ -126,7 +126,7 @@ public class Ecosystem implements Listener {
 
     protected void snowOn(List<Greenhouse> snowGlobes) {
 	for (Greenhouse g : snowGlobes) {
-	    //plugin.getLogger().info("DEBUG: snowing in a greenhouse");
+	    plugin.logger(3,"snowing in a greenhouse");
 	    // Chance of snow
 	    if (Math.random()>Settings.snowChanceGlobal)
 		return;

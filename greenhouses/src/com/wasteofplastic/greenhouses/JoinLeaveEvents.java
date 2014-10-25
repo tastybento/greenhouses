@@ -31,18 +31,17 @@ public class JoinLeaveEvents implements Listener {
 	// Set the player's name (it may have changed)
 	players.setPlayerName(playerUUID, p.getName());
 	players.save(playerUUID);
-	plugin.getLogger().info("Cached " + p.getName());
+	plugin.logger(3,"Cached " + p.getName());
 	// TODO: Check leases and expire any old ones.
 	// Check to see if the player is in a greenhouse - one may have cropped up around them while they were logged off
 	for (Greenhouse g: plugin.getGreenhouses()) {
 	    if (g.insideGreenhouse(p.getLocation())) {
-		plugin.getLogger().info(p.getName() + " is in a greenhouse");
+		plugin.logger(2,p.getName() + " is in a greenhouse");
 		if (players.getInGreenhouse(playerUUID) == null || !players.getInGreenhouse(playerUUID).equals(g)) {
 		    players.setInGreenhouse(playerUUID, g);
 		    p.sendMessage(g.getEnterMessage());
 		    g.startBiome();
 		}
-		//plugin.visualize(d, p);
 		break;
 	    }
 	}

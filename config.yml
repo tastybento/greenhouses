@@ -4,6 +4,12 @@ greenhouses:
      - world
      - creative
 
+   # Console message level.
+   # 0 = no messages except for warnings or severe errors
+   # 1 = normal messages (default)
+   # 2 and higher - debug levels - no need to use these unless you want to try debug
+   debug: 1
+
    ### Weather and ecosystem settings
 
    # How often it should snow in the g/h when the weather is raining, in seconds

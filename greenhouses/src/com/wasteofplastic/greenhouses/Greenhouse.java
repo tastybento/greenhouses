@@ -92,11 +92,11 @@ public class Greenhouse {
 
 
     public boolean insideGreenhouse(Location loc) {
-	//plugin.getLogger().info("Checking intersection");
+	plugin.logger(3,"Checking intersection");
 	Vector v = loc.toVector();
-	//plugin.getLogger().info("Pos 1 = " + pos1.toString());
-	//plugin.getLogger().info("Pos 2 = " + pos2.toString());
-	//plugin.getLogger().info("V = " + v.toString());
+	plugin.logger(3,"Pos 1 = " + pos1.toString());
+	plugin.logger(3,"Pos 2 = " + pos2.toString());
+	plugin.logger(3,"V = " + v.toString());
 	boolean i = v.isInAABB(Vector.getMinimum(pos1,  pos2), Vector.getMaximum(pos1, pos2));
 	return i;
     }
@@ -121,7 +121,7 @@ public class Greenhouse {
      * @return
      */
     public boolean isAWall(Location loc) {
-	//plugin.getLogger().info("Debug: wall check");
+	plugin.logger(3,"wall check");
 	if (loc.getBlockX() == pos1.getBlockX() || loc.getBlockX() == pos2.getBlockX()
 		|| loc.getBlockZ() == pos1.getBlockZ() || loc.getBlockZ() == pos2.getBlockZ()) {
 	    return true;
@@ -275,11 +275,11 @@ public class Greenhouse {
      * @return true if okay, otherwise false
      */
     public boolean checkEco() {
-	//plugin.getLogger().info("DEBUG: checking the ecology of the greenhouse.");
+	plugin.logger(3,"Checking the ecology of the greenhouse.");
 	if (biomeRecipe != null) {
 	    return this.biomeRecipe.checkRecipe(getPos1(), getPos2(), null);
 	} else {
-	    plugin.getLogger().info("DEBUG: biomeRecipe is null! ");
+	    plugin.logger(3,"BiomeRecipe is null! ");
 	    plugin.getLogger().warning("[Greenhouse info]");
 	    plugin.getLogger().warning("Owner: " + getOwner());
 	    plugin.getLogger().warning("Greenhouse ID (in yml file): " + getId());
@@ -296,7 +296,7 @@ public class Greenhouse {
 	if (greenhouseBiome == null) {
 	    return;
 	}
-	//plugin.getLogger().info("DEBUG: start biome - setting to " + greenhouseBiome.toString());
+	plugin.logger(3,"start biome - setting to " + greenhouseBiome.toString());
 	for (int x = pos1.getBlockX();x<pos2.getBlockX();x++) {
 	    for (int z = pos1.getBlockZ();z<pos2.getBlockZ();z++) {
 		Block b = world.getBlockAt(x, groundY, z);
@@ -315,7 +315,7 @@ public class Greenhouse {
 	if (originalBiome == null) {
 	    return;
 	}
-	//plugin.getLogger().info("DEBUG: end biome - reseting to " + originalBiome.toString());
+	plugin.logger(3,"end biome - reseting to " + originalBiome.toString());
 	for (int x = pos1.getBlockX();x<pos2.getBlockX();x++) {
 	    for (int z = pos1.getBlockZ();z<pos2.getBlockZ();z++) {
 		Block b = world.getBlockAt(x, groundY, z);
@@ -337,7 +337,7 @@ public class Greenhouse {
 	if (biomeRecipe == null) {
 	    return;
 	}
-	//plugin.getLogger().info("DEBUG: populating mobs in greenhouse");
+	plugin.logger(3,"populating mobs in greenhouse");
 	// Make sure no players are around
 	if (plugin.players.getNumberInGreenhouse(this) > 0)
 	    return;
@@ -346,7 +346,7 @@ public class Greenhouse {
 	if (mob == null) {
 	    return;
 	}
-	//plugin.getLogger().info("Mob ready to spawn!");
+	plugin.logger(3,"Mob ready to spawn!");
 	// Spawn a temporary snowball in center of greenhouse
 	Vector p1 = pos1.clone();
 	Entity snowball = world.spawnEntity(p1.midpoint(pos2).toLocation(world), EntityType.SNOWBALL);
@@ -356,15 +356,15 @@ public class Greenhouse {
 	    Double z = (Math.abs(pos2.getZ()-pos1.getZ())-1)/2D;
 	    //Double distance = (pos1.distance(pos2)/2)+24D
 	    // Limit spawning
-	    //plugin.getLogger().info("Mob limit is " + biomeRecipe.getMobLimit());
+	    plugin.logger(3,"Mob limit is " + biomeRecipe.getMobLimit());
 	    // Find out how many of this type of mob is around
 
 	    int mobsInArea = snowball.getNearbyEntities(x, y, z).size();
 	    double internalArea = (x*4*z);
-	    //plugin.getLogger().info("Mobs in area = " + mobsInArea);
-	    //plugin.getLogger().info("Area of greenhouse = " + internalArea);
+	    plugin.logger(3,"Mobs in area = " + mobsInArea);
+	    plugin.logger(3,"Area of greenhouse = " + internalArea);
 	    if (internalArea - (mobsInArea * biomeRecipe.getMobLimit()) <= 0) {
-		//plugin.getLogger().info("Too many mobs already in this greenhouse");
+		plugin.logger(3,"Too many mobs already in this greenhouse");
 		snowball.remove();
 		return;
 	    }
@@ -373,15 +373,15 @@ public class Greenhouse {
 	    // Check for players
 	    for (Entity e : localEntities) {	
 		if (e instanceof Player) {
-		    //plugin.getLogger().info("DEBUG: players around");
+		    plugin.logger(3,"players around");
 		    return;
 		}
 	    }
 
 	} else {
-	    //plugin.getLogger().info("Could not spawn snowball!");
+	    plugin.logger(3,"Could not spawn snowball!");
 	}
-	//plugin.getLogger().info("DEBUG: no players around");
+	plugin.logger(3,"no players around");
 	// No players around
 	Material type = biomeRecipe.getMobSpawnOn(mob);
 	int minx = Math.min(pos1.getBlockX(), pos2.getBlockX());
@@ -395,15 +395,15 @@ public class Greenhouse {
 	    Block h = world.getHighestBlockAt(x, z);
 	    Block b = h.getRelative(BlockFace.DOWN);
 	    Block a = h.getRelative(BlockFace.UP);
-	    //plugin.getLogger().info("DEBUG: block found " + h.getType().toString());
-	    //plugin.getLogger().info("DEBUG: below found " + b.getType().toString());
-	    //plugin.getLogger().info("DEBUG: above found " + a.getType().toString());
+	    plugin.logger(3,"block found " + h.getType().toString());
+	    plugin.logger(3,"below found " + b.getType().toString());
+	    plugin.logger(3,"above found " + a.getType().toString());
 	    if ((b.getType().equals(type) && h.getType().equals(Material.AIR))
 		    || (h.getType().equals(type) && a.getType().equals(Material.AIR)) ) {
 		Location midBlock = new Location(world, h.getLocation().getX()+0.5D, h.getLocation().getY(), h.getLocation().getZ()+0.5D);
 		Entity e = world.spawnEntity(midBlock, mob);
 		if (e != null)
-		    plugin.getLogger().info("Spawned a "+ Util.prettifyText(mob.toString()) + " on "+ Util.prettifyText(type.toString()) + " at " 
+		    plugin.logger(2,"Spawned a "+ Util.prettifyText(mob.toString()) + " on "+ Util.prettifyText(type.toString()) + " at " 
 				+ midBlock.getBlockX() + "," + midBlock.getBlockY() + "," + midBlock.getBlockZ());
 		    return;
 	    }
@@ -453,12 +453,12 @@ public class Greenhouse {
 	}
 	Location hopper = roofHopperLocation;
 	if (hopper != null) {
-	    //plugin.getLogger().info("DEBUG: Hopper location:" + hopper.toString());
+	    plugin.logger(3,"Hopper location:" + hopper.toString());
 	    Block b = hopper.getBlock();
 	    // Check the hopper is still there
 	    if (b.getType().equals(Material.HOPPER)) {
 		Hopper h = (Hopper)b.getState();
-		//plugin.getLogger().info("DEBUG: Hopper found!");
+		plugin.logger(3,"Hopper found!");
 		// Check what is in the hopper
 		if (h.getInventory().contains(Material.INK_SACK)) {
 		    ItemStack[] hopperInv = h.getInventory().getContents();
@@ -475,7 +475,7 @@ public class Greenhouse {
 			remBoneMeal.setDurability((short)15);
 			remBoneMeal.setAmount(1);
 			// Rewrite to use on bonemeal per flower
-			//plugin.getLogger().info("DEBUG: Bonemeal found!");
+			plugin.logger(3,"Bonemeal found!");
 			// Now go and grow stuff with the set probability
 			int minx = Math.min(pos1.getBlockX(), pos2.getBlockX());
 			int maxx = Math.max(pos1.getBlockX(), pos2.getBlockX());
@@ -485,7 +485,7 @@ public class Greenhouse {
 			    for (int z = minz+1; z < maxz;z++) {
 				Block bl = world.getHighestBlockAt(new Location(world,x,pos1.getBlockY(),z));
 				//if (Math.random()<Settings.flowerChance) {
-				//plugin.getLogger().info("DEBUG: Block is " + bl.getType().toString());
+				plugin.logger(3,"Block is " + bl.getType().toString());
 				if (biomeRecipe.growPlant(bl)) {
 				    bonemeal--;
 				    // Spray the bonemeal 
@@ -506,7 +506,7 @@ public class Greenhouse {
 	    } else {
 		// Greenhouse is broken or no longer has a hopper when it should
 		// TODO remove the greenhouse
-		//plugin.getLogger().info("DEBUG: Hopper is not there anymore...");
+		plugin.logger(3,"Hopper is not there anymore...");
 	    }
 	}
     }
