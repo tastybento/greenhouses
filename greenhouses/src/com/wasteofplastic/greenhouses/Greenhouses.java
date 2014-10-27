@@ -560,7 +560,6 @@ public class Greenhouses extends JavaPlugin {
 			    getLogger().severe("Problem found with greenhouse during block conversion. Skipping...");
 			    getLogger().severe("[Greenhouse info]");
 			    getLogger().severe("Owner: " + g.getOwner());
-			    getLogger().severe("ID: " + g.getId());
 			    getLogger().severe("Location " + g.getPos1().toString() + " to " + g.getPos2().toString());
 			    e.printStackTrace();
 			}
@@ -656,8 +655,6 @@ public class Greenhouses extends JavaPlugin {
 	    if (!playersFolder.renameTo(backup)) {
 		getLogger().severe("Could not rename players folder to backup!"); 
 	    }
-	    File newPlayersFolder = new File(this.getDataFolder(),"plyrs");
-	    newPlayersFolder.mkdir();
 	    for (final File f : backup.listFiles()) {
 		// Need to remove the .yml suffix
 		String fileName = f.getName();
@@ -672,11 +669,6 @@ public class Greenhouses extends JavaPlugin {
 			//new Players(this, playerUUID);
 			YamlConfiguration playerInfo = new YamlConfiguration();
 			playerInfo.load(f);
-			// Save the player file - just name for now
-			File newPlayerFile = new File(newPlayersFolder,f.getName());
-			YamlConfiguration newPlayerInfo = new YamlConfiguration();
-			newPlayerInfo.set("playerName", playerInfo.getString("playerName",""));
-			newPlayerInfo.save(newPlayerFile);
 			// Copy over greenhouses
 			ConfigurationSection myHouses = playerInfo.getConfigurationSection("greenhouses");
 			if (myHouses != null) {
@@ -748,6 +740,8 @@ public class Greenhouses extends JavaPlugin {
 				Greenhouse g = new Greenhouse(this, pos1, pos2, owner);
 				logger(3,"Greenhouse pos1: " + g.getPos1().toString());
 				logger(3,"Greenhouse pos2: " + g.getPos2().toString());
+				// Set owner name
+				g.setPlayerName(playerName);
 				// Set biome
 				String oBiome = myHouses.getString(key + ".originalBiome", "SUNFLOWER_PLAINS");
 				Biome originalBiome = Biome.valueOf(oBiome);
@@ -810,7 +804,7 @@ public class Greenhouses extends JavaPlugin {
 	for (Player p : getServer().getOnlinePlayers()) {
 	    for (Greenhouse d: greenhouses) {
 		if (d.insideGreenhouse(p.getLocation())) {
-		    players.setInGreenhouse(p.getUniqueId(), d);
+		    players.setInGreenhouse(p, d);
 		    break;
 		}
 	    }
@@ -1051,7 +1045,7 @@ public class Greenhouses extends JavaPlugin {
 		if (!p.equals(owner)) {
 		    p.sendMessage((Locale.messagesyouarein.replace("[owner]", owner.getDisplayName())).replace("[biome]", Util.prettifyText(d.getBiome().toString())));
 		}
-		players.setInGreenhouse(p.getUniqueId(), d);
+		players.setInGreenhouse(p, d);
 	    }
 	}
 	return d;
@@ -1094,7 +1088,7 @@ public class Greenhouses extends JavaPlugin {
      * @param g
      */
     public void removeGreenhouse(Greenhouse g) {
-	players.get(g.getOwner());
+	//players.get(g.getOwner());
 	// Remove the greenhouse
 	greenhouses.remove(g);
 	// Stop any eco action
@@ -1105,7 +1099,7 @@ public class Greenhouses extends JavaPlugin {
 	    if (p.getUniqueId().equals(g.getOwner()))
 		ownerOnline=true;
 	    if (g.insideGreenhouse(p.getLocation())) {
-		players.setInGreenhouse(p.getUniqueId(), null);
+		players.setInGreenhouse(p, null);
 		p.sendMessage(ChatColor.RED + Locale.messagesremoved);
 	    }
 	}
@@ -1243,7 +1237,7 @@ public class Greenhouses extends JavaPlugin {
      * @return the Greenhouse object
      */
     public Greenhouse checkGreenhouse(final Player player) {
-	return checkGreenhouse(player, null);
+	return makeGreenhouse(player, null);
     }
     /**
      * Checks that a greenhouse meets specs and makes it
@@ -1252,7 +1246,7 @@ public class Greenhouses extends JavaPlugin {
      * @param type
      * @return
      */
-    public Greenhouse checkGreenhouse(final Player player, Biome type) {
+    public Greenhouse makeGreenhouse(final Player player, Biome type) {
 	// Do an immediate permissions check of the biome recipe if the type is declared
 	BiomeRecipe greenhouseRecipe = null;
 	if (type != null) {
@@ -1663,7 +1657,7 @@ public class Greenhouses extends JavaPlugin {
 	    try {
 		// Copy over the info
 		greenhouseSection.set(greenhouseNum + ".owner", g.getOwner().toString());
-		greenhouseSection.set(greenhouseNum + ".playerName", players.getName(g.getOwner()));
+		greenhouseSection.set(greenhouseNum + ".playerName", g.getPlayerName());
 		greenhouseSection.set(greenhouseNum + ".pos-one", getStringLocation(g.getPos1()));
 		greenhouseSection.set(greenhouseNum + ".pos-two", getStringLocation(g.getPos2()));
 		greenhouseSection.set(greenhouseNum + ".originalBiome", g.getOriginalBiome().toString());

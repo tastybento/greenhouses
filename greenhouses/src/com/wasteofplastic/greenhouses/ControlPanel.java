@@ -50,7 +50,7 @@ public class ControlPanel implements Listener {
 	    if (store.containsKey(slot)) {
 		BiomeRecipe item = store.get(slot);
 		// Sets up a greenhouse
-		Greenhouse oldg = plugin.players.getInGreenhouse(player.getUniqueId());
+		Greenhouse oldg = plugin.players.getInGreenhouse(player);
 		if (oldg != null) {
 		    // Player wants to try and change biome
 		    //player.closeInventory(); // Closes the inventory
@@ -59,9 +59,8 @@ public class ControlPanel implements Listener {
 		    //return;
 		    plugin.removeGreenhouse(oldg);
 		}
-		// TODO Return what is missing so the player can see
-		// Check we are in a greenhouse
-		Greenhouse g = plugin.checkGreenhouse(player,item.getType());
+		// Make greenhouse
+		Greenhouse g = plugin.makeGreenhouse(player,item.getType());
 		if (g == null) {
 		    player.closeInventory(); // Closes the inventory
 		    //error.norecipe

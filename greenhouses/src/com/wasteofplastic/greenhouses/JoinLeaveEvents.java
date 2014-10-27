@@ -27,18 +27,15 @@ public class JoinLeaveEvents implements Listener {
     public void onPlayerJoin(final PlayerJoinEvent event) {
 	Player p = event.getPlayer();
 	final UUID playerUUID = p.getUniqueId();
-	players.addPlayer(playerUUID);
-	// Set the player's name (it may have changed)
-	players.setPlayerName(playerUUID, p.getName());
-	players.save(playerUUID);
+	// Add player to the cache, and clear any greenhouses over their permitted limit
+	plugin.players.addPlayer(p);
 	plugin.logger(3,"Cached " + p.getName());
-	// TODO: Check leases and expire any old ones.
 	// Check to see if the player is in a greenhouse - one may have cropped up around them while they were logged off
 	for (Greenhouse g: plugin.getGreenhouses()) {
 	    if (g.insideGreenhouse(p.getLocation())) {
 		plugin.logger(2,p.getName() + " is in a greenhouse");
-		if (players.getInGreenhouse(playerUUID) == null || !players.getInGreenhouse(playerUUID).equals(g)) {
-		    players.setInGreenhouse(playerUUID, g);
+		if (players.getInGreenhouse(p) == null || !players.getInGreenhouse(p).equals(g)) {
+		    players.setInGreenhouse(p, g);
 		    p.sendMessage(g.getEnterMessage());
 		    g.startBiome();
 		}
@@ -64,12 +61,11 @@ public class JoinLeaveEvents implements Listener {
     @EventHandler(priority = EventPriority.NORMAL)
     public void onPlayerQuit(final PlayerQuitEvent event) {
 	// Remove biome if no one left there on log out
-	UUID playerUUID = event.getPlayer().getUniqueId();
-	Greenhouse g = players.getInGreenhouse(playerUUID);
+	Greenhouse g = players.getInGreenhouse(event.getPlayer());
 	if (g != null)
 	    if (plugin.players.getNumberInGreenhouse(g) == 0) {
 		g.endBiome();
 	    }
-	players.removeOnlinePlayer(playerUUID);
+	players.removeOnlinePlayer(event.getPlayer());
     }
 }

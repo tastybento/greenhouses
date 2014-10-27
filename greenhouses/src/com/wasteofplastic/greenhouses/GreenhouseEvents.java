@@ -51,7 +51,7 @@ public class GreenhouseEvents implements Listener {
 	// Find out which greenhouse the player is in
         if(event.getClickedBlock() != null && event.getClickedBlock().getWorld().getEnvironment() == Environment.NETHER 
                 && event.getItem() != null && event.getItem().getType() == Material.WATER_BUCKET) {
-            Greenhouse g = plugin.players.getInGreenhouse(player.getUniqueId());
+            Greenhouse g = plugin.players.getInGreenhouse(player);
             if (g != null && !g.getBiome().equals(Biome.HELL) && !g.getBiome().equals(Biome.DESERT)
         	    && !g.getBiome().equals(Biome.DESERT_HILLS) && !g.getBiome().equals(Biome.DESERT_MOUNTAINS)) {
         	event.setCancelled(true);
@@ -74,7 +74,7 @@ public class GreenhouseEvents implements Listener {
 	// Find out which greenhouse the player is in
         if(event.getBlock().getWorld().getEnvironment() == Environment.NETHER 
                 && event.getBlock().getType() == Material.ICE) {
-            Greenhouse g = plugin.players.getInGreenhouse(player.getUniqueId());
+            Greenhouse g = plugin.players.getInGreenhouse(player);
             if (g != null && !g.getBiome().equals(Biome.HELL) && !g.getBiome().equals(Biome.DESERT)
         	    && !g.getBiome().equals(Biome.DESERT_HILLS) && !g.getBiome().equals(Biome.DESERT_MOUNTAINS)) {
         	event.setCancelled(true);
@@ -173,11 +173,11 @@ public class GreenhouseEvents implements Listener {
 	// No greenhouse interaction
 	if (fromGreenhouse == null && toGreenhouse == null) {
 	    // Clear the greenhouse flag (the greenhouse may have been deleted while they were offline)
-	    plugin.players.setInGreenhouse(player.getUniqueId(), null);
+	    plugin.players.setInGreenhouse(player, null);
 	    return false;	    
 	} else if (fromGreenhouse == toGreenhouse) {
 	    // Set the greenhouse - needs to be done if the player teleports too (should be done on a teleport event)
-	    plugin.players.setInGreenhouse(player.getUniqueId(), toGreenhouse);
+	    plugin.players.setInGreenhouse(player, toGreenhouse);
 	    return false;
 	}
 	if (fromGreenhouse != null && toGreenhouse == null) {
@@ -187,7 +187,7 @@ public class GreenhouseEvents implements Listener {
 		// Stop visualization
 		//plugin.devisualize(player);
 	    }
-	    plugin.players.setInGreenhouse(player.getUniqueId(), null);
+	    plugin.players.setInGreenhouse(player, null);
 	    if (plugin.players.getNumberInGreenhouse(fromGreenhouse) == 0) {
 		fromGreenhouse.endBiome();
 	    }
@@ -199,14 +199,14 @@ public class GreenhouseEvents implements Listener {
 		//plugin.visualize(toGreenhouse, player);
 	    }
 	    toGreenhouse.startBiome();
-	    plugin.players.setInGreenhouse(player.getUniqueId(), toGreenhouse);	    
+	    plugin.players.setInGreenhouse(player, toGreenhouse);	    
 
 	} else if (fromGreenhouse != null && toGreenhouse != null){
 	    // Leaving one greenhouse and entering another greenhouse immediately
 	    if (!fromGreenhouse.getFarewellMessage().isEmpty()) {
 		player.sendMessage(fromGreenhouse.getFarewellMessage());
 	    }
-	    plugin.players.setInGreenhouse(player.getUniqueId(), toGreenhouse);
+	    plugin.players.setInGreenhouse(player, toGreenhouse);
 	    if (plugin.players.getNumberInGreenhouse(fromGreenhouse) == 0) {
 		fromGreenhouse.endBiome();
 	    }

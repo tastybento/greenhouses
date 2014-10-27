@@ -21,11 +21,11 @@ import com.wasteofplastic.particles.ParticleEffect;
 
 public class Greenhouse {
     private Greenhouses plugin;
-    private UUID id;
     private final Vector pos1;
     private final Vector pos2;
     private final World world;
     private UUID owner;
+    private String playerName;
     private HashMap<String,Object> flags = new HashMap<String,Object>();
     private Biome originalBiome;
     private Biome greenhouseBiome;
@@ -55,7 +55,7 @@ public class Greenhouse {
 	this.originalBiome = pos1.getBlock().getBiome();
 	this.greenhouseBiome = pos2.getBlock().getBiome();
 	this.owner = owner;
-	this.id = UUID.randomUUID();
+	this.playerName = "";
 	flags.put("enterMessage", "");
 	flags.put("farewellMessage", "");
 
@@ -176,6 +176,22 @@ public class Greenhouse {
     }
 
      /**
+     * @return the playerName
+     */
+    public String getPlayerName() {
+        return playerName;
+    }
+
+
+    /**
+     * @param playerName the playerName to set
+     */
+    public void setPlayerName(String playerName) {
+        this.playerName = playerName;
+    }
+
+
+    /**
      * @return the enterMessage
      */
     public String getEnterMessage() {
@@ -204,22 +220,6 @@ public class Greenhouse {
      */
     public void setFarewellMessage(String farewellMessage) {
 	flags.put("farewellMessage",farewellMessage);
-    }
-
-
-    /**
-     * @return the id
-     */
-    public UUID getId() {
-	return id;
-    }
-
-
-    /**
-     * @param id the id to set
-     */
-    public void setId(UUID id) {
-	this.id = id;
     }
 
 
@@ -282,7 +282,6 @@ public class Greenhouse {
 	    plugin.logger(3,"BiomeRecipe is null! ");
 	    plugin.getLogger().warning("[Greenhouse info]");
 	    plugin.getLogger().warning("Owner: " + getOwner());
-	    plugin.getLogger().warning("Greenhouse ID (in yml file): " + getId());
 	    plugin.getLogger().warning("Location :" + getPos1().toString() + " to " + getPos2().toString());
 	    return false;
 	}

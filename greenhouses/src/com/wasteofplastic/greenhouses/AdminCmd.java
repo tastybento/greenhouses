@@ -54,13 +54,13 @@ public class AdminCmd implements CommandExecutor {
 		    return true;
 		}
 		Player player = (Player)sender;
-		Greenhouse d = players.getInGreenhouse(player.getUniqueId());
+		Greenhouse d = players.getInGreenhouse(player);
 		if (d == null) {
 		    sender.sendMessage(ChatColor.RED + Locale.admininfoerror2);
 		    return true;
 		}
 		sender.sendMessage(ChatColor.GREEN + Locale.infoinfo);
-		sender.sendMessage(ChatColor.GREEN + Locale.generalowner + ":" + players.getName(d.getOwner()));
+		sender.sendMessage(ChatColor.GREEN + Locale.generalowner + ":" + d.getPlayerName());
 		sender.sendMessage(ChatColor.GREEN + Locale.admininfoflags);
 		for (String flag : d.getFlags().keySet()) {
 		    sender.sendMessage(flag + ": " + d.getFlags().get(flag));
