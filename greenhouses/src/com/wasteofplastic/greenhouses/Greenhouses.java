@@ -1374,20 +1374,25 @@ public class Greenhouses extends JavaPlugin {
 	for (int x = minx; x <= maxx; x++) {
 	    for (int z = minz; z <= maxz; z++) {
 		Material bt = world.getBlockAt(x, height.getBlockY(), z).getType();
-		if (bt.equals(Material.GLASS) || bt.equals(Material.THIN_GLASS) || bt.equals(Material.STAINED_GLASS))
+		if (bt.equals(Material.GLASS) || bt.equals(Material.THIN_GLASS) || bt.equals(Material.STAINED_GLASS)) {
 		    roofGlass++;
-		if (bt.equals(Material.GLOWSTONE))
+		} else if (bt.equals(Material.GLOWSTONE)) {
 		    roofGlowstone++;
-		if (bt.equals(Material.HOPPER)) {
+		} else if (bt.equals(Material.HOPPER)) {
 		    ghHopper++;
 		    roofHopperLoc = new Location(world,x,height.getBlockY(), z);
+		} else {
+		    player.sendBlockChange(new Location(world,x,height.getBlockY(),z),Material.STAINED_GLASS,(byte)14);
 		}
 		// Check if there are any blocks above the greenhouse
-		for (int y = height.getBlockY()+1; y <255; y++) {
-		    if (!world.getBlockAt(x, y, z).getType().equals(Material.AIR)) {
-			logger(3,"non-air block found at  " + x + "," + y+ "," + z + " which is higher than " + height.getBlockY());
-			blockAbove = true;
-			break;
+		if (world.getEnvironment().equals(Environment.NORMAL)) {
+		    for (int y = height.getBlockY()+1; y <255; y++) {
+			if (!world.getBlockAt(x, y, z).getType().equals(Material.AIR)) {
+			    logger(2,"non-air block found at  " + x + "," + y+ "," + z + " which is higher than " + height.getBlockY());
+			    player.sendBlockChange(new Location(world,x,y,z),Material.STAINED_GLASS,(byte)14);
+			    blockAbove = true;
+			    break;
+			}
 		    }
 		}
 		//if (world.getHighestBlockYAt(x, z) > height.getBlockY()) {
@@ -1423,7 +1428,7 @@ public class Greenhouses extends JavaPlugin {
 		}
 		Material bt = world.getBlockAt(minx, y, z).getType();
 		if (!wallBlocks.contains(bt)) {
-
+		    player.sendBlockChange(new Location(world,minx,y,z),Material.STAINED_GLASS,(byte)14);
 		    logger(3,""+bt.toString() +" found at y=" + y);
 		    groundY= y;
 		    break;
@@ -1462,6 +1467,7 @@ public class Greenhouses extends JavaPlugin {
 		}
 		Material bt = world.getBlockAt(maxx, y, z).getType();
 		if (!wallBlocks.contains(bt)) {
+		    player.sendBlockChange(new Location(world,maxx,y,z),Material.STAINED_GLASS,(byte)14);
 		    logger(3,""+bt.toString() +" found at y=" + y);
 		    logger(3,"Ground level found at y=" + y);
 		    groundY= y;
@@ -1502,6 +1508,7 @@ public class Greenhouses extends JavaPlugin {
 		Material bt = world.getBlockAt(x, y, minz).getType();
 		if (!wallBlocks.contains(bt)) {
 		    // plugin.logger(1,""+bt.toString() +" found at y=" + y);
+		    player.sendBlockChange(new Location(world,x,y,maxz),Material.STAINED_GLASS,(byte)14);
 		    logger(3,"Ground level found at y=" + y);
 		    groundY= y;
 		    break;
@@ -1540,6 +1547,7 @@ public class Greenhouses extends JavaPlugin {
 		}
 		Material bt = world.getBlockAt(x, y, maxz).getType();
 		if (!wallBlocks.contains(bt)) {
+		    player.sendBlockChange(new Location(world,x,y,maxz),Material.STAINED_GLASS,(byte)14);
 		    logger(3,""+bt.toString() +" found at y=" + y);
 		    logger(3,"Ground level found at y=" + y);
 		    groundY= y;
