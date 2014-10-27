@@ -46,9 +46,6 @@ public class Greenhouses extends JavaPlugin {
     private static Greenhouses plugin;
     // The world
     public static World pluginWorld = null;
-    // Player YAMLs
-    public YamlConfiguration playerFile;
-    public File playersFolder;
     // Localization Strings
     private FileConfiguration locale = null;
     private File localeFile = null;
@@ -665,11 +662,8 @@ public class Greenhouses extends JavaPlugin {
 	    ConfigurationSection greenhouseSection = greenhouseConfig.createSection("greenhouses");
 	    int greenhouseNum = 0;
 	    // Load all the players
-	    File backup = new File(this.getDataFolder(),"backup");
-	    if (!playersFolder.renameTo(backup)) {
-		getLogger().severe("Could not rename players folder to backup!"); 
-	    }
-	    for (final File f : backup.listFiles()) {
+	    File playersFolder = new File(this.getDataFolder(),"players");
+	    for (final File f : playersFolder.listFiles()) {
 		// Need to remove the .yml suffix
 		String fileName = f.getName();
 		if (fileName.endsWith(".yml")) {
