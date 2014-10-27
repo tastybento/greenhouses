@@ -2,8 +2,12 @@ package com.wasteofplastic.greenhouses;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.Potion;
@@ -1506,4 +1510,72 @@ public class Util {
 	    currency = c;
 	}
     }
+
+    /**
+     * Chops up a long line into shorter lengths while at the same time 
+     * preserving the chat color
+     * @param longLine
+     * @param length
+     * @return
+     */
+    static List<String> chop(String longLine, int length) {
+	List<String> result = new ArrayList<String>();
+	// Go through letter by letter
+	// This is the current line that is being built
+	String currentLine = "";
+	// Last chat color
+	String color = "";
+	List<String> formatting = new ArrayList<String>();
+	char[] line = longLine.toCharArray();
+	for (int i = 0; i< line.length; i++) {
+	    // Chat color check
+	    if (line[i] == '§') {
+		// Found a color or formatting
+		// Record this color or formatting
+		if (i+1 < line.length) {
+		    // Avoid any problems should this symbol just so happen to be at the end of the string
+		    // Formatting
+		    if (line[i+1] == 'k' || line[i+1] == 'l' || line[i+1] == 'm' || line[i+1] == 'n' || line[i+1] == 'o') {
+			formatting.add(String.copyValueOf(line, i, 2));
+		    } else if (line[i+1] == 'r') {
+			// Reset clears all colors and formatting
+			color = "";
+			formatting.clear();
+		    } else {
+			// Colors replace each other
+			if (!color.isEmpty()) {
+			    formatting.remove(String.copyValueOf(line, i, 2));
+			}
+			formatting.add(String.copyValueOf(line, i, 2));
+			color = String.copyValueOf(line, i, 2); 
+		    }
+		}
+		// Is this color right at the end of the line (color is two chars)
+		if (length - currentLine.length() - formatting.size()*2 == 1) {
+		    // No room, shove to next line
+		    result.add(currentLine);
+		    currentLine = "";
+		}
+	    }
+
+
+	    currentLine = currentLine + String.valueOf(line[i]);
+	    //Bukkit.getLogger().info("DEBUG " + currentLine);
+	    if (currentLine.length() == (length + formatting.size()*2)) {
+		// Start a new line
+		result.add(currentLine);
+		currentLine = "";
+		if (!formatting.isEmpty()) {
+		    for (String c : formatting) {
+			currentLine += c;
+		    }
+		}
+	    }
+	}
+	if (!currentLine.isEmpty()) {
+	    result.add(currentLine);
+	}
+	return result;
+    }
+
 }

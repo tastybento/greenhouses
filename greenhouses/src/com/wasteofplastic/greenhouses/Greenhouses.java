@@ -1649,7 +1649,7 @@ public class Greenhouses extends JavaPlugin {
      * Saves all the greenhouses to greenhouse.yml
      */
     public void saveGreenhouses() {
-	logger(1,"Saving greenhouses...");
+	logger(2,"Saving greenhouses...");
 	ConfigurationSection greenhouseSection = greenhouseConfig.createSection("greenhouses");
 	// Get a list of all the greenhouses
 	int greenhouseNum = 0;

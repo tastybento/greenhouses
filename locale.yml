@@ -13,7 +13,7 @@ help:
    help: "help"
    make: "Tries to make a greenhouse"
    remove: "Removes a greenhouse that you are standing in if you are the owner"
-   info: "Shows info on the greenhouse you and general info"
+   info: "How to make a greenhouse!"
    list: "Lists all the greenhouse biomes that can be made"
    recipe: "Tells you how to make greenhouse biome"
 
@@ -51,17 +51,13 @@ messages:
    ecolost: "Your greenhouse at [location] lost its eco system and was removed."
 
 info:
-   title: "&A[Greenhouse Construction]"
+   title: "&A[How To Build A Greenhouse]"
    instructions:
-     - "&EGreenhouses must be built out of glass or glowstone, have 4 walls and a flat roof."
-     - "&EUp to &F4 wooden or metal doors &Eare allowed."
-     - "&F1 hopper &Ecan be placed in a wall or roof."
-     - "&EIf you break a greenhouse you will have to make it again."
-     - "&A[Biomes]"
-     - "&EGrass, water, trees, sand, ice and snow in the greenhouse determine the greenhouse biome."
-     - "&EBe careful to keep the biome in balance, otherwise it may be lost!"
-     - "&A[Snow and fertilizer]"
-     - "&EAdd water buckets or bonemeal to the hopper to disperse snow when it rain or fertilize grass automatically."
+     - "&EMake a box out of out of glass with 4 walls and a flat glass roof."
+     - "&EAdd up to &F4 doors &Ein the walls."
+     - "&FAdd 1 hopper &Ein a wall or roof to make snow or feed plants."
+     - "&ECheck the biome recipes for what must be inside a greenhouse!"
+     - "&EAdd water buckets and/or bonemeal to the hopper to make snow when it rains and/or grow plants."
    info: "[Greenhouse Info]"
    none: "None"
 

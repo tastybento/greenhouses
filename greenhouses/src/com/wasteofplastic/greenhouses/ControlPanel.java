@@ -47,6 +47,15 @@ public class ControlPanel implements Listener {
 	if (inventory.getName().equals(ChatColor.translateAlternateColorCodes('&', Locale.controlpaneltitle))) {
 	    //String message = "";
 	    event.setCancelled(true); // Don't let them pick anything up
+	    if (slot < 0)  {
+		player.closeInventory();
+		return;
+	    }
+	    if (slot == 0) {
+		player.performCommand("greenhouse info");
+		player.closeInventory();
+		return;
+	    }
 	    if (store.containsKey(slot)) {
 		BiomeRecipe item = store.get(slot);
 		// Sets up a greenhouse
@@ -82,7 +91,8 @@ public class ControlPanel implements Listener {
      */
     public Inventory getPanel(Player player) {
 	HashMap<Integer, BiomeRecipe> store = new HashMap<Integer,BiomeRecipe>();
-	int index = 0;
+	// Index 0 is reserved for instructions
+	int index = 1;
 	// Run through biomes and add to the inventory if this player is allowed to use them
 	for (BiomeRecipe br : plugin.getBiomeRecipes()) {
 	    // Gather the info
@@ -92,16 +102,38 @@ public class ControlPanel implements Listener {
 	    }
 	}
 	// Now create the panel
-	int panelSize = store.size() + 9 - 1;
+	//int panelSize = store.size() + 9 - 1;
+	int panelSize = store.size() + 9;
 	panelSize -= ( panelSize % 9);
 	Inventory biomePanel = Bukkit.createInventory(player, panelSize, ChatColor.translateAlternateColorCodes('&', Locale.controlpaneltitle));
+	// Add the instructions item
+	ItemStack item = new ItemStack(Material.THIN_GLASS);
+	ItemMeta meta = item.getItemMeta();
+	meta.setDisplayName(Locale.generalgreenhouses);
+	List<String> lore = new ArrayList<String>();
+	if (plugin.players.isAtLimit(player)) {
+	    lore.add(ChatColor.RED + "You cannot build any more greenhouses!");
+	} else {
+	    lore.addAll(Util.chop(ChatColor.translateAlternateColorCodes('&', Locale.helpinfo),21)); 
+	    if (plugin.players.getRemainingGreenhouses(player) > 0) {
+		if (plugin.players.getRemainingGreenhouses(player) == 1) {
+		    lore.addAll(Util.chop(ChatColor.GREEN + "You can build one more greenhouse.",21));
+		} else {
+		    lore.addAll(Util.chop(ChatColor.GREEN + "You can build up to " + plugin.players.getRemainingGreenhouses(player) + " more greenhouses.",21));
+		}
+	    }
+	}
+	meta.setLore(lore);
+	item.setItemMeta(meta);
+	biomePanel.addItem(item);
+	// Now add the biomes
+
 	for (BiomeRecipe br : store.values()) {
 	    // Create an itemStack
-	    ItemStack item = new ItemStack(br.getIcon());
-	    ItemMeta meta = item.getItemMeta();
+	    item = new ItemStack(br.getIcon());
+	    meta = item.getItemMeta();
 	    meta.setDisplayName(Util.prettifyText(br.getType().toString()));
-	    ArrayList<String> lore = new ArrayList<String>();
-
+	    lore.clear();
 	    List<String> reqBlocks = br.getRecipeBlocks();
 	    if (reqBlocks.size() > 0) {
 		lore.add(ChatColor.YELLOW + Locale.recipeminimumblockstitle);
@@ -131,15 +163,6 @@ public class ControlPanel implements Listener {
 	    meta.setLore(lore);
 	    item.setItemMeta(meta);
 	    biomePanel.addItem(item);
-	}
-	// Put a hint if no biomes are available
-	if (store.size() == 0) {
-	    // Create an itemStack
-	    ItemStack i = new ItemStack(Material.TNT);
-	    ItemMeta meta = i.getItemMeta();
-	    meta.setDisplayName(Locale.errornoPermission);
-	    i.setItemMeta(meta);
-	    biomePanel.addItem(i);
 	}
 	// Stash the panel for later use when clicked
 	biomePanels.put(player.getUniqueId(), store);

@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
@@ -20,6 +21,12 @@ public class PlayerCache {
     public PlayerCache(Greenhouses plugin) {
 	this.plugin = plugin;
 	playerCache.clear();
+	// Add any players currently online (handles the /reload condition)
+	final Player[] serverPlayers = plugin.getServer().getOnlinePlayers();
+	for (Player p : serverPlayers) {
+	    // Add this player to the online cache
+	    playerCache.put(p.getUniqueId(), new Players(p));
+	}
     }
 
     public void addPermissionLimit(String perm, int limit) {
@@ -167,6 +174,30 @@ public class PlayerCache {
 		return false;
 	    }  
 	    return true;
+	}
+    }
+
+    public int getRemainingGreenhouses(Player player) {
+	if (permissionLimits.isEmpty()) {
+	    return -1;
+	} else {
+	    int limit = -1;
+	    // Find the largest limit this player has
+	    for (String perm : permissionLimits.keySet()) {
+		if (VaultHelper.checkPerm(player, perm)) { 
+		    limit = Math.max(permissionLimits.get(perm), limit);
+		}
+	    }
+	    if (limit == -1) {
+		// This player has no limit
+		return -1;
+	    }
+	    int remaining = limit - playerCache.get(player.getUniqueId()).getNumberOfGreenhouses();
+	    if (remaining < 0) {
+		return 0;
+	    } else {
+		return remaining;
+	    }
 	}
     }
 }
