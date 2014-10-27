@@ -16,6 +16,7 @@ help:
    info: "How to make a greenhouse"
    list: "Lists all the greenhouse biomes that can be made"
    recipe: "Tells you how to make greenhouse biome"
+   opengui: "Opens the Greenhouse GUI"
 
 list:
    title: "[Greenhouse Biome Recipes]"

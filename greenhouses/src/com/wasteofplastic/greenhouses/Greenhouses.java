@@ -335,6 +335,7 @@ public class Greenhouses extends JavaPlugin {
 	Locale.helpremove = getLocale().getString("help.remove", "Removes a greenhouse that you are standing in if you are the owner");
 	Locale.helpinfo = getLocale().getString("help.info", "Shows info on the greenhouse you and general info");
 	Locale.helplist = getLocale().getString("help.list", "Lists all the greenhouse biomes that can be made");
+	Locale.helpopengui = getLocale().getString("help.opengui", "Opens the Greenhouse GUI");
 	Locale.helprecipe = getLocale().getString("help.recipe", "Tells you how to make greenhouse biome");
 	Locale.listtitle = getLocale().getString("list.title", "[Greenhouse Biome Recipes]");
 	Locale.listinfo = getLocale().getString("list.info", "Use /greenhouse recipe <number> to see details on how to make each greenhouse");

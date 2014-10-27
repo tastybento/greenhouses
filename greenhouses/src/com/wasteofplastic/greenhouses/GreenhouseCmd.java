@@ -65,6 +65,7 @@ public class GreenhouseCmd implements CommandExecutor {
 	    // /greenhouse <command>
 	    if (split[0].equalsIgnoreCase("help")) { 
 		player.sendMessage(ChatColor.GREEN + Locale.generalgreenhouses +" " + plugin.getDescription().getVersion() + " " + Locale.helphelp + ":");
+		player.sendMessage(ChatColor.YELLOW + "/" + label + " : " + ChatColor.WHITE + Locale.helpopengui);
 		player.sendMessage(ChatColor.YELLOW + "/" + label + " make: " + ChatColor.WHITE + Locale.helpmake);
 		player.sendMessage(ChatColor.YELLOW + "/" + label + " remove: " + ChatColor.WHITE + Locale.helpremove);
 		player.sendMessage(ChatColor.YELLOW + "/" + label + " info: " + ChatColor.WHITE + Locale.helpinfo);
