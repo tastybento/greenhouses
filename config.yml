@@ -29,7 +29,7 @@ greenhouses:
    #  - myrank.developer:100 <-- allows 100 for the permission myrank.developer
 
    limits:
-     - greenhouses.player:5
+     - greenhouses.player:-1
 
    ### Weather and ecosystem settings
 
