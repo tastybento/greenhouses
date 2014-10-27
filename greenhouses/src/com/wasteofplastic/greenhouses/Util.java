@@ -6,10 +6,10 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.map.MinecraftFont;
 import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionEffect;
 
@@ -1519,7 +1519,13 @@ public class Util {
      * @return
      */
     static List<String> chop(String longLine, int length) {
+	// Use this to check lengths
+	MinecraftFont mcf = new MinecraftFont();
 	List<String> result = new ArrayList<String>();
+	if (!mcf.isValid(longLine)) {
+	    result.add(longLine);
+	    return result;
+	}
 	// Go through letter by letter
 	// This is the current line that is being built
 	String currentLine = "";
@@ -1529,7 +1535,7 @@ public class Util {
 	char[] line = longLine.toCharArray();
 	for (int i = 0; i< line.length; i++) {
 	    // Chat color check
-	    if (line[i] == '§') {
+	    while (line[i] == '§') {
 		// Found a color or formatting
 		// Record this color or formatting
 		if (i+1 < line.length) {
@@ -1550,25 +1556,46 @@ public class Util {
 			color = String.copyValueOf(line, i, 2); 
 		    }
 		}
-		// Is this color right at the end of the line (color is two chars)
-		if (length - currentLine.length() - formatting.size()*2 == 1) {
-		    // No room, shove to next line
+		// Colors and formatting do not add to line width
+		// Add this color/formatting code
+		currentLine = currentLine + String.copyValueOf(line,i,2);
+		// Skip ahead past this code
+		i = i + 2;
+	    }
+	    // Check if we are adding a space to the start of a new line
+	    if (!(ChatColor.stripColor(currentLine).isEmpty() && line[i] == ' ')) {
+		currentLine = currentLine + String.valueOf(line[i]);
+	    }
+	    //Bukkit.getLogger().info("DEBUG " + ChatColor.stripColor(currentLine) + " length =" + mcf.getWidth(ChatColor.stripColor(currentLine)));
+
+	    if (mcf.getWidth(ChatColor.stripColor(currentLine)) >= length) {
+		// Start a new line
+		// Word wrap
+		// Get last space
+		int lastSpace = currentLine.lastIndexOf(" ");
+		// If no space, or space is at the end of the line
+		if (lastSpace == -1 || lastSpace == currentLine.length()) {
+		    // No space found
 		    result.add(currentLine);
 		    currentLine = "";
-		}
-	    }
-
-
-	    currentLine = currentLine + String.valueOf(line[i]);
-	    //Bukkit.getLogger().info("DEBUG " + currentLine);
-	    if (currentLine.length() == (length + formatting.size()*2)) {
-		// Start a new line
-		result.add(currentLine);
-		currentLine = "";
-		if (!formatting.isEmpty()) {
-		    for (String c : formatting) {
-			currentLine += c;
+		    // Add in any formatting
+		    if (!formatting.isEmpty()) {
+			for (String c : formatting) {
+			    currentLine += c;
+			}
 		    }
+		} else {
+		    // Word wrap
+		    result.add(currentLine.substring(0, lastSpace));
+		    String newLine = currentLine.substring(lastSpace+1);
+		    currentLine = "";
+		    // Add in any formatting
+		    if (!formatting.isEmpty()) {
+			for (String c : formatting) {
+			    currentLine += c;
+			}
+		    }
+		    currentLine += newLine;
 		}
 	    }
 	}

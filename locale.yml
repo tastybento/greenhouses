@@ -13,7 +13,7 @@ help:
    help: "help"
    make: "Tries to make a greenhouse"
    remove: "Removes a greenhouse that you are standing in if you are the owner"
-   info: "How to make a greenhouse!"
+   info: "How to make a greenhouse"
    list: "Lists all the greenhouse biomes that can be made"
    recipe: "Tells you how to make greenhouse biome"
 
@@ -53,13 +53,19 @@ messages:
 info:
    title: "&A[How To Build A Greenhouse]"
    instructions:
-     - "&EMake a box out of out of glass with 4 walls and a flat glass roof."
-     - "&EAdd up to &F4 doors &Ein the walls."
-     - "&FAdd 1 hopper &Ein a wall or roof to make snow or feed plants."
-     - "&ECheck the biome recipes for what must be inside a greenhouse!"
-     - "&EAdd water buckets and/or bonemeal to the hopper to make snow when it rains and/or grow plants."
+     - "&EMake a box out of out of glass with 4 walls and a flat glass"
+     - "&Eroof and add up to &F4 doors &Ein the walls."
+     - "&EPlace &F1 hopper &Ein a wall or roof and add water buckets."
+     - "&Eto make snow and/or bonemeal to grow plants automatically."
+     - "&ECheck the biome recipes for what blocks must be inside a"
+     - "&Egreenhouse to make one successfully."    
    info: "[Greenhouse Info]"
    none: "None"
+   nomore: "&4You cannot build any more greenhouses!"
+   onemore: "&6You can build one more greenhouse."
+   youcanbuild: "&AYou can builds up to [number] more greenhouses!"
+   unlimited: "&AYou can build an unlimited number of greenhouses!"
+   welcome: "&BWelcome! Click here for instructions"
 
 recipe:
    hint: "Use /greenhouse list to see a list of recipe numbers!"

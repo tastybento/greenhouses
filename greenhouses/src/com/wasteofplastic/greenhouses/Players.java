@@ -59,13 +59,6 @@ public class Players {
     }
 
     /**
-     * @param numberOfGreenhouses the numberOfGreenhouses to set
-     */
-    public void setNumberOfGreenhouses(int numberOfGreenhouses) {
-        this.numberOfGreenhouses = numberOfGreenhouses;
-    }
-
-    /**
      * @return the uuid
      */
     public UUID getUuid() {

@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
@@ -29,6 +28,11 @@ public class PlayerCache {
 	}
     }
 
+    /**
+     * Adds a limit to how many g/h can be build by permission
+     * @param perm
+     * @param limit
+     */
     public void addPermissionLimit(String perm, int limit) {
 	permissionLimits.put(perm, limit);
     }
@@ -41,7 +45,8 @@ public class PlayerCache {
 	if (!playerCache.containsKey(player.getUniqueId())) {
 	    playerCache.put(player.getUniqueId(),new Players(player));
 	}
-	int limit = -1; // Unlimited. 0 = none allowed. Positive numbers = limit.
+	// Check permission limits on number of greenhouses
+	int limit = 0; // 0 = none allowed. Positive numbers = limit. Negative = unlimited
 	if (!permissionLimits.isEmpty()) {
 	    // Find the largest limit this player has
 	    for (String perm : permissionLimits.keySet()) {
@@ -49,27 +54,32 @@ public class PlayerCache {
 		    limit = Math.max(permissionLimits.get(perm), limit);
 		}
 	    }
-	}
-	List<Greenhouse> toBeRemoved = new ArrayList<Greenhouse>();
-	// Look at how many greenhouses player has and remove any over their limit
-	for (Greenhouse g: plugin.getGreenhouses()) {
-	    if (g.getOwner().equals(player.getUniqueId())) {
-		if (limit < 0 || playerCache.get(player.getUniqueId()).getNumberOfGreenhouses() < limit) {
-		    // Allowed
-		    playerCache.get(player.getUniqueId()).incrementGreenhouses();
-		    g.setPlayerName(player.getDisplayName());
-		} else {
-		    // Over the limit
-		    toBeRemoved.add(g);
+	    List<Greenhouse> toBeRemoved = new ArrayList<Greenhouse>();
+	    // Look at how many greenhouses player has and remove any over their limit
+	    for (Greenhouse g: plugin.getGreenhouses()) {
+		if (g.getOwner().equals(player.getUniqueId())) {
+		    if (limit < 0 || (limit > 0 && playerCache.get(player.getUniqueId()).getNumberOfGreenhouses() < limit)) {
+			// Allowed
+			playerCache.get(player.getUniqueId()).incrementGreenhouses();
+			g.setPlayerName(player.getDisplayName());
+		    } else {
+			// Over the limit
+			toBeRemoved.add(g);
+		    }
 		}
 	    }
-	}
-	// Remove greenhouses
-	for (Greenhouse g: toBeRemoved) {
-	    plugin.removeGreenhouse(g);
-	}
-	if (toBeRemoved.size() > 0) {
-	    plugin.setMessage(player.getUniqueId(),ChatColor.RED + "Permissions only allow you " + limit + " greenhouses so " + toBeRemoved.size() + " were removed.");
+	    // Remove greenhouses
+	    for (Greenhouse g: toBeRemoved) {
+		plugin.removeGreenhouse(g);
+		plugin.logger(2,"Removed greenhouse over the limit for " + player.getName());
+	    }
+	    if (toBeRemoved.size() > 0) {
+		if (limit == 0) {
+		    player.sendMessage(ChatColor.RED + "Permissions do not allow you any greenhouses so " + toBeRemoved.size() + " were removed.");
+		} else {
+		    player.sendMessage(ChatColor.RED + "Permissions only allow you " + limit + " greenhouses so " + toBeRemoved.size() + " were removed.");
+		}
+	    }
 	}
     }
 
@@ -127,7 +137,7 @@ public class PlayerCache {
      * @param player
      * @return true if successful, otherwise false
      */
-    public boolean addGreenhouse(Player player) {
+    public boolean incGreenhouseCount(Player player) {
 	// Do a permission check if there are limits
 	if (permissionLimits.isEmpty()) {
 	    playerCache.get(player.getUniqueId()).incrementGreenhouses();
@@ -149,9 +159,24 @@ public class PlayerCache {
 	return false;	
     }
 
-    public void removeGreenhouse(Player player) {
+    /**
+     * Decrements the number of greenhouses this player has
+     * @param player
+     */
+    public void decGreenhouseCount(Player player) {
 	playerCache.get(player.getUniqueId()).decrementGreenhouses();
     }
+
+    /**
+     * Decrements by UUID
+     * @param playerUUID
+     */
+    public void decGreenhouseCount(UUID playerUUID) {
+	if (playerCache.containsKey(playerUUID)) {
+	    playerCache.get(playerUUID).decrementGreenhouses();
+	}
+    }
+
 
     /**
      * Returns true if the player is at their permitted limit of greenhouses otherwise false
@@ -160,17 +185,24 @@ public class PlayerCache {
      */
     public boolean isAtLimit(Player player) {
 	// Do a permission check if there are limits
-	if (permissionLimits.isEmpty()) {
+	if (permissionLimits.isEmpty() || player.isOp()) {
+	    plugin.logger(2, "No permission limits");
 	    return false;
 	} else {
-	    int limit = -1;
+	    int limit = 0;
 	    // Find the largest limit this player has
 	    for (String perm : permissionLimits.keySet()) {
-		if (VaultHelper.checkPerm(player, perm)) { 
+		if (VaultHelper.checkPerm(player, perm)) {
+		    if (permissionLimits.get(perm) < 0) {
+			// Unlimited!
+			return false;
+		    }
 		    limit = Math.max(permissionLimits.get(perm), limit);
 		}
 	    }
-	    if (limit == -1 || playerCache.get(player.getUniqueId()).getNumberOfGreenhouses() < limit) {
+	    plugin.logger(2, "Permission limit is " + limit);
+	    // Players are at their limit if they do not have the permission
+	    if (limit > 0 && playerCache.get(player.getUniqueId()).getNumberOfGreenhouses() < limit) {
 		return false;
 	    }  
 	    return true;
@@ -181,16 +213,16 @@ public class PlayerCache {
 	if (permissionLimits.isEmpty()) {
 	    return -1;
 	} else {
-	    int limit = -1;
+	    int limit = 0;
 	    // Find the largest limit this player has
 	    for (String perm : permissionLimits.keySet()) {
 		if (VaultHelper.checkPerm(player, perm)) { 
+		    if (permissionLimits.get(perm) < 0) {
+			// This player has no limit
+			return -1;
+		    }
 		    limit = Math.max(permissionLimits.get(perm), limit);
 		}
-	    }
-	    if (limit == -1) {
-		// This player has no limit
-		return -1;
 	    }
 	    int remaining = limit - playerCache.get(player.getUniqueId()).getNumberOfGreenhouses();
 	    if (remaining < 0) {

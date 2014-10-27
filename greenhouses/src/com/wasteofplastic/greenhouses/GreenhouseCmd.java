@@ -105,14 +105,19 @@ public class GreenhouseCmd implements CommandExecutor {
 		    player.sendMessage(ChatColor.RED + Locale.erroralreadyexists);
 		    return true;
 		}
-		// Check we are in a greenhouse
-		Greenhouse g = plugin.checkGreenhouse(player);
-		if (g == null) {
-		    // norecipe
-		    player.sendMessage(ChatColor.RED + Locale.errornorecipe);
-		    return true;
+		// Check if they are at their limit
+		if (plugin.players.isAtLimit(player)) {
+		    player.sendMessage(ChatColor.translateAlternateColorCodes('&', Locale.infonomore));
+		} else {
+		    // Try to make greenhouse
+		    Greenhouse g = plugin.tryToMakeGreenhouse(player);
+		    if (g == null) {
+			// norecipe
+			player.sendMessage(ChatColor.RED + Locale.errornorecipe);
+			return true;
+		    }
+		    // Greenhouse is made
 		}
-		// Greenhouse is made
 		return true;
 	    } else if (split[0].equalsIgnoreCase("info")) {
 		// Show some instructions on how to make greenhouses
@@ -146,25 +151,30 @@ public class GreenhouseCmd implements CommandExecutor {
 		    player.sendMessage(ChatColor.RED + Locale.erroralreadyexists);
 		    return true;
 		}
-		// Check we are in a greenhouse
-		Biome b = null;
-		try {
-		    b = Biome.valueOf(split[1].toUpperCase());
-		} catch (Exception e) {
-		    player.sendMessage(ChatColor.RED + Locale.errornorecipe);
-		    return true;
+		// Check if they are at their limit
+		if (plugin.players.isAtLimit(player)) {
+		    player.sendMessage(ChatColor.translateAlternateColorCodes('&', Locale.infonomore));
+		} else {
+		    // Check we are in a greenhouse
+		    Biome b = null;
+		    try {
+			b = Biome.valueOf(split[1].toUpperCase());
+		    } catch (Exception e) {
+			player.sendMessage(ChatColor.RED + Locale.errornorecipe);
+			return true;
+		    }
+		    if (b == null) {
+			player.sendMessage(ChatColor.RED + Locale.errornorecipe);
+			return true;
+		    }
+		    Greenhouse g = plugin.tryToMakeGreenhouse(player,b);
+		    if (g == null) {
+			// norecipe
+			player.sendMessage(ChatColor.RED + Locale.errornorecipe);
+			return true;
+		    }
+		    // Greenhouse is made
 		}
-		if (b == null) {
-		    player.sendMessage(ChatColor.RED + Locale.errornorecipe);
-		    return true;
-		}
-		Greenhouse g = plugin.makeGreenhouse(player,b);
-		if (g == null) {
-		    // norecipe
-		    player.sendMessage(ChatColor.RED + Locale.errornorecipe);
-		    return true;
-		}
-		// Greenhouse is made
 		return true;
 	    } else if (split[0].equalsIgnoreCase("recipe")) {
 		int recipeNumber = 0;

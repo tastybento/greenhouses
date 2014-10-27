@@ -361,6 +361,11 @@ public class Greenhouses extends JavaPlugin {
 	Locale.infoinstructions = getLocale().getStringList("info.instructions");
 	Locale.infoinfo = getLocale().getString("info.info", "[Greenhouse Info]");
 	Locale.infonone = getLocale().getString("info.none", "None");
+	Locale.infowelcome = getLocale().getString("info.welcome","&BWelcome! Click here for instructions");
+	Locale.infonomore = getLocale().getString("info.nomore", "&4You cannot build any more greenhouses!");
+	Locale.infoonemore = getLocale().getString("info.onemore","&6You can build one more greenhouse.");
+	Locale.infoyoucanbuild = getLocale().getString("info.youcanbuild","&AYou can builds up to [number] more greenhouses!");
+	Locale.infounlimited = getLocale().getString("info.unlimited","&AYou can build an unlimited number of greenhouses!");
 	Locale.recipehint = getLocale().getString("recipe.hint", "Use /greenhouse list to see a list of recipe numbers!");
 	Locale.recipewrongnumber = getLocale().getString("recipe.wrongnumber", "Recipe number must be between 1 and [size]");
 	Locale.recipetitle = getLocale().getString("recipe.title", "[[biome] recipe]");
@@ -419,16 +424,28 @@ public class Greenhouses extends JavaPlugin {
 	logger(3,"Snowdensity " + Settings.snowDensity);
 	logger(3,"Snowspeed " + Settings.snowSpeed);
 
-
-	Settings.checkLeases = getConfig().getInt("greenhouses.checkleases",12);
-	if (Settings.checkLeases < 0) {
-	    Settings.checkLeases = 0;
-	    getLogger().warning("Checkleases in config.yml was set to a negative value! Setting to 0. No lease checking.");	    
-	} else if (Settings.checkLeases > 24) {
-	    Settings.checkLeases = 24;
-	    getLogger().warning("Maximum value for Checkleases in config.yml is 24 hours. Setting to 24.");	    
+	// Permission settings
+	// Check if section exists
+	List<String> limits = getConfig().getStringList("greenhouses.limits");
+	for (String perm : limits) {
+	    try{
+		String[] split = perm.split(":");
+		if (split.length == 2) {
+		    int limit = Integer.valueOf(split[1]);
+		    if (limit < 0) {
+			logger(1,"Permission Limits : " + split[0] + " unlimited greenhouses.");
+		    } else if (limit == 0) {
+			logger(1,"Permission Limits : " + split[0] + " cannot make greenhouses.");
+		    } else {
+			logger(1,"Permission Limits : " + split[0] + " limited to " + limit + " greenhouses.");
+		    }
+		    players.addPermissionLimit(split[0], limit);
+		}
+	    } catch (Exception e){
+		getLogger().severe("Problem parsing limit permission in config.yml (" + perm + "). Skipping...");
+		e.printStackTrace();
+	    }
 	}
-
     }
 
     /*
@@ -472,15 +489,11 @@ public class Greenhouses extends JavaPlugin {
 	if (!VaultHelper.setupEconomy()) {
 	    getLogger().severe("Could not set up economy!");
 	}
+	// Set up player's cache
+	players = new PlayerCache(this);
 	loadPluginConfig();
 	loadBiomeRecipes();
 	biomeInv = new ControlPanel(this);
-	// Set and make the player's directory if it does not exist and then load players into memory
-	playersFolder = new File(getDataFolder() + File.separator + "players");
-	if (!playersFolder.exists()) {
-	    playersFolder.mkdir();
-	}
-	players = new PlayerCache(this);
 	// Set up commands for this plugin
 	getCommand("greenhouse").setExecutor(new GreenhouseCmd(this,players));
 	getCommand("gadmin").setExecutor(new AdminCmd(this,players));
@@ -819,8 +832,7 @@ public class Greenhouses extends JavaPlugin {
     public void registerEvents() {
 	final PluginManager manager = getServer().getPluginManager();
 	// Greenhouse Protection events
-	if (Settings.useProtection)
-	    manager.registerEvents(new GreenhouseGuard(this), this);
+	manager.registerEvents(new GreenhouseGuard(this), this);
 	// Listen to greenhouse change events
 	manager.registerEvents(new GreenhouseEvents(this), this);
 	// Events for when a player joins or leaves the server
@@ -1091,6 +1103,8 @@ public class Greenhouses extends JavaPlugin {
 	//players.get(g.getOwner());
 	// Remove the greenhouse
 	greenhouses.remove(g);
+	// Remove the greenhouse from the owner's count (only does anything if they are online)
+	players.decGreenhouseCount(g.getOwner());
 	// Stop any eco action
 	eco.remove(g);
 	boolean ownerOnline = false;
@@ -1103,8 +1117,9 @@ public class Greenhouses extends JavaPlugin {
 		p.sendMessage(ChatColor.RED + Locale.messagesremoved);
 	    }
 	}
-	if (!ownerOnline)
-	    setMessage(g.getOwner(), Locale.messagesremovedmessage.replace("[biome]", g.getBiome().toString()));
+	if (!ownerOnline) {
+	    setMessage(g.getOwner(), Locale.messagesremovedmessage.replace("[biome]", Util.prettifyText(g.getBiome().toString())) + " [" + g.getPos1().getBlockX() + "," + g.getPos1().getBlockZ() + "]");
+	} 
 	logger(3,"Returning biome to original state: " + g.getOriginalBiome().toString());
 	g.setBiome(g.getOriginalBiome()); // just in case
 	g.endBiome();
@@ -1126,9 +1141,6 @@ public class Greenhouses extends JavaPlugin {
 		}
 	    }
 	}
-	// Save the owner
-	logger(3,"Saving player in remove greenhouse method.");
-	//players.save(g.getOwner());
 	/*
 	// Set the biome
 	for (int y = g.getPos1().getBlockY(); y< g.getPos2().getBlockY();y++) {
@@ -1236,8 +1248,8 @@ public class Greenhouses extends JavaPlugin {
      * @param player
      * @return the Greenhouse object
      */
-    public Greenhouse checkGreenhouse(final Player player) {
-	return makeGreenhouse(player, null);
+    public Greenhouse tryToMakeGreenhouse(final Player player) {
+	return tryToMakeGreenhouse(player, null);
     }
     /**
      * Checks that a greenhouse meets specs and makes it
@@ -1246,7 +1258,7 @@ public class Greenhouses extends JavaPlugin {
      * @param type
      * @return
      */
-    public Greenhouse makeGreenhouse(final Player player, Biome type) {
+    public Greenhouse tryToMakeGreenhouse(final Player player, Biome type) {
 	// Do an immediate permissions check of the biome recipe if the type is declared
 	BiomeRecipe greenhouseRecipe = null;
 	if (type != null) {
@@ -1265,7 +1277,7 @@ public class Greenhouses extends JavaPlugin {
 	    }
 	    if (greenhouseRecipe == null) {
 		player.sendMessage(ChatColor.RED + Locale.errornoPermission);
-		logger(2,"no biomes were allowed to be used");
+		logger(2,"No biomes were allowed to be used");
 		// This biome is unknown
 		return null;
 	    } else {
@@ -1606,7 +1618,8 @@ public class Greenhouses extends JavaPlugin {
 			}
 		    }
 		} else {
-		    player.sendMessage(ChatColor.RED + "No permission for " + r.getType().toString());
+		    plugin.logger(2, "No permission for " + player.getName() + " to make " + r.getType().toString());
+		    //player.sendMessage(ChatColor.RED + "No permission for " + r.getType().toString());
 		}
 	    }
 	}
@@ -1625,6 +1638,7 @@ public class Greenhouses extends JavaPlugin {
 	    //g.setOriginalGreenhouseContents(contents);
 	    g.startBiome();
 	    player.sendMessage(ChatColor.GREEN + Locale.createsuccess.replace("[biome]", Util.prettifyText(winner.getType().toString())));
+	    players.incGreenhouseCount(player);
 	    return g;
 	}
 	return null;

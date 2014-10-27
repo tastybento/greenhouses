@@ -3,12 +3,33 @@ greenhouses:
    worldName:
      - world
      - creative
+     - ASkyBlock
+     - AcidIsland
 
    # Console message level.
    # 0 = no messages except for warnings or severe errors
    # 1 = normal messages (default)
    # 2 and higher - debug levels - no need to use these unless you want to try debug
    debug: 1
+
+   ### Permissions limits
+   # This will limit how many greenhouses a player can make or have by permission.
+   # Format is <permission>:<max number of greenhouses>
+   # If max number is negative then unlimited greenhouses is allowed.
+   # If a player looses a permission then the next time they log in they will
+   # randomly lose greenhouses until they max out their limit.
+   # If permissions are listed, only players who have them can build, except Ops.
+   # The permission can be any permission you like, e.g., rank-based permission
+
+   # Example:
+   #limits:
+   #  - greenhouses.player:2   <-- allows up to 2 greenhouses for default permission
+   #  - greenhouses.donor:5 <-- allows up to 5 greenhouses
+   #  - greenhouses.VIP:-1 <-- unlimited greenhouses
+   #  - myrank.developer:100 <-- allows 100 for the permission myrank.developer
+
+   limits:
+     - greenhouses.player:5
 
    ### Weather and ecosystem settings
 

@@ -77,5 +77,10 @@ public class Locale {
     public static String  admininfoflags;
     public static String  newsheadline;
     public static String  controlpaneltitle;
-    public static String recipemissing;     
+    public static String recipemissing;
+    public static String infoyoucanbuild;
+    public static String infoonemore;
+    public static String infonomore;
+    public static String infounlimited;
+    public static String infowelcome;     
 }

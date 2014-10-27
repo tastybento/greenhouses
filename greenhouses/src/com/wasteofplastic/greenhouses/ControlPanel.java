@@ -67,17 +67,21 @@ public class ControlPanel implements Listener {
 		    //player.sendMessage(ChatColor.RED + Locale.erroralreadyexists);
 		    //return;
 		    plugin.removeGreenhouse(oldg);
-		}
-		// Make greenhouse
-		Greenhouse g = plugin.makeGreenhouse(player,item.getType());
-		if (g == null) {
+		} 
+		// Check if they are at their limit
+		if (plugin.players.isAtLimit(player)) {
+		    player.sendMessage(ChatColor.translateAlternateColorCodes('&', Locale.infonomore));
+		} else {
+		    // Make greenhouse
+		    Greenhouse g = plugin.tryToMakeGreenhouse(player,item.getType());
+		    if (g == null) {
+			player.closeInventory(); // Closes the inventory
+			//error.norecipe
+			player.sendMessage(ChatColor.RED + Locale.errornorecipe);
+			return;
+		    }
 		    player.closeInventory(); // Closes the inventory
-		    //error.norecipe
-		    player.sendMessage(ChatColor.RED + Locale.errornorecipe);
-		    return;
 		}
-		player.closeInventory(); // Closes the inventory
-
 		//player.performCommand("greenhouse make");
 		//player.sendMessage(message);		
 	    }
@@ -111,17 +115,19 @@ public class ControlPanel implements Listener {
 	ItemMeta meta = item.getItemMeta();
 	meta.setDisplayName(Locale.generalgreenhouses);
 	List<String> lore = new ArrayList<String>();
+	lore.addAll(Util.chop(ChatColor.translateAlternateColorCodes('&', Locale.infowelcome),110)); 
 	if (plugin.players.isAtLimit(player)) {
-	    lore.add(ChatColor.RED + "You cannot build any more greenhouses!");
+	    lore.add(ChatColor.translateAlternateColorCodes('&', Locale.infonomore));
 	} else {
-	    lore.addAll(Util.chop(ChatColor.translateAlternateColorCodes('&', Locale.helpinfo),21)); 
 	    if (plugin.players.getRemainingGreenhouses(player) > 0) {
 		if (plugin.players.getRemainingGreenhouses(player) == 1) {
-		    lore.addAll(Util.chop(ChatColor.GREEN + "You can build one more greenhouse.",21));
+		    lore.addAll(Util.chop(ChatColor.translateAlternateColorCodes('&', Locale.infoonemore),110));
 		} else {
-		    lore.addAll(Util.chop(ChatColor.GREEN + "You can build up to " + plugin.players.getRemainingGreenhouses(player) + " more greenhouses.",21));
+		    lore.addAll(Util.chop(ChatColor.translateAlternateColorCodes('&', Locale.infoyoucanbuild).replace("[number]", String.valueOf(plugin.players.getRemainingGreenhouses(player))),110));
 		}
-	    }
+	    } else {
+		lore.addAll(Util.chop(ChatColor.translateAlternateColorCodes('&', Locale.infounlimited),110));
+	    }   
 	}
 	meta.setLore(lore);
 	item.setItemMeta(meta);
