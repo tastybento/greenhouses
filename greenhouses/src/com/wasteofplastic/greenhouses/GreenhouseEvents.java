@@ -21,7 +21,6 @@ import org.bukkit.event.player.PlayerBucketFillEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
-import org.bukkit.inventory.ItemStack;
 
 /**
  * @author ben
@@ -87,28 +86,15 @@ public class GreenhouseEvents implements Listener {
      * Tracks player movement
      * @param event
      */
-    @EventHandler(priority = EventPriority.HIGH)
+    @EventHandler(priority = EventPriority.NORMAL)
     public void onPlayerMove(PlayerMoveEvent event) {
+	//plugin.logger(3,event.getEventName());
 	Player player = event.getPlayer();
 	World world = player.getWorld();
 	// Check we are in the right world
 	if (!Settings.worldName.contains(world.getName())) {
+	    plugin.logger(4,"Not in a Greenhouse world");
 	    return;
-	}
-	if (player.getVehicle() != null) {
-	    return; // handled in vehicle listener
-	}
-	// Check if the player has a compass in their hand
-	ItemStack holding = player.getItemInHand();
-	if (holding != null) {
-	    if (holding.getType().equals(Material.COMPASS)) {
-		Location closest = plugin.getClosestGreenhouse(player);
-		if (closest != null) {
-		    player.setCompassTarget(closest);
-		    plugin.logger(3,"Temp " + player.getLocation().getBlock().getTemperature());
-		    plugin.logger(3,"Compass " + closest.getBlockX() + "," + closest.getBlockZ());
-		}
-	    }
 	}
 	// Did we move a block?
 	if (event.getFrom().getBlockX() != event.getTo().getBlockX()
@@ -153,18 +139,18 @@ public class GreenhouseEvents implements Listener {
 	    // No greenhouses yet
 	    return false;
 	}
-	plugin.logger(3,"Checking greenhouses");
-	plugin.logger(3,"From : " + from.toString());
-	plugin.logger(3,"From: " + from.getBlockX() + "," + from.getBlockZ());
-	plugin.logger(3,"To: " + to.getBlockX() + "," + to.getBlockZ());
+	plugin.logger(4,"Checking greenhouses");
+	plugin.logger(4,"From : " + from.toString());
+	plugin.logger(4,"From: " + from.getBlockX() + "," + from.getBlockZ());
+	plugin.logger(4,"To: " + to.getBlockX() + "," + to.getBlockZ());
 	for (Greenhouse d: plugin.getGreenhouses()) {
-	    plugin.logger(3,"Greenhouse (" + d.getPos1().getBlockX() + "," + d.getPos1().getBlockZ() + " : " + d.getPos2().getBlockX() + "," + d.getPos2().getBlockZ() + ")");
+	    plugin.logger(4,"Greenhouse (" + d.getPos1().getBlockX() + "," + d.getPos1().getBlockZ() + " : " + d.getPos2().getBlockX() + "," + d.getPos2().getBlockZ() + ")");
 	    if (d.insideGreenhouse(to)) {
-		plugin.logger(3,"To intersects d!");
+		plugin.logger(4,"To intersects d!");
 		toGreenhouse = d;
 	    }
 	    if (d.insideGreenhouse(from)) {
-		plugin.logger(3,"From intersects d!");
+		plugin.logger(4,"From intersects d!");
 		fromGreenhouse = d;
 	    }
 

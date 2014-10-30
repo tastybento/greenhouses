@@ -1161,45 +1161,6 @@ public class Greenhouses extends JavaPlugin {
 
 
     /**
-     * Returns the location of the closest greenhouse to this player that they own.
-     * @param player
-     * @return Location or null if none.
-     */
-    public Location getClosestGreenhouse(Player player) {
-	// Find closest greenhouse
-	Location closest = null;
-	Double distance = 0D;
-	for (Greenhouse d : greenhouses) {
-	    UUID owner = d.getOwner();
-	    // Only look at greenhouses that this player owns
-	    if ((owner !=null && owner.equals(player.getUniqueId()))) {
-		// Only check if this greenhouse is in the same world as the player
-		if (d.getWorld().equals(player.getWorld())) {
-		    // First time check
-		    if (closest == null) {
-			Vector mid = d.getPos1().toVector().midpoint(d.getPos2().toVector());
-			closest = mid.toLocation(d.getPos1().getWorld());
-			distance = player.getLocation().distanceSquared(closest);
-			logger(3,"first greenhouse found at " + d.getPos1().toString() + " distance " + distance);
-		    } else {
-			// Find out if this location is closer to player
-			Double newDist = player.getLocation().distanceSquared(d.getPos1());
-			if (newDist < distance) {
-			    Vector mid = d.getPos1().toVector().midpoint(d.getPos2().toVector());
-			    closest = mid.toLocation(d.getPos1().getWorld());
-			    distance = player.getLocation().distanceSquared(closest);
-			    logger(3,"closer greenhouse found at " + d.getPos1().toString() + " distance " + distance);
-			}
-		    }
-		}
-	    }
-	}
-	logger(3,"Greenhouse " + closest.getBlockX() + "," + closest.getBlockY() + "," + closest.getBlockZ() + " distance " + distance);
-	return closest;
-
-    }
-
-    /**
      * Checks that each greenhouse is still viable
      */
     public void checkEco() {

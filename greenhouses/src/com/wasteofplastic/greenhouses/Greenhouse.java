@@ -345,14 +345,14 @@ public class Greenhouse {
 	if (mob == null) {
 	    return;
 	}
-	plugin.logger(3,"Mob ready to spawn!");
+	plugin.logger(3,"Mob ready to spawn in location " + pos1.getBlockX() + "," + pos2.getBlockZ());
 	// Spawn a temporary snowball in center of greenhouse
 	Vector p1 = pos1.clone();
 	Entity snowball = world.spawnEntity(p1.midpoint(pos2).toLocation(world), EntityType.SNOWBALL);
 	if (snowball != null) {
-	    Double x = (Math.abs(pos2.getX()-pos1.getX())-1)/2D;
-	    Double y= (Math.abs(pos2.getY()-pos1.getY())-1)/2D;
-	    Double z = (Math.abs(pos2.getZ()-pos1.getZ())-1)/2D;
+	    Double x = (Math.abs(pos2.getX()-pos1.getX()))/2D;
+	    Double y= (Math.abs(pos2.getY()-pos1.getY()))/2D;
+	    Double z = (Math.abs(pos2.getZ()-pos1.getZ()))/2D;
 	    //Double distance = (pos1.distance(pos2)/2)+24D
 	    // Limit spawning
 	    plugin.logger(3,"Mob limit is " + biomeRecipe.getMobLimit());
