@@ -56,11 +56,17 @@ public class GreenhouseCmd implements CommandExecutor {
 	 * playerUUID is the unique ID of the player who issued the command
 	 */
 	final UUID playerUUID = player.getUniqueId();
+	final Greenhouse greenhouseInNow = players.getInGreenhouse(player);
 	switch (split.length) {
 	// /greenhouse command by itself
 	case 0:
-	    player.openInventory(plugin.getRecipeInv(player));
-	    return true;
+	    if (greenhouseInNow==null || greenhouseInNow.getOwner().equals(playerUUID)) {
+		player.openInventory(plugin.getRecipeInv(player));
+		return true;
+	    } else {
+		player.sendMessage(ChatColor.RED + Locale.errornotowner);
+		return true;
+	    }
 	case 1:
 	    // /greenhouse <command>
 	    if (split[0].equalsIgnoreCase("help")) { 
@@ -72,10 +78,6 @@ public class GreenhouseCmd implements CommandExecutor {
 		player.sendMessage(ChatColor.YELLOW + "/" + label + " list: " + ChatColor.WHITE + Locale.helplist);
 		player.sendMessage(ChatColor.YELLOW + "/" + label + " recipe <number>: " + ChatColor.WHITE + Locale.helprecipe);
 		return true;
-	    } else if (split[0].equalsIgnoreCase("recipe")) {
-		// Show control panel
-		player.openInventory(plugin.getRecipeInv(player));
-		return true;
 	    } else if (split[0].equalsIgnoreCase("list")) {
 		// List all the biomes that can be made
 		player.sendMessage(ChatColor.GREEN + Locale.listtitle);
@@ -86,12 +88,10 @@ public class GreenhouseCmd implements CommandExecutor {
 		}
 		return true;
 	    } else if (split[0].equalsIgnoreCase("remove")) {
-
-		Greenhouse d = players.getInGreenhouse(player);
-		if (d != null) {
-		    if (d.getOwner().equals(playerUUID)) {
+		if (greenhouseInNow != null) {
+		    if (greenhouseInNow.getOwner().equals(playerUUID)) {
 			player.sendMessage(ChatColor.RED + Locale.errorremoving);
-			plugin.removeGreenhouse(d);
+			plugin.removeGreenhouse(greenhouseInNow);
 			return true;
 		    }
 		    player.sendMessage(ChatColor.RED + Locale.errornotyours);
@@ -126,17 +126,16 @@ public class GreenhouseCmd implements CommandExecutor {
 		for (String instructions : Locale.infoinstructions) {
 		    player.sendMessage(ChatColor.GREEN + ChatColor.translateAlternateColorCodes('&', instructions));
 		}
-		Greenhouse d = players.getInGreenhouse(player);
-		if (d != null) {
+		if (greenhouseInNow != null) {
 		    player.sendMessage(ChatColor.GOLD + Locale.infoinfo);
 		    // general.biome
-		    player.sendMessage(ChatColor.GREEN + Locale.generalbiome + ": " + Util.prettifyText(d.getBiome().toString()));
-		    if (d.getOwner() != null) {
-			Player owner = plugin.getServer().getPlayer(d.getOwner());
+		    player.sendMessage(ChatColor.GREEN + Locale.generalbiome + ": " + Util.prettifyText(greenhouseInNow.getBiome().toString()));
+		    if (greenhouseInNow.getOwner() != null) {
+			Player owner = plugin.getServer().getPlayer(greenhouseInNow.getOwner());
 			if (owner != null) {
 			    player.sendMessage(ChatColor.YELLOW + Locale.generalowner + ": " + owner.getDisplayName() + " (" + owner.getName() + ")");
 			} else {
-			    player.sendMessage(ChatColor.YELLOW + Locale.generalowner + ": " + d.getPlayerName());
+			    player.sendMessage(ChatColor.YELLOW + Locale.generalowner + ": " + greenhouseInNow.getPlayerName());
 			}
 		    }
 		}

@@ -60,6 +60,12 @@ public class ControlPanel implements Listener {
 		BiomeRecipe item = store.get(slot);
 		// Sets up a greenhouse
 		Greenhouse oldg = plugin.players.getInGreenhouse(player);
+		// Check ownership
+		if (oldg != null && !oldg.getOwner().equals(player.getUniqueId())) {
+		    player.sendMessage(Locale.errornotyours);
+		    player.closeInventory();
+		    return;
+		}
 		if (oldg != null) {
 		    // Player wants to try and change biome
 		    //player.closeInventory(); // Closes the inventory
