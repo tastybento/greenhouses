@@ -50,8 +50,14 @@ public class PlayerCache {
 	if (!permissionLimits.isEmpty()) {
 	    // Find the largest limit this player has
 	    for (String perm : permissionLimits.keySet()) {
-		if (VaultHelper.checkPerm(player, perm)) { 
-		    limit = Math.max(permissionLimits.get(perm), limit);
+		if (VaultHelper.checkPerm(player, perm)) {
+		    int l = permissionLimits.get(perm);
+		    if (l< 0) {
+			limit = -1;
+			break;
+		    } else {
+			limit = Math.max(l, limit);
+		    }
 		}
 	    }
 	    List<Greenhouse> toBeRemoved = new ArrayList<Greenhouse>();
@@ -75,9 +81,9 @@ public class PlayerCache {
 	    }
 	    if (toBeRemoved.size() > 0) {
 		if (limit == 0) {
-		    player.sendMessage(ChatColor.RED + "Permissions do not allow you any greenhouses so " + toBeRemoved.size() + " were removed.");
+		    player.sendMessage(ChatColor.RED + Locale.limitsnoneallowed.replace("[number]",String.valueOf(toBeRemoved.size())));
 		} else {
-		    player.sendMessage(ChatColor.RED + "Permissions only allow you " + limit + " greenhouses so " + toBeRemoved.size() + " were removed.");
+		    player.sendMessage(ChatColor.RED + Locale.limitslimitedto.replace("[limit]", String.valueOf(limit)).replace("[number]",String.valueOf(toBeRemoved.size())));
 		}
 	    }
 	}
@@ -139,17 +145,22 @@ public class PlayerCache {
      */
     public boolean incGreenhouseCount(Player player) {
 	// Do a permission check if there are limits
-	if (permissionLimits.isEmpty()) {
-	    playerCache.get(player.getUniqueId()).incrementGreenhouses();
-	    return true;
-	} else {
-	    int limit = -1;
+	// Check permission limits on number of greenhouses
+	int limit = 0; // 0 = none allowed. Positive numbers = limit. Negative = unlimited
+	if (!permissionLimits.isEmpty()) {
 	    // Find the largest limit this player has
 	    for (String perm : permissionLimits.keySet()) {
-		if (VaultHelper.checkPerm(player, perm)) { 
-		    limit = Math.max(permissionLimits.get(perm), limit);
+		if (VaultHelper.checkPerm(player, perm)) {
+		    int l = permissionLimits.get(perm);
+		    if (l< 0) {
+			limit = -1;
+			break;
+		    } else {
+			limit = Math.max(l, limit);
+		    }
 		}
 	    }
+
 	    if (limit == -1 || playerCache.get(player.getUniqueId()).getNumberOfGreenhouses() < limit) {
 		playerCache.get(player.getUniqueId()).incrementGreenhouses();
 		return true;

@@ -3,6 +3,8 @@ package com.wasteofplastic.greenhouses;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bukkit.ChatColor;
+
 
 
 /**
@@ -83,5 +85,7 @@ public class Locale {
     public static String infonomore;
     public static String infounlimited;
     public static String infowelcome;
-    public static String helpopengui;     
+    public static String helpopengui;
+    public static String limitsnoneallowed;   
+    public static String limitslimitedto;
 }

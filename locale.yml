@@ -98,6 +98,11 @@ create:
    doorerror: "You cannot have more than 4 doors in the greenhouse!"
    success: "You successfully made a [biome] biome greenhouse!"
 
+limits:
+   noneallowed: "Permissions do not allow you any greenhouses so [number] were removed."
+   limitedto: "Permissions limit you to [limit] greenhouses so [number] were removed."
+   
+
 ##################################
 #Admin commands that use /gadmin #
 ##################################

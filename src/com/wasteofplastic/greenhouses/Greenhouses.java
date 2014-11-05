@@ -396,7 +396,8 @@ public class Greenhouses extends JavaPlugin {
 	Locale.admininfoflags = getLocale().getString("admininfo.flags", "[Greenhouse Flags]");
 	Locale.newsheadline = getLocale().getString("news.headline", "[Greenhouse News]");
 	Locale.controlpaneltitle = getLocale().getString("controlpanel.title", "&AGreenhouses");
-
+	Locale.limitslimitedto = getLocale().getString("limits.limitedto","Permissions limit you to [limit] greenhouses so [number] were removed.");
+	Locale.limitsnoneallowed = getLocale().getString("limits.noneallowed", "Permissions do not allow you any greenhouses so [number] were removed.");
 
 
 	// Assign settings
