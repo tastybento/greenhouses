@@ -147,7 +147,9 @@ public class PlayerCache {
 	// Do a permission check if there are limits
 	// Check permission limits on number of greenhouses
 	int limit = 0; // 0 = none allowed. Positive numbers = limit. Negative = unlimited
-	if (!permissionLimits.isEmpty()) {
+	if (permissionLimits.isEmpty()) {
+	    return true;
+	} else {
 	    // Find the largest limit this player has
 	    for (String perm : permissionLimits.keySet()) {
 		if (VaultHelper.checkPerm(player, perm)) {
