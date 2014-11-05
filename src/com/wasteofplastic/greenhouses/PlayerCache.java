@@ -148,6 +148,7 @@ public class PlayerCache {
 	// Check permission limits on number of greenhouses
 	int limit = 0; // 0 = none allowed. Positive numbers = limit. Negative = unlimited
 	if (permissionLimits.isEmpty()) {
+	    playerCache.get(player.getUniqueId()).incrementGreenhouses();
 	    return true;
 	} else {
 	    // Find the largest limit this player has
