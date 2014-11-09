@@ -7,9 +7,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import net.minecraft.server.v1_7_R4.ChunkCoordIntPair;
-import net.minecraft.server.v1_7_R4.EntityPlayer;
-
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
