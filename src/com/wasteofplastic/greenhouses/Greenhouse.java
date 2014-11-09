@@ -331,6 +331,7 @@ public class Greenhouse {
 	    }
 	}
 	/*
+	 * NMS approach showed no difference to Bukkit API approach
 	int diffx, diffz;
 	int view = Bukkit.getServer().getViewDistance() << 4;
 	for (Chunk chunk : chunks) {
@@ -357,13 +358,14 @@ public class Greenhouse {
 	    }
 	    world.refreshChunk(c.getX(),c.getZ());
 	} 
-	plugin.getLogger().info("DEBUG: number of mobs = " + locs.size());
+	//plugin.getLogger().info("DEBUG: number of mobs = " + locs.size());
 	// re spawn them
+	// To work, this respawning has to happen 2 ticks after the refresh at a minimum
+	// 1 tick leaves the mobs invisible.
 	Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
 
 	    @Override
 	    public void run() {
-		// TODO Auto-generated method stub
 		for (int i = 0; i< locs.size(); i++) {
 		    world.spawnEntity(locs.get(i), types.get(i));
 		}
@@ -575,7 +577,8 @@ public class Greenhouse {
 	    }
 	}
     }
-
+/*
+ * Not used right now.
     public static class Pair {
 	private final int left;
 	private final int right;
@@ -594,6 +597,6 @@ public class Greenhouse {
 	    return (this.left == pairo.getLeft()) && (this.right == pairo.getRight());
 	}
     }
-
+*/
 
 }

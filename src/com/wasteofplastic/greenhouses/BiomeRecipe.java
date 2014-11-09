@@ -377,7 +377,7 @@ public class BiomeRecipe {
 		case SOUTH:
 		case UP:
 		case WEST:
-		    plugin.logger(3,"DEBUG:" + bf.toString() + " material is " + b.getRelative(bf).getType().toString());
+		    plugin.logger(3, bf.toString() + " material is " + b.getRelative(bf).getType().toString());
 		    if (b.getRelative(bf).getType().equals(localMaterial.get(index))) {
 			plugin.logger(3,"Material matches");
 			byte t = b.getRelative(bf).getData();
