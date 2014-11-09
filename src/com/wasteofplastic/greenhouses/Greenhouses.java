@@ -457,7 +457,9 @@ public class Greenhouses extends JavaPlugin {
 	saveGreenhouses();
 	// Reset biomes back
 	for (Greenhouse g: plugin.getGreenhouses()) {
+	    try {
 	    g.endBiome();
+	    } catch (Exception e) {}
 	}
 	try {
 	    // Remove players from memory

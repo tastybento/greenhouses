@@ -1,9 +1,17 @@
 package com.wasteofplastic.greenhouses;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
+import net.minecraft.server.v1_7_R4.ChunkCoordIntPair;
+import net.minecraft.server.v1_7_R4.EntityPlayer;
+
+import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -13,6 +21,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.Hopper;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
@@ -175,11 +184,11 @@ public class Greenhouse {
 	this.owner = owner;
     }
 
-     /**
+    /**
      * @return the playerName
      */
     public String getPlayerName() {
-        return playerName;
+	return playerName;
     }
 
 
@@ -187,7 +196,7 @@ public class Greenhouse {
      * @param playerName the playerName to set
      */
     public void setPlayerName(String playerName) {
-        this.playerName = playerName;
+	this.playerName = playerName;
     }
 
 
@@ -292,42 +301,77 @@ public class Greenhouse {
      * Starts the biome in the greenhouse
      */
     public void startBiome() {
-	if (greenhouseBiome == null) {
-	    return;
-	}
-	plugin.logger(3,"start biome - setting to " + greenhouseBiome.toString());
-	for (int x = pos1.getBlockX();x<pos2.getBlockX();x++) {
-	    for (int z = pos1.getBlockZ();z<pos2.getBlockZ();z++) {
-		Block b = world.getBlockAt(x, groundY, z);
-		b.setBiome(greenhouseBiome);
-		world.refreshChunk(b.getChunk().getX(), b.getChunk().getZ());
-	    }
-	}
+	setBiomeBlocks(greenhouseBiome);
     }
-
 
     /**
      * Reverts the biome of the greenhouse to the original unless someone is in this greenhouse
      * @param to 
      */
     public void endBiome() {
-	if (originalBiome == null) {
+	setBiomeBlocks(originalBiome);
+    }
+    
+    
+    /**
+     * Actually set blocks to a biome and refresh the area
+     * @param biome
+     */
+    private void setBiomeBlocks(Biome biome) {
+	if (biome == null) {
 	    return;
 	}
-	plugin.logger(3,"end biome - reseting to " + originalBiome.toString());
+	plugin.logger(2,"biome seting to " + originalBiome.toString());
+	//List<Pair> chunks = new ArrayList<Pair>();
+	final Set<Chunk> chunks = new HashSet<Chunk>();
+	final List<Location> locs = new ArrayList<Location>();
+	final List<EntityType> types = new ArrayList<EntityType>();
 	for (int x = pos1.getBlockX();x<pos2.getBlockX();x++) {
 	    for (int z = pos1.getBlockZ();z<pos2.getBlockZ();z++) {
 		Block b = world.getBlockAt(x, groundY, z);
-		b.setBiome(originalBiome);
-		world.refreshChunk(b.getChunk().getX(), b.getChunk().getZ());
+		b.setBiome(biome);
+		chunks.add(b.getChunk());
 	    }
 	}
+	/*
+	int diffx, diffz;
+	int view = Bukkit.getServer().getViewDistance() << 4;
+	for (Chunk chunk : chunks) {
+	    net.minecraft.server.v1_7_R4.Chunk c = ((org.bukkit.craftbukkit.v1_7_R4.CraftChunk) chunk).getHandle();
+	    net.minecraft.server.v1_7_R4.World world = c.world;
+	    for (EntityPlayer ep : (List<EntityPlayer>) world.players) {
+	        diffx = (int) Math.abs(ep.locX - (chunk.getX() << 4));
+	        diffz = (int) Math.abs(ep.locZ - (chunk.getZ() << 4));
+	        if (diffx <= view && diffz <= view) {
+	            ep.chunkCoordIntPairQueue.add(new ChunkCoordIntPair(chunk.getX(), chunk.getZ()));
+	        }
+	    }
+	}*/
+	// Go through chunks and refresh them
+	for (Chunk c: chunks) {
+	    //c.unload(true, false);
+	    //c.load();
+	    for (Entity e: c.getEntities()) {
+		if ((e instanceof LivingEntity) && (!(e instanceof Player))) {
+		    locs.add(e.getLocation());
+		    types.add(e.getType());
+		    e.remove();
+		}
+	    }
+	    world.refreshChunk(c.getX(),c.getZ());
+	} 
+	plugin.getLogger().info("DEBUG: number of mobs = " + locs.size());
+	// re spawn them
+	Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
 
-	// }
-
-
-
-    }
+	    @Override
+	    public void run() {
+		// TODO Auto-generated method stub
+		for (int i = 0; i< locs.size(); i++) {
+		    world.spawnEntity(locs.get(i), types.get(i));
+		}
+	    }}, 2L);
+   }
 
     /**
      * Spawns friendly mobs according to the type of biome
@@ -403,8 +447,8 @@ public class Greenhouse {
 		Entity e = world.spawnEntity(midBlock, mob);
 		if (e != null)
 		    plugin.logger(2,"Spawned a "+ Util.prettifyText(mob.toString()) + " on "+ Util.prettifyText(type.toString()) + " at " 
-				+ midBlock.getBlockX() + "," + midBlock.getBlockY() + "," + midBlock.getBlockZ());
-		    return;
+			    + midBlock.getBlockX() + "," + midBlock.getBlockY() + "," + midBlock.getBlockZ());
+		return;
 	    }
 	}
 
@@ -535,6 +579,24 @@ public class Greenhouse {
 	}
     }
 
+    public static class Pair {
+	private final int left;
+	private final int right;
+	public Pair(int left, int right) {
+	    this.left = left;
+	    this.right = right;
+	}
+	public int getLeft() { return left; }
+	public int getRight() { return right; }
+
+	@Override
+	public boolean equals(Object o) {
+	    if (o == null) return false;
+	    if (!(o instanceof Pair)) return false;
+	    Pair pairo = (Pair) o;
+	    return (this.left == pairo.getLeft()) && (this.right == pairo.getRight());
+	}
+    }
 
 
 }
