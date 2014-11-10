@@ -456,11 +456,12 @@ public class Greenhouses extends JavaPlugin {
     public void onDisable() {
 	saveGreenhouses();
 	// Reset biomes back
+	/*
 	for (Greenhouse g: plugin.getGreenhouses()) {
 	    try {
-	    g.endBiome();
+		g.endBiome();
 	    } catch (Exception e) {}
-	}
+	}*/
 	try {
 	    // Remove players from memory
 	    players.removeAllPlayers();

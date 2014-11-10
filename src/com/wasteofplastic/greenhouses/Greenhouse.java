@@ -18,6 +18,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.Hopper;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Horse;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -308,8 +309,8 @@ public class Greenhouse {
     public void endBiome() {
 	setBiomeBlocks(originalBiome);
     }
-    
-    
+
+
     /**
      * Actually set blocks to a biome and refresh the area
      * @param biome
@@ -318,11 +319,9 @@ public class Greenhouse {
 	if (biome == null) {
 	    return;
 	}
-	plugin.logger(2,"biome seting to " + originalBiome.toString());
+	plugin.logger(2,"Biome seting to " + biome.toString());
 	//List<Pair> chunks = new ArrayList<Pair>();
 	final Set<Chunk> chunks = new HashSet<Chunk>();
-	final List<Location> locs = new ArrayList<Location>();
-	final List<EntityType> types = new ArrayList<EntityType>();
 	for (int x = pos1.getBlockX();x<pos2.getBlockX();x++) {
 	    for (int z = pos1.getBlockZ();z<pos2.getBlockZ();z++) {
 		Block b = world.getBlockAt(x, groundY, z);
@@ -345,14 +344,30 @@ public class Greenhouse {
 	        }
 	    }
 	}*/
+	// Check if there are any players around
+	boolean playerAround = false;
+	for (Chunk c: chunks) {
+	    if (c.isLoaded()) {
+		for (Entity e: c.getEntities()) {
+		    if (e instanceof Player) {
+			playerAround = true;
+			break;
+		    }
+		}
+	    }
+	} 
+	if (!playerAround) {
+	    return;
+	}
 	// Go through chunks and refresh them
+	final List<MobClone> mobs = new ArrayList<MobClone>();
 	for (Chunk c: chunks) {
 	    //c.unload(true, false);
 	    //c.load();
 	    for (Entity e: c.getEntities()) {
 		if ((e instanceof LivingEntity) && (!(e instanceof Player))) {
-		    locs.add(e.getLocation());
-		    types.add(e.getType());
+		    mobs.add(new MobClone((LivingEntity) e));
+		    // TODO Check what happens when mobs are wearing items!
 		    e.remove();
 		}
 	    }
@@ -366,11 +381,12 @@ public class Greenhouse {
 
 	    @Override
 	    public void run() {
-		for (int i = 0; i< locs.size(); i++) {
-		    world.spawnEntity(locs.get(i), types.get(i));
+		for (MobClone mob : mobs) {
+		    mob.respawn();
 		}
-	    }}, 2L);
-   }
+		mobs.clear();
+	    }}, 2L);	
+    }
 
     /**
      * Spawns friendly mobs according to the type of biome
@@ -577,8 +593,8 @@ public class Greenhouse {
 	    }
 	}
     }
-/*
- * Not used right now.
+    /*
+     * Not used right now.
     public static class Pair {
 	private final int left;
 	private final int right;
@@ -597,6 +613,6 @@ public class Greenhouse {
 	    return (this.left == pairo.getLeft()) && (this.right == pairo.getRight());
 	}
     }
-*/
+     */
 
 }

@@ -114,7 +114,6 @@ public class GreenhouseEvents implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerTeleport(PlayerTeleportEvent event) {
-	Player player = event.getPlayer();
 	// Check if they changed worlds
 	World fromWorld = event.getFrom().getWorld();
 	World toWorld = event.getTo().getWorld();
@@ -123,7 +122,7 @@ public class GreenhouseEvents implements Listener {
 	    return;
 	}
 	// Did we move a block?
-	checkMove(player, event.getFrom(), event.getTo());
+	checkMove(event.getPlayer(), event.getFrom(), event.getTo());
     }
 
     /**
