@@ -2,7 +2,6 @@ package com.wasteofplastic.greenhouses;
 
 import java.util.Collection;
 
-import org.bukkit.Bukkit;
 import org.bukkit.DyeColor;
 import org.bukkit.Location;
 import org.bukkit.entity.Ageable;
@@ -32,7 +31,6 @@ import org.bukkit.entity.Villager;
 import org.bukkit.entity.Villager.Profession;
 import org.bukkit.entity.Wolf;
 import org.bukkit.entity.Zombie;
-import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.HorseInventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.Colorable;
