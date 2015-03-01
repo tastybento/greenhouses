@@ -73,7 +73,7 @@ biomes:
       DOUBLE_PLANT: 4:GRASS:5
       LONG_GRASS: 20:GRASS:1
   HELL:
-    icon: STATIONARY_LAVA
+    icon: LAVA_BUCKET
     priority: 5
     contents: NETHERRACK:1
     lavacoverage: 21
@@ -107,7 +107,7 @@ biomes:
       MUSHROOM_COW: 10:MYCEL
     moblimit: 9
   OCEAN:
-    icon: STATIONARY_WATER
+    icon: WATER_BUCKET
     priority: 8
     watercoverage: 95
     icecoverage: 0

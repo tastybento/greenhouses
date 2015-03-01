@@ -107,29 +107,29 @@ public class BiomeRecipe {
 
 		    if (!b.getType().equals(Material.AIR))
 			plugin.logger(3,"Checking block " + b.getType() + ":" + b.getData() + "@" + x + " " + y + " " + z);
-			// Log water, lava and ice blocks
-			switch (b.getType()) {
-			case WATER:
-			case STATIONARY_WATER:
-			    water++;
-			    break;
-			case LAVA:
-			case STATIONARY_LAVA:
-			    lava++;
-			    break;
-			case ICE:
-			case PACKED_ICE:
-			    ice++;
-			    break;
-			case LEAVES:
-			case LEAVES_2:
-			    // Leaves need special handling because they can change state over time (decay)
-			    while (data > 3) {
-				data = data-4;
-			    }
-			    break;
-			default:
+		    // Log water, lava and ice blocks
+		    switch (b.getType()) {
+		    case WATER:
+		    case STATIONARY_WATER:
+			water++;
+			break;
+		    case LAVA:
+		    case STATIONARY_LAVA:
+			lava++;
+			break;
+		    case ICE:
+		    case PACKED_ICE:
+			ice++;
+			break;
+		    case LEAVES:
+		    case LEAVES_2:
+			// Leaves need special handling because they can change state over time (decay)
+			while (data > 3) {
+			    data = data-4;
 			}
+			break;
+		    default:
+		    }
 		    int index = indexOfReqBlocks(b.getType(),data); 
 		    if (index>=0) {
 			plugin.logger(3,"Found block " + b.getType().toString() + " type " + b.getData() + " at index " + index);
@@ -246,6 +246,14 @@ public class BiomeRecipe {
 	return blocks;
     }
 
+    /**
+     * Creates a list of plants that can grow, the probability and what they must grow on.
+     * Data is drawn from the file biomes.yml
+     * @param plantMaterial
+     * @param plantType
+     * @param plantProbability
+     * @param plantGrowOn
+     */
     public void addPlants(Material plantMaterial, int plantType, int plantProbability, Material plantGrowOn) {
 	ItemStack i = new ItemStack(plantMaterial);
 	if (plantType > 0) {
@@ -492,7 +500,15 @@ public class BiomeRecipe {
 	this.lavaCoverage = lavacoverage;
     }
 
-    public boolean growPlant(Block bl) {	
+    /**
+     * Plants a plant on block bl if it makes sense.
+     * @param bl
+     * @return
+     */
+    public boolean growPlant(Block bl) {
+	if (bl.getType() != Material.AIR) {
+	    return false;
+	}
 	// Plants a plant on block bl if it make sense
 	// Loop through the possible plants
 	boolean grewPlant = false;
@@ -502,23 +518,32 @@ public class BiomeRecipe {
 	    plugin.logger(3,"probability = " + ((double)prob/100));
 	    if (Math.random() < ((double)prob/100)) {
 		grewPlant = true;
-		plugin.logger(3,"trying to grow plant. Index is " + index);
+		plugin.logger(2,"trying to grow plant. Index is " + index);
 		// Okay worth trying to plant something
 		Material belowBl = bl.getRelative(BlockFace.DOWN).getType();
+		Block aboveBl = bl.getRelative(BlockFace.UP);
 		plugin.logger(3,"material found = " + belowBl.toString());
+		plugin.logger(3,"above = " + aboveBl.getType().toString());
 		plugin.logger(3,"req material = " + plantGrownOn.get(index).toString());
-		if (belowBl.equals(plantGrownOn.get(index))) {
-		    Block aboveBl = bl.getRelative(BlockFace.UP);
-		    bl.setType(plantMaterial.get(index));
-		    bl.setData(plantType.get(index).byteValue());
-
-		    //TODO Double plant heads popping. FIX!!!
-
-		    if (plantMaterial.get(index).equals(Material.DOUBLE_PLANT)) {
-			// put the top on
-			aboveBl.setType(Material.DOUBLE_PLANT);
-			aboveBl.setData((byte)8);
+		if (belowBl == plantGrownOn.get(index)) {
+		    if (!plantMaterial.get(index).equals(Material.DOUBLE_PLANT)) {
+			bl.setType(plantMaterial.get(index));
+			bl.setData(plantType.get(index).byteValue());
+		    } else {
+			// Check if there is room above for the plant
+			plugin.logger(2,"Double plant time!");
+			if (aboveBl.getType() == Material.AIR) {
+			    plugin.logger(2,"Above above is AIR!");
+			    bl.setType(plantMaterial.get(index));
+			    bl.setData(plantType.get(index).byteValue());
+			    // put the top on
+			    aboveBl.setType(Material.DOUBLE_PLANT);
+			    aboveBl.setData((byte)8);
+			} else {
+			    plugin.logger(3,"Above above is not AIR");
+			}
 		    }
+
 		}
 	    }
 	    index++;

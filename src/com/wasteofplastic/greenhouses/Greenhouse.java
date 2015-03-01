@@ -3,9 +3,11 @@ package com.wasteofplastic.greenhouses;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
@@ -23,7 +25,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
-import com.wasteofplastic.particles.ParticleEffect;
+import com.darkblade12.particleeffect.ParticleEffect;
+import com.darkblade12.particleeffect.ParticleEffect.ParticleColor;
 
 public class Greenhouse {
     private Greenhouses plugin;
@@ -41,6 +44,8 @@ public class Greenhouse {
     private int height;
     private int groundY;
     private BiomeRecipe biomeRecipe;
+    private ConcurrentHashMap<Chunk,List<MobClone>> mobsInChunk = new ConcurrentHashMap<Chunk,List<MobClone>>();
+
 
     public Greenhouse(Greenhouses plugin, Location pos1, Location pos2, UUID owner) {
 	this.plugin = plugin;
@@ -359,31 +364,44 @@ public class Greenhouse {
 	    return;
 	}
 	// Go through chunks and refresh them
-	final List<MobClone> mobs = new ArrayList<MobClone>();
 	for (Chunk c: chunks) {
-	    //c.unload(true, false);
-	    //c.load();
-	    for (Entity e: c.getEntities()) {
-		if ((e instanceof LivingEntity) && (!(e instanceof Player))) {
-		    mobs.add(new MobClone((LivingEntity) e));
-		    // TODO Check what happens when mobs are wearing items!
-		    e.remove();
+	    // Only do this if the chunk is not already being refreshed
+	    if (!mobsInChunk.containsKey(c)) {
+		//c.unload(true, false);
+		//c.load();
+		List<MobClone> mobs = new ArrayList<MobClone>();
+		for (Entity e: c.getEntities()) {
+		    if ((e instanceof LivingEntity) && (!(e instanceof Player))) {
+			mobs.add(new MobClone((LivingEntity) e));
+			// TODO Check what happens when mobs are wearing items!
+			e.remove();
+		    }
 		}
+		mobsInChunk.put(c, mobs);
+		plugin.logger(4, "DEBUG: put in " + mobs.size() + " mobs to chunk." + c.toString());
+		//mobs.clear();
+		world.refreshChunk(c.getX(),c.getZ());
 	    }
-	    world.refreshChunk(c.getX(),c.getZ());
 	} 
 	//plugin.getLogger().info("DEBUG: number of mobs = " + locs.size());
 	// re spawn them
 	// To work, this respawning has to happen 2 ticks after the refresh at a minimum
 	// 1 tick leaves the mobs invisible.
-	Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
 
+	Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
 	    @Override
 	    public void run() {
-		for (MobClone mob : mobs) {
-		    mob.respawn();
+		plugin.logger(4, "DEBUG: there are " + mobsInChunk.size() + " chunks to reset");
+		Iterator<Chunk> it = mobsInChunk.keySet().iterator();
+		while (it.hasNext()) {
+		    Chunk c = it.next();
+		    plugin.logger(4, "DEBUG: next chunk is " + c.toString() + " and there are " + mobsInChunk.get(c).size() + " mobs");
+		    
+		    for (MobClone mob : mobsInChunk.get(c)) {
+			mob.respawn();
+		    }
+		    it.remove();
 		}
-		mobs.clear();
 	    }}, 2L);	
     }
 
@@ -481,7 +499,8 @@ public class Greenhouse {
 		for (int y = b.getLocation().getBlockY(); y < heightY; y++) {
 		    Block airCheck = world.getBlockAt(x, y, z);
 		    if (airCheck.getType().equals(Material.AIR)) {
-			ParticleEffect.SNOWBALL_POOF.display(airCheck.getLocation(), 0F, 0F, 0F, 0.1F, 5);
+			ParticleEffect.SNOWBALL.display(0F,0F,0F, 0.1F, 5, airCheck.getLocation(), 30D);
+			
 		    }
 		}
 
@@ -549,7 +568,7 @@ public class Greenhouse {
 				    for (int y = bl.getLocation().getBlockY(); y< heightY; y++) {
 					Block airCheck = world.getBlockAt(x, y, z);
 					if (airCheck.getType().equals(Material.AIR)) {
-					    ParticleEffect.EXPLODE.display(airCheck.getLocation(), 0F, 0F, 0F, 0.1F, 5);
+					    ParticleEffect.EXPLOSION_NORMAL.display(0F,0F,0F, 0.1F, 5, airCheck.getLocation(), 30D);
 					}
 				    }
 				    // Remove the bonemeal from the hopper

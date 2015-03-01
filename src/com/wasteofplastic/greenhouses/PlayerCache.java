@@ -1,5 +1,6 @@
 package com.wasteofplastic.greenhouses;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
@@ -21,7 +22,7 @@ public class PlayerCache {
 	this.plugin = plugin;
 	playerCache.clear();
 	// Add any players currently online (handles the /reload condition)
-	final Player[] serverPlayers = plugin.getServer().getOnlinePlayers();
+	final Collection<? extends Player> serverPlayers = plugin.getServer().getOnlinePlayers();
 	for (Player p : serverPlayers) {
 	    // Add this player to the online cache
 	    playerCache.put(p.getUniqueId(), new Players(p));

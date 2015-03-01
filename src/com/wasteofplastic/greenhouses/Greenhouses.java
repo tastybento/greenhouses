@@ -32,8 +32,9 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
+import org.mcstats.Metrics;
 
-import com.wasteofplastic.particles.ParticleEffect;
+import com.darkblade12.particleeffect.ParticleEffect;
 
 /**
  * This plugin simulates greenhouses in Minecraft. It enables players to build biomes inside
@@ -551,6 +552,9 @@ public class Greenhouses extends JavaPlugin {
 			    g.growFlowers();
 			} catch (Exception e) {
 			    getLogger().severe("Problem found with greenhouse during growing flowers. Skipping...");
+			    if (plugin.getDebug() >= 3) {
+				e.printStackTrace();
+			    }
 			}
 			//g.populateGreenhouse();
 		    }
@@ -598,7 +602,9 @@ public class Greenhouses extends JavaPlugin {
 			checkEco();
 		    } catch (Exception e) {
 			getLogger().severe("Problem found with greenhouse during eco check. Skipping...");
-			e.printStackTrace();
+			if (plugin.getDebug() >= 3) {
+			    e.printStackTrace();
+			}
 		    }
 
 		    //}
@@ -659,14 +665,25 @@ public class Greenhouses extends JavaPlugin {
 	greenhouses.clear();
 	// Check for updated file
 	greenhouseFile = new File(this.getDataFolder(),"greenhouses.yml");
+	greenhouseConfig = new YamlConfiguration();
+	File playersFolder = new File(this.getDataFolder(),"players");
 	// See if the new file exists or not, if not make it
-	if (!greenhouseFile.exists()) {
+	if (!greenhouseFile.exists() && !playersFolder.exists()) {
+	    // Brand new install
+	    logger(1,"Creating new greenhouse.yml file");
+	    greenhouseConfig.createSection("greenhouses");
+	    try {
+		greenhouseConfig.save(greenhouseFile);
+	    } catch (IOException e) {
+		logger(1,"Could not save greenhouse.yml file!");
+		// Could not save
+		e.printStackTrace();
+	    }
+	} else if (!greenhouseFile.exists() && playersFolder.exists()) {
 	    logger(1,"Converting from old greenhouse storage to new greenhouse storage");
-	    greenhouseConfig = new YamlConfiguration();
 	    ConfigurationSection greenhouseSection = greenhouseConfig.createSection("greenhouses");
 	    int greenhouseNum = 0;
 	    // Load all the players
-	    File playersFolder = new File(this.getDataFolder(),"players");
 	    for (final File f : playersFolder.listFiles()) {
 		// Need to remove the .yml suffix
 		String fileName = f.getName();
@@ -717,9 +734,8 @@ public class Greenhouses extends JavaPlugin {
 		// TODO Auto-generated catch block
 		e.printStackTrace();
 	    }
-	} else {
+	} else if (greenhouseFile.exists()){
 	    // Load greenhouses from new file
-	    greenhouseConfig = new YamlConfiguration();
 	    try {
 		greenhouseConfig.load(greenhouseFile);
 	    } catch (FileNotFoundException e) {
@@ -1133,8 +1149,7 @@ public class Greenhouses extends JavaPlugin {
 				|| b.getType().equals(Material.ICE) || b.getType().equals(Material.PACKED_ICE)) {
 			    // Evaporate it
 			    b.setType(Material.AIR);
-			    ParticleEffect.LARGE_SMOKE.display(b.getLocation(), 0F, 0F, 0F, 0.1F, 5);
-
+			    ParticleEffect.SMOKE_LARGE.display(0F,0F,0F, 0.1F, 5, b.getLocation(), 30D);
 			}
 		    }
 		}
@@ -1674,5 +1689,13 @@ public class Greenhouses extends JavaPlugin {
 		getLogger().info("DEBUG ["+level+"]:"+info);
 	    }
 	}
+    }
+
+
+    /**
+     * @return the debug
+     */
+    public int getDebug() {
+	return debug;
     }
 }
