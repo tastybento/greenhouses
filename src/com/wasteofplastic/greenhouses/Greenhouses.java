@@ -21,6 +21,7 @@ import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -28,6 +29,8 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.material.Door;
+import org.bukkit.material.Openable;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
@@ -1232,6 +1235,7 @@ public class Greenhouses extends JavaPlugin {
      * @param type
      * @return
      */
+    @SuppressWarnings("deprecation")
     public Greenhouse tryToMakeGreenhouse(final Player player, Biome type) {
 	// Do an immediate permissions check of the biome recipe if the type is declared
 	BiomeRecipe greenhouseRecipe = null;
@@ -1292,7 +1296,7 @@ public class Greenhouses extends JavaPlugin {
 	// Check the sides
 	Location sidex = location.clone();
 	int limit = 100;
-	while (!wallBlocks.contains(sidex.getBlock().getType())) {
+	while (!wallBlocks.contains(sidex.getBlock().getType()) && !sidex.getBlock().getType().toString().contains("DOOR")) {
 	    logger(3,"wall block type " + sidex.getBlock().getType().toString() + " at x="+sidex.getBlockX());
 	    sidex.add(new Vector(-1,0,0));
 	    limit--;
@@ -1306,7 +1310,7 @@ public class Greenhouses extends JavaPlugin {
 	sidex = location.clone();
 	limit = 100;
 
-	while (!wallBlocks.contains(sidex.getBlock().getType())) {
+	while (!wallBlocks.contains(sidex.getBlock().getType()) && !sidex.getBlock().getType().toString().contains("DOOR")) {
 	    sidex.add(new Vector(1,0,0));
 	    limit--;
 	    if (limit ==0) {
@@ -1318,7 +1322,7 @@ public class Greenhouses extends JavaPlugin {
 	logger(3,"maxx wall block found " + maxx + " of type " + sidex.getBlock().getType().toString());
 	Location sidez = location.clone();
 	limit = 100;
-	while (!wallBlocks.contains(sidez.getBlock().getType())) {
+	while (!wallBlocks.contains(sidez.getBlock().getType()) && !sidez.getBlock().getType().toString().contains("DOOR")) {
 	    sidez.add(new Vector(0,0,-1));
 	    limit--;
 	    if (limit ==0) {
@@ -1330,7 +1334,7 @@ public class Greenhouses extends JavaPlugin {
 	logger(3,"minz wall block found " + minz + " of type " + sidez.getBlock().getType().toString());
 	sidez = location.clone();
 	limit = 100;
-	while (!wallBlocks.contains(sidez.getBlock().getType())) {
+	while (!wallBlocks.contains(sidez.getBlock().getType()) && !sidez.getBlock().getType().toString().contains("DOOR")) {
 	    sidez.add(new Vector(0,0,1));
 	    limit--;
 	    if (limit ==0) {
@@ -1392,6 +1396,7 @@ public class Greenhouses extends JavaPlugin {
 	boolean fault = false;
 	// Check wall height - has to be the same all the way around
 	// Side #1 - minx is constant
+	logger(3,"Side 1");
 	for (int z = minz; z <= maxz; z++) {
 	    for (int y = roofY; y>0; y--) {
 		if (y< groundY) {
@@ -1401,7 +1406,7 @@ public class Greenhouses extends JavaPlugin {
 		    break;
 		}
 		Material bt = world.getBlockAt(minx, y, z).getType();
-		if (!wallBlocks.contains(bt)) {
+		if (!(bt.toString().contains("DOOR")) && !wallBlocks.contains(bt)) {
 		    player.sendBlockChange(new Location(world,minx,y,z),Material.STAINED_GLASS,(byte)14);
 		    logger(3,""+bt.toString() +" found at y=" + y);
 		    groundY= y;
@@ -1411,7 +1416,7 @@ public class Greenhouses extends JavaPlugin {
 		    wallGlass++;
 		if (bt.equals(Material.GLOWSTONE))
 		    wallGlowstone++;
-		if (bt.equals(Material.WOODEN_DOOR) || bt.equals(Material.IRON_DOOR_BLOCK)) {
+		if (bt.toString().contains("DOOR")) {
 		    wallDoors++;
 		}
 		if (bt.equals(Material.HOPPER)) {
@@ -1431,6 +1436,7 @@ public class Greenhouses extends JavaPlugin {
 	    return null;
 	}
 	// Side #2 - maxx is constant
+	logger(3,"Side 2");
 	for (int z = minz; z <= maxz; z++) {
 	    for (int y = roofY; y>0; y--) {
 		if (y< groundY) {
@@ -1440,7 +1446,7 @@ public class Greenhouses extends JavaPlugin {
 		    break;
 		}
 		Material bt = world.getBlockAt(maxx, y, z).getType();
-		if (!wallBlocks.contains(bt)) {
+		if (!(bt.toString().contains("DOOR")) && !wallBlocks.contains(bt)) {
 		    player.sendBlockChange(new Location(world,maxx,y,z),Material.STAINED_GLASS,(byte)14);
 		    logger(3,""+bt.toString() +" found at y=" + y);
 		    logger(3,"Ground level found at y=" + y);
@@ -1450,8 +1456,8 @@ public class Greenhouses extends JavaPlugin {
 		if (bt.equals(Material.GLASS) || bt.equals(Material.THIN_GLASS) || bt.equals(Material.STAINED_GLASS) || bt.equals(Material.STAINED_GLASS_PANE))
 		    wallGlass++;
 		if (bt.equals(Material.GLOWSTONE))
-		    wallGlowstone++;
-		if (bt.equals(Material.WOODEN_DOOR) || bt.equals(Material.IRON_DOOR_BLOCK)) {
+		    wallGlowstone++;	 
+		if (bt.toString().contains("DOOR")) {
 		    wallDoors++;
 		}
 		if (bt.equals(Material.HOPPER)) {
@@ -1471,6 +1477,7 @@ public class Greenhouses extends JavaPlugin {
 	}
 
 	// Side #3 - mixz is constant
+	logger(3,"Side 3");
 	for (int x = minx; x <= maxx; x++) {
 	    for (int y = roofY; y>0; y--) {
 		if (y< groundY) {
@@ -1480,8 +1487,8 @@ public class Greenhouses extends JavaPlugin {
 		    break;
 		}
 		Material bt = world.getBlockAt(x, y, minz).getType();
-		if (!wallBlocks.contains(bt)) {
-		    // plugin.logger(1,""+bt.toString() +" found at y=" + y);
+		if (!(bt.toString().contains("DOOR")) && !wallBlocks.contains(bt)) {
+		    logger(3,"Block "+bt.toString() +" found at y=" + y);
 		    player.sendBlockChange(new Location(world,x,y,maxz),Material.STAINED_GLASS,(byte)14);
 		    logger(3,"Ground level found at y=" + y);
 		    groundY= y;
@@ -1491,7 +1498,7 @@ public class Greenhouses extends JavaPlugin {
 		    wallGlass++;
 		if (bt.equals(Material.GLOWSTONE))
 		    wallGlowstone++;
-		if (bt.equals(Material.WOODEN_DOOR) || bt.equals(Material.IRON_DOOR_BLOCK)) {
+		if (bt.toString().contains("DOOR")) {
 		    wallDoors++;
 		}
 		if (bt.equals(Material.HOPPER)) {
@@ -1511,6 +1518,7 @@ public class Greenhouses extends JavaPlugin {
 	}
 
 	// Side #4 - max z is constant
+	logger(3,"Side 4");
 	for (int x = minx; x <= maxx; x++) {
 	    for (int y = roofY; y>0; y--) {
 		if (y< groundY) {
@@ -1520,7 +1528,7 @@ public class Greenhouses extends JavaPlugin {
 		    break;
 		}
 		Material bt = world.getBlockAt(x, y, maxz).getType();
-		if (!wallBlocks.contains(bt)) {
+		if (!(bt.toString().contains("DOOR")) && !wallBlocks.contains(bt)) {
 		    player.sendBlockChange(new Location(world,x,y,maxz),Material.STAINED_GLASS,(byte)14);
 		    logger(3,""+bt.toString() +" found at y=" + y);
 		    logger(3,"Ground level found at y=" + y);
@@ -1531,7 +1539,7 @@ public class Greenhouses extends JavaPlugin {
 		    wallGlass++;
 		if (bt.equals(Material.GLOWSTONE))
 		    wallGlowstone++;
-		if (bt.equals(Material.WOODEN_DOOR) || bt.equals(Material.IRON_DOOR_BLOCK)) {
+		if (bt.toString().contains("DOOR")) {
 		    wallDoors++;
 		}
 		if (bt.equals(Material.HOPPER)) {
