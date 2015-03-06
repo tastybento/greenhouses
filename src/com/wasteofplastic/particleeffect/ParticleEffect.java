@@ -1,4 +1,4 @@
-package com.darkblade12.particleeffect;
+package com.wasteofplastic.particleeffect;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -15,7 +15,8 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
-import com.darkblade12.particleeffect.ReflectionUtils.PackageType;
+import com.wasteofplastic.particleeffect.ParticleEffect.ParticleData;
+import com.wasteofplastic.particleeffect.ReflectionUtils.PackageType;
 
 /**
  * <b>ParticleEffect Library</b>

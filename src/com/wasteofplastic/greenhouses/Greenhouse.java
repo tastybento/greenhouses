@@ -25,8 +25,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
-import com.darkblade12.particleeffect.ParticleEffect;
-import com.darkblade12.particleeffect.ParticleEffect.ParticleColor;
+import com.wasteofplastic.particleeffect.ParticleEffect;
 
 public class Greenhouse {
     private Greenhouses plugin;

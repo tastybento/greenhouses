@@ -1,4 +1,4 @@
-package com.darkblade12.particleeffect;
+package com.wasteofplastic.particleeffect;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
