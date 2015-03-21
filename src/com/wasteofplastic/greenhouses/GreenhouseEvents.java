@@ -114,6 +114,10 @@ public class GreenhouseEvents implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerTeleport(PlayerTeleportEvent event) {
+	// Strangely, sometimes these worlds can be null
+	if (event.getFrom() == null || event.getTo() == null) {
+	    return;
+	}
 	// Check if they changed worlds
 	World fromWorld = event.getFrom().getWorld();
 	World toWorld = event.getTo().getWorld();
@@ -169,13 +173,11 @@ public class GreenhouseEvents implements Listener {
 	    // leaving a greenhouse
 	    if (!fromGreenhouse.getFarewellMessage().isEmpty()) {
 		player.sendMessage(fromGreenhouse.getFarewellMessage());
-		// Stop visualization
-		//plugin.devisualize(player);
 	    }
 	    plugin.players.setInGreenhouse(player, null);
-	    if (plugin.players.getNumberInGreenhouse(fromGreenhouse) == 0) {
-		fromGreenhouse.endBiome();
-	    }
+	    //if (plugin.players.getNumberInGreenhouse(fromGreenhouse) == 0) {
+	//	fromGreenhouse.ƒ();
+	    //}
 	} else if (fromGreenhouse == null && toGreenhouse != null){
 	    // Going into a greenhouse
 	    if (!toGreenhouse.getEnterMessage().isEmpty()) {
@@ -183,7 +185,7 @@ public class GreenhouseEvents implements Listener {
 		
 		//plugin.visualize(toGreenhouse, player);
 	    }
-	    toGreenhouse.startBiome();
+	    toGreenhouse.startBiome(false);
 	    plugin.players.setInGreenhouse(player, toGreenhouse);	    
 
 	} else if (fromGreenhouse != null && toGreenhouse != null){
@@ -192,10 +194,10 @@ public class GreenhouseEvents implements Listener {
 		player.sendMessage(fromGreenhouse.getFarewellMessage());
 	    }
 	    plugin.players.setInGreenhouse(player, toGreenhouse);
-	    if (plugin.players.getNumberInGreenhouse(fromGreenhouse) == 0) {
-		fromGreenhouse.endBiome();
-	    }
-	    toGreenhouse.startBiome();
+	    //if (plugin.players.getNumberInGreenhouse(fromGreenhouse) == 0) {
+		//fromGreenhouse.endBiome();
+	    //}
+	    toGreenhouse.startBiome(false);
 	    if (!toGreenhouse.getEnterMessage().isEmpty()) {		
 		player.sendMessage(toGreenhouse.getEnterMessage());
 	    }

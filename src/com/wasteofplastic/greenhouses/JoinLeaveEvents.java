@@ -37,7 +37,7 @@ public class JoinLeaveEvents implements Listener {
 		if (players.getInGreenhouse(p) == null || !players.getInGreenhouse(p).equals(g)) {
 		    players.setInGreenhouse(p, g);
 		    p.sendMessage(g.getEnterMessage());
-		    g.startBiome();
+		    g.startBiome(false);
 		}
 		break;
 	    }
@@ -60,12 +60,6 @@ public class JoinLeaveEvents implements Listener {
 
     @EventHandler(priority = EventPriority.NORMAL)
     public void onPlayerQuit(final PlayerQuitEvent event) {
-	// Remove biome if no one left there on log out
-	Greenhouse g = players.getInGreenhouse(event.getPlayer());
-	if (g != null)
-	    if (plugin.players.getNumberInGreenhouse(g) == 0) {
-		g.endBiome();
-	    }
 	players.removeOnlinePlayer(event.getPlayer());
     }
 }

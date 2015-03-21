@@ -93,7 +93,7 @@ create:
    missingwall: "A wall is missing!"
    nothingabove: "There can be no blocks above the greenhouse! Red glass blocks should show the problem blocks."
    holeinroof: "There is a hole in the roof or it is not flat! Red glass blocks should show the problem."
-   holeinwall: "There is a hole in the wall or they are not the same height all the way around! Red glass blocks should show the problem."
+   holeinwall: "There is a hole in the wall!"
    hoppererror: "Only one hopper is allowed in the walls or roof."
    doorerror: "You cannot have more than 4 doors in the greenhouse!"
    success: "You successfully made a [biome] biome greenhouse!"

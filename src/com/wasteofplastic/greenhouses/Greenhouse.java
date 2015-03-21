@@ -1,9 +1,7 @@
 package com.wasteofplastic.greenhouses;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -20,7 +18,6 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.Hopper;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
@@ -301,8 +298,8 @@ public class Greenhouse {
     /**
      * Starts the biome in the greenhouse
      */
-    public void startBiome() {
-	setBiomeBlocks(greenhouseBiome);
+    public void startBiome(boolean teleport) {
+	setBiomeBlocks(greenhouseBiome, teleport);
     }
 
     /**
@@ -310,15 +307,18 @@ public class Greenhouse {
      * @param to 
      */
     public void endBiome() {
-	setBiomeBlocks(originalBiome);
+	setBiomeBlocks(originalBiome, false);
     }
 
 
     /**
-     * Actually set blocks to a biome and refresh the area
+     * Actually set blocks to a biome
+     * The chunk refresh command has been deprecated and no longer works on 1.8+
+     * so jumping through hoops to refresh mobs is no longer needed
      * @param biome
+     * @param teleport 
      */
-    private void setBiomeBlocks(Biome biome) {
+    private void setBiomeBlocks(Biome biome, boolean teleport) {
 	if (biome == null) {
 	    return;
 	}
@@ -330,6 +330,29 @@ public class Greenhouse {
 		Block b = world.getBlockAt(x, groundY, z);
 		b.setBiome(biome);
 		chunks.add(b.getChunk());
+	    }
+	}
+	if (teleport) {
+	    for (Chunk c: chunks) {
+		if (c.isLoaded()) {
+		    for (final Entity e: c.getEntities()) {
+			if (e instanceof Player) {
+			    if (!e.isInsideVehicle()) {
+				final Location playerLoc = e.getLocation();
+				// Teleport them somewhere far, far away
+				e.teleport(new Location(e.getWorld(),0,-10,0));
+				Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
+
+				    @Override
+				    public void run() {
+					// Teleport them back
+					playerLoc.getChunk().load();
+					e.teleport(playerLoc);	
+				    }}, 5L);
+			    }
+			}
+		    }
+		}	    
 	    }
 	}
 	/*
@@ -348,6 +371,7 @@ public class Greenhouse {
 	    }
 	}*/
 	// Check if there are any players around
+	/*
 	boolean playerAround = false;
 	for (Chunk c: chunks) {
 	    if (c.isLoaded()) {
@@ -395,13 +419,14 @@ public class Greenhouse {
 		while (it.hasNext()) {
 		    Chunk c = it.next();
 		    plugin.logger(4, "DEBUG: next chunk is " + c.toString() + " and there are " + mobsInChunk.get(c).size() + " mobs");
-		    
+
 		    for (MobClone mob : mobsInChunk.get(c)) {
 			mob.respawn();
 		    }
 		    it.remove();
 		}
-	    }}, 2L);	
+	    }}, 2L);
+	 */	
     }
 
     /**
@@ -499,7 +524,7 @@ public class Greenhouse {
 		    Block airCheck = world.getBlockAt(x, y, z);
 		    if (airCheck.getType().equals(Material.AIR)) {
 			ParticleEffect.SNOWBALL.display(0F,0F,0F, 0.1F, 5, airCheck.getLocation(), 30D);
-			
+
 		    }
 		}
 
