@@ -19,6 +19,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.World.Environment;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
@@ -1446,6 +1447,8 @@ public class Greenhouses extends JavaPlugin {
 	boolean otherBlocks = false;
 	// Ceiling issue
 	boolean inCeiling = false;
+	// Blocks above the greenhouse
+	boolean blocksAbove = false;
 	// The y height where other blocks were found
 	// If this is the bottom layer, the player has most likely uneven walls
 	int otherBlockLayer = -1;
@@ -1454,56 +1457,68 @@ public class Greenhouses extends JavaPlugin {
 	int wallBlockCount = 0;
 	// Floor coordinate
 	int y = 0;
-	for (y = height.getBlockY(); y > 0; y--) {
+	for (y = world.getMaxHeight(); y > 0; y--) {
 	    Set<Location> redLayer = new HashSet<Location>();
 	    int doorCount = 0;
 	    int hopperCount = 0;
 	    boolean airHole = false;
 	    boolean otherBlock = false;
+	    boolean blockAbove = false;
 	    for (int x = minX; x <= maxX; x++) {
 		for (int z = minZ; z <= maxZ; z++) {
-		    // Check just the walls
-		    if (y == height.getBlockY() || x == minX || x == maxX || z == minZ || z== maxZ) {
-			//getLogger().info("Checking " + x + " " + y + " " + z);
-			Location thisBlock = new Location(world, x, y, z);
-			Material blockType = world.getBlockAt(x, y, z).getType();
-			if ((y != height.getBlockY() && !wallBlocks.contains(blockType)) || (y == height.getBlockY() && !roofBlocks.contains(blockType))) {
-			    logger(2,"DEBUG: bad block found at  " + x + "," + y+ "," + z + " " + blockType);
-			    if (blockType == Material.AIR) {
-				airHole = true;
-				if (y == height.getBlockY()) {
-				    inCeiling = true;
-				}
-			    } else {
-				otherBlock = true;
-			    }
+		    Location thisBlock = new Location(world, x, y, z);
+		    Material blockType = world.getBlockAt(x, y, z).getType();
+		    // Checking above greenhouse - no blocks allowed
+		    if (y > height.getBlockY()) {
+			// We are above the greenhouse
+			if ((world.getEnvironment().equals(Environment.NORMAL) || world.getEnvironment().equals(Environment.THE_END)) 
+				&& blockType != Material.AIR) {
+			    blockAbove = true;
 			    redLayer.add(thisBlock);
-			} else {
-			    wallBlockCount++;
-			    // A string comparison is used to capture 1.8+ door types without stopping pre-1.8
-			    // servers from working
-			    if (blockType.toString().contains("DOOR")) {
-				doorCount++;
-				// If we already have 8 doors add these blocks to the red list
-				if (wallDoors == 8) {
-				    redLayer.add(thisBlock);
-				}
-			    }
-			    if (blockType.equals(Material.HOPPER)) {
-				hopperCount++;
-				if (ghHopper > 0) {
-				    // Problem! Add extra hoppers to the red glass list
-				    redLayer.add(thisBlock);
+			}
+		    } else {
+			// Check just the walls
+			if (y == height.getBlockY() || x == minX || x == maxX || z == minZ || z== maxZ) {
+			    //getLogger().info("Checking " + x + " " + y + " " + z);
+
+			    if ((y != height.getBlockY() && !wallBlocks.contains(blockType)) || (y == height.getBlockY() && !roofBlocks.contains(blockType))) {
+				logger(2,"DEBUG: bad block found at  " + x + "," + y+ "," + z + " " + blockType);
+				if (blockType == Material.AIR) {
+				    airHole = true;
+				    if (y == height.getBlockY()) {
+					inCeiling = true;
+				    }
 				} else {
-				    // This is the first hopper
-				    roofHopperLoc = thisBlock.clone();
+				    otherBlock = true;
+				}
+				redLayer.add(thisBlock);
+			    } else {
+				wallBlockCount++;
+				// A string comparison is used to capture 1.8+ door types without stopping pre-1.8
+				// servers from working
+				if (blockType.toString().contains("DOOR")) {
+				    doorCount++;
+				    // If we already have 8 doors add these blocks to the red list
+				    if (wallDoors == 8) {
+					redLayer.add(thisBlock);
+				    }
+				}
+				if (blockType.equals(Material.HOPPER)) {
+				    hopperCount++;
+				    if (ghHopper > 0) {
+					// Problem! Add extra hoppers to the red glass list
+					redLayer.add(thisBlock);
+				    } else {
+					// This is the first hopper
+					roofHopperLoc = thisBlock.clone();
+				    }
 				}
 			    }
 			}
 		    }
 		}
 	    }
-	    if (wallBlockCount == 0) {
+	    if (wallBlockCount == 0 && y < height.getBlockY()) {
 		// This is the floor
 		break;
 	    } else {
@@ -1519,6 +1534,9 @@ public class Greenhouses extends JavaPlugin {
 			otherBlockLayer = y;
 		    }
 		}
+		if (blockAbove) {
+		    blocksAbove = true;
+		}
 		// Collect the holes
 		redGlass.addAll(redLayer);
 	    }
@@ -1526,6 +1544,9 @@ public class Greenhouses extends JavaPlugin {
 	//getLogger().info("Floor is at height y = " + y);
 	if (!redGlass.isEmpty()) {
 	    // Show errors
+	    if (blocksAbove) {
+		player.sendMessage(ChatColor.RED + Locale.createnothingabove);
+	    }
 	    if (airHoles & !inCeiling) {
 		player.sendMessage(ChatColor.RED + Locale.createholeinwall);
 	    } else if (airHoles & inCeiling) {
