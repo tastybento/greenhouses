@@ -25,7 +25,6 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -1403,9 +1402,6 @@ public class Greenhouses extends JavaPlugin {
 	}
 	 */
 	// Pick smallest area
-	if (intArea == roofArea) {
-	    getLogger().info("DEBUG: everything looks ok");
-	}
 	if (intArea > roofArea) {
 	    if (!useRoofMaxX && maxX < maxXX) {
 		maxX = maxXX;
