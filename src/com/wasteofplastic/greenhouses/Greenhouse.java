@@ -315,6 +315,8 @@ public class Greenhouse {
      * Actually set blocks to a biome
      * The chunk refresh command has been deprecated and no longer works on 1.8+
      * so jumping through hoops to refresh mobs is no longer needed
+     * If teleport is true, this biome starting is happening during a teleport
+     * sequence, i.e, gh is being generated or removed
      * @param biome
      * @param teleport 
      */

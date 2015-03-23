@@ -799,7 +799,8 @@ public class Greenhouses extends JavaPlugin {
 				    getLogger().warning("Greenhouse will be removed next eco-tick!");
 				    getLogger().warning("*****************************************");
 				}
-				//g.setBiome(greenhouseBiome);			
+				// Start the biome
+				g.startBiome(false);			
 				Location hopperLoc = getLocationString(myHouses.getString(key + ".roofHopperLocation"));
 				if (hopperLoc != null) {
 				    g.setRoofHopperLocation(hopperLoc);
