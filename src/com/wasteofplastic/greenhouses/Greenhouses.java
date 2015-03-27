@@ -1578,7 +1578,7 @@ public class Greenhouses extends JavaPlugin {
 		    for (Location loc: original) {
 			player.sendBlockChange(loc,loc.getBlock().getType(),loc.getBlock().getData());
 		    }
-		}}, 60L);
+		}}, 120L);
 	    return null;
 	}
 	//player.sendMessage(ChatColor.GREEN + "Seems ok");
