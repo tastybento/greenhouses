@@ -339,18 +339,24 @@ public class Greenhouse {
 		if (c.isLoaded()) {
 		    for (final Entity e: c.getEntities()) {
 			if (e instanceof Player) {
+			    Player player = (Player)e;
 			    if (!e.isInsideVehicle()) {
 				final Location playerLoc = e.getLocation();
-				// Teleport them somewhere far, far away
-				e.teleport(new Location(e.getWorld(),0,-10,0));
-				Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
+				if (playerLoc.getBlockX() >= pos1.getBlockX() && playerLoc.getBlockX() < pos2.getBlockX()
+					&& playerLoc.getBlockZ() >= pos1.getBlockZ() && playerLoc.getBlockZ() < pos2.getBlockZ()) {
+				    
+				    // Teleport them somewhere far, far away
+				    e.teleport(new Location(e.getWorld(),0,-5,0));
+				    Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
 
-				    @Override
-				    public void run() {
-					// Teleport them back
-					playerLoc.getChunk().load();
-					e.teleport(playerLoc);	
-				    }}, 5L);
+					@Override
+					public void run() {
+					    // Teleport them back
+					    playerLoc.getChunk().load();
+					    e.teleport(playerLoc);	
+					}}, 5L);
+				}
+				
 			    }
 			}
 		    }
@@ -447,7 +453,7 @@ public class Greenhouse {
 	if (mob == null) {
 	    return;
 	}
-	plugin.logger(3,"Mob ready to spawn in location " + pos1.getBlockX() + "," + pos2.getBlockZ());
+	plugin.logger(3,"Mob ready to spawn in location " + pos1.getBlockX() + "," + pos2.getBlockZ() + " in world " + world.getName());
 	// Spawn a temporary snowball in center of greenhouse
 	Vector p1 = pos1.clone();
 	Entity snowball = world.spawnEntity(p1.midpoint(pos2).toLocation(world), EntityType.SNOWBALL);
@@ -460,25 +466,32 @@ public class Greenhouse {
 	    plugin.logger(3,"Mob limit is " + biomeRecipe.getMobLimit());
 	    // Find out how many of this type of mob is around
 
-	    int mobsInArea = snowball.getNearbyEntities(x, y, z).size();
+	    List<Entity> mobsInArea = snowball.getNearbyEntities(x, y, z);
+	    int numberOfMobs = 0;
+	    for (Entity en : mobsInArea) {
+		if (en.getType() == mob) {
+		    numberOfMobs++;
+		}
+	    }
 	    double internalArea = (x*4*z);
-	    plugin.logger(3,"Mobs in area = " + mobsInArea);
+	    plugin.logger(3,"Mobs in area = " + numberOfMobs);
 	    plugin.logger(3,"Area of greenhouse = " + internalArea);
-	    if (internalArea - (mobsInArea * biomeRecipe.getMobLimit()) <= 0) {
+	    if (internalArea - (numberOfMobs * biomeRecipe.getMobLimit()) <= 0) {
 		plugin.logger(3,"Too many mobs already in this greenhouse");
 		snowball.remove();
 		return;
 	    }
-	    List<Entity> localEntities = snowball.getNearbyEntities(x+24D, y+24D, z+24D);
+	    //List<Entity> localEntities = snowball.getNearbyEntities(x+24D, y+24D, z+24D);
 	    snowball.remove();
-	    // Check for players
+	    // Check for players - remove this because it isn't popular
+	    /*
 	    for (Entity e : localEntities) {	
 		if (e instanceof Player) {
 		    plugin.logger(3,"players around");
 		    return;
 		}
 	    }
-
+*/
 	} else {
 	    plugin.logger(3,"Could not spawn snowball!");
 	}
