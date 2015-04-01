@@ -1284,146 +1284,130 @@ public class Greenhouses extends JavaPlugin {
 	final World world = location.getWorld();
 	// Try up
 	Location height = location.clone();
-	while (!roofBlocks.contains(height.getBlock().getType())) {
+	boolean roofFound = false;
+	int roofY = location.getBlockY();
+	for (; roofY < world.getMaxHeight(); roofY++) {
+	    if (roofBlocks.contains(height.getBlock().getType())) {
+		roofFound = true;
+		logger(3,"roof block found " + roofY + " of type " + height.getBlock().getType().toString());
+		break;
+	    }
 	    height.add(new Vector(0,1,0));
-	    if (height.getBlockY() > 255) {
+	}
+	if (!roofFound) {
+	    roofY = location.getBlockY();
+	    // If the roof was not found start going around in circles until something is found
+	    // Expand in ever increasing squares around location until a wall block is found
+	    for (int radius = 1; radius < 100; radius++) {
+		for (int x = location.getBlockX() - radius; x <= location.getBlockX() + radius; x++) {
+		    for (int z = location.getBlockZ() - radius; z <= location.getBlockZ() + radius; z++) {
+			if (!((x > location.getBlockX() - radius && x < location.getBlockX() + radius) 
+				&& (z > location.getBlockZ() - radius && z < location.getBlockZ() + radius))) {
+			    //player.sendBlockChange(new Location(world,x,roofY,z), Material.GLASS, (byte)(radius % 14));
+			    Block b = world.getBlockAt(x,roofY,z);
+			    if (b.getType() == Material.AIR) {
+				// Look up
+				for (int y = roofY; y < world.getMaxHeight(); y++) {
+				    if (roofBlocks.contains(world.getBlockAt(x,y,z).getType())) {
+					roofFound = true;
+					height = new Location(world,x,y,z);
+					logger(3,"Roof block found at " + x + " " + y + " " + z + " of type " + height.getBlock().getType().toString());
+					break;
+				    }
+				}
+			    }
+			}
+			if (roofFound) {
+			    break;
+			}
+		    }
+		    if (roofFound) {
+			break;
+		    }
+		}
+		if (roofFound) {
+		    break;
+		}
+	    }
+	}
+
+	// we have the height above this location where a roof block is
+	// Check the sides
+
+	// Now look along the roof until we find the dimensions of the roof
+	Roof roof = null;
+	Walls walls = null;
+	if (roofFound) {
+	    roof = new Roof(height);
+	    Location justBelow = height.clone().subtract(new Vector(0,1,0));
+	    walls = new Walls(justBelow,roofFound,player);    
+	} else {
+	 // If the roof was not found with the roof check, maybe the walls will find something
+	    // Try at player height
+	    walls = new Walls(location, roofFound, player);
+	}
+
+	if (!roofFound) {
+	    if (walls.getRoofBlock() == null) {
+		player.sendMessage(ChatColor.RED + Locale.createnoroof);
+		logger(3,"Roof not found with roof check, and walls found nothing");
+		return null;
+	    }
+	    logger(3,"Roof block is " + walls.getRoofBlock().getBlock().getType());
+	    if (roofBlocks.contains(walls.getRoofBlock().getBlock().getType())) {
+		// A roof has been found from the walls
+		logger(3,"Roof not found with roof check, and walls found roof!");
+		roof = new Roof(walls.getRoofBlock());
+		height = walls.getRoofBlock();
+	    } else {
+		// A roof was not found
+		logger(3,"Roof not found");
 		player.sendMessage(ChatColor.RED + Locale.createnoroof);
 		return null;
 	    }
 	}
-	final int roofY = height.getBlockY();
-	logger(3,"roof block found " + roofY + " of type " + height.getBlock().getType().toString());
-	// we have the height above this location where a roof block is
-	// Check the sides
+	int maxX = roof.getMaxX();
+	int minX = roof.getMinX();
+	int maxZ = roof.getMaxZ();
+	int minZ = roof.getMinZ();
 
-	// New idea
-	// Now look along the roof until we find the dimensions of the roof
-	Location maxx = height.clone();
-	int limit = 0;
-	while (roofBlocks.contains(maxx.getBlock().getType()) && limit < 100) {
-	    limit++;
-	    maxx.add(new Vector(1,0,0));
-	}
-	int maxX = maxx.getBlockX()-1;
-	Location minx = height.clone();
-	while (roofBlocks.contains(minx.getBlock().getType()) && limit < 200) {
-	    limit++;
-	    minx.subtract(new Vector(1,0,0));
-	}
-	int minX = minx.getBlockX() + 1;
-	Location maxz = height.clone();
-	while (roofBlocks.contains(maxz.getBlock().getType()) && limit < 300) {
-	    limit++;
-	    maxz.add(new Vector(0,0,1));
-	} 
-	int maxZ = maxz.getBlockZ() - 1;
-	Location minz = height.clone();
-	while (roofBlocks.contains(minz.getBlock().getType()) && limit < 400) {
-	    limit++;
-	    minz.subtract(new Vector(0,0,1));
-	}
-	int minZ = minz.getBlockZ() + 1;
-
-	// Area of roof
-	int roofArea = (maxX - minX) * (maxZ - minZ);
-
-	// Now check at player height
-	boolean useRoofMaxX = false;
-	maxx = location.clone();
-	limit = 0;
-	while (!wallBlocks.contains(maxx.getBlock().getType()) && limit < 100) {
-	    limit++;
-	    maxx.add(new Vector(1,0,0));
-	}
-	if (limit == 100) {
-	    useRoofMaxX = true;
-	}
-	boolean useRoofMinX = false;
-	limit = 0;
-	int maxXX = maxx.getBlockX();
-	minx = location.clone();
-	while (!wallBlocks.contains(minx.getBlock().getType()) && limit < 100) {
-	    limit++;
-	    minx.subtract(new Vector(1,0,0));
-	}
-	if (limit == 100) {
-	    useRoofMinX = true;
-	}
-	boolean useRoofMaxZ = false;
-	limit = 0;
-	int minXX = minx.getBlockX();
-	maxz = location.clone();
-	while (!wallBlocks.contains(maxz.getBlock().getType()) && limit < 100) {
-	    limit++;
-	    maxz.add(new Vector(0,0,1));
-	} 
-	if (limit == 100) {
-	    useRoofMaxZ = true;
-	}
-	boolean useRoofMinZ = false;
-	limit = 0;
-	int maxZZ = maxz.getBlockZ();
-	minz = location.clone();
-	while (!wallBlocks.contains(minz.getBlock().getType()) && limit < 100) {
-	    limit++;
-	    minz.subtract(new Vector(0,0,1));
-	}
-	if (limit == 100) {
-	    useRoofMinZ = true;
-	}
-	int minZZ = minz.getBlockZ();
-
-	// Get interior area
-	int intArea = (maxXX - minXX) * (maxZZ - minZZ);
-
-
-	/*
-	getLogger().info("Before");
-	getLogger().info("minx = " + minX);
-	getLogger().info("maxx = " + maxX);
-	getLogger().info("minz = " + minZ);
-	getLogger().info("maxz = " + maxZ);
-	getLogger().info("minXX = " + minXX);
-	getLogger().info("maxXX = " + maxXX);
-	getLogger().info("minZZ = " + minZZ);
-	getLogger().info("maxZZ = " + maxZZ);
-	 */
-	// Pick the largest boundaries
-	/*
-	if (!useRoofMaxX && maxX < maxXX) {
-	    maxX = maxXX;
-	}
-	if (!useRoofMinX && minX > minXX) {
-	    minX = minXX;
-	}
-	if (!useRoofMaxZ && maxZ < maxZZ) {
-	    maxZ = maxZZ;
-	}
-	if (!useRoofMinZ && minZ > minZZ) {
-	    minZ = minZZ;
-	}
-	 */
 	// Pick smallest area
-	if (intArea > roofArea) {
-	    if (!useRoofMaxX && maxX < maxXX) {
-		maxX = maxXX;
+	if (walls.getArea() > roof.getArea()) {
+	    logger(3,"Roof is the smallest area");
+	    if (!walls.useRoofMaxX() && maxX < walls.getMaxXX()) {
+		maxX = walls.getMaxXX();
 	    }
-	    if (!useRoofMinX && minX > minXX) {
-		minX = minXX;
+	    if (!walls.useRoofMinX() && minX > walls.getMinXX()) {
+		minX = walls.getMinXX();
 	    }
-	    if (!useRoofMaxZ && maxZ < maxZZ) {
-		maxZ = maxZZ;
+	    if (!walls.useRoofMaxZ() && maxZ < walls.getMaxZZ()) {
+		maxZ = walls.getMaxZZ();
 	    }
-	    if (!useRoofMinZ && minZ > minZZ) {
-		minZ = minZZ;
+	    if (!walls.useRoofMinZ() && minZ > walls.getMinZZ()) {
+		minZ = walls.getMinZZ();
 	    }  
 	}
-	if (intArea < roofArea) {
-	    maxX = maxXX;
-	    minX = minXX;
-	    maxZ = maxZZ;
-	    minZ = minZZ;
+	// If the walled area is universally smaller than the roof, use all the wall values
+	// If the roof wasn't found, use the walls
+	if (walls.getArea() < roof.getArea() || !roofFound) {
+	    logger(3,"Walls are the smallest area");
+	    maxX = walls.getMaxXX();
+	    minX = walls.getMinXX();
+	    maxZ = walls.getMaxZZ();
+	    minZ = walls.getMinZZ();
 	}
+	//getLogger().info("minx = " + minX);
+	//getLogger().info("maxx = " + maxX);
+	//getLogger().info("minz = " + minZ);
+	//getLogger().info("maxz = " + maxZ);
+
+	// Check the player is inside the greenhouse
+	if (!(player.getLocation().getBlockX() > minX && player.getLocation().getBlockX() <= maxX
+		&& player.getLocation().getBlockZ() > minZ && player.getLocation().getBlockZ() <= maxZ)) {
+	    player.sendMessage(ChatColor.RED + Locale.errornotinside);
+	    return null;
+	}
+
 
 	// Now look down those sides
 	/*
@@ -1543,6 +1527,11 @@ public class Greenhouses extends JavaPlugin {
 	    }
 	}
 	//getLogger().info("Floor is at height y = " + y);
+	// Check that the player is vertically in the greenhouse
+	if (player.getLocation().getBlockY() <= y) {
+	    player.sendMessage(ChatColor.RED + Locale.errornotinside);
+	    return null;
+	}
 	if (!redGlass.isEmpty()) {
 	    // Show errors
 	    if (blocksAbove) {
