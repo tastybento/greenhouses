@@ -164,7 +164,22 @@ public class Walls {
 	Greenhouses.logger(3,"wall maxX = " + maxX);
 	Greenhouses.logger(3,"wall minZ = " + minZ);
 	Greenhouses.logger(3,"wall maxZ = " + maxZ);
-	Greenhouses.logger(3,"floor = " + floor);	
+	
+	// Find the floor again, only looking within the walls
+	y = roof.getHeight();
+	do {
+	    wallBlockCount = 0;
+	    for (int x = minX; x <= maxX; x++) {
+		for (int z = minZ; z <= maxZ; z++) {
+		    if (wallBlocks.contains(world.getBlockAt(x, y, z).getType())) {
+			wallBlockCount++;
+		    } 
+		}
+	    }
+
+	} while( y-- > 0 && wallBlockCount > 0);
+	floor = y + 1;	
+	Greenhouses.logger(3,"#2 floor = " + floor);	
 
     }
 

@@ -1148,6 +1148,7 @@ public class Greenhouses extends JavaPlugin {
 	    if (g.insideGreenhouse(p.getLocation())) {
 		players.setInGreenhouse(p, null);
 		p.sendMessage(ChatColor.RED + Locale.messagesremoved);
+		/*
 		if (!p.isInsideVehicle()) {
 		    // Teleport them to make biome change
 		    final Location playerLoc = p.getLocation();
@@ -1162,7 +1163,7 @@ public class Greenhouses extends JavaPlugin {
 
 			    }}, 5L);
 		    }
-		}
+		}*/
 	    }
 	}
 	if (!ownerOnline) {
@@ -1295,7 +1296,11 @@ public class Greenhouses extends JavaPlugin {
 	}
 	// Check that the player is under the roof
 	if (!(player.getLocation().getBlockX() > roof.getMinX() && player.getLocation().getBlockX() <= roof.getMaxX()
-		&& player.getLocation().getBlockZ() > roof.getMinZ() && player.getLocation().getBlockZ() <= roof.getMaxX())) {
+		&& player.getLocation().getBlockZ() > roof.getMinZ() && player.getLocation().getBlockZ() <= roof.getMaxZ())) {
+	    logger(3,"Player does not appear to be inside the greenhouse");
+	    logger(3,"Player location " + player.getLocation());
+	    logger(3,"Roof minx = " + roof.getMinX() + " maxx = " + roof.getMaxX());
+	    logger(3,"Roof minz = " + roof.getMinZ() + " maxz = " + roof.getMaxZ());
 	    player.sendMessage(ChatColor.RED + Locale.errornotinside);
 	    return null;
 	}	
@@ -1357,8 +1362,9 @@ public class Greenhouses extends JavaPlugin {
 			// Check just the walls
 			if (y == roof.getHeight() || x == minX || x == maxX || z == minZ || z== maxZ) {
 			    //Greenhouses.logger(3,"DEBUG: Checking " + x + " " + y + " " + z);
-
-			    if ((y != roof.getHeight() && !wallBlocks.contains(blockType)) || (y == roof.getHeight() && !roof.isRoofBlock(blockType))) {
+			    // Doing string check for DOOR allows all 1.8 doors to be covered even if the server is not 1.8
+			    if ((y != roof.getHeight() && !wallBlocks.contains(blockType) && !blockType.toString().contains("DOOR")) 
+				    || (y == roof.getHeight() && !roof.isRoofBlock(blockType) && !blockType.toString().contains("DOOR"))) {
 				Greenhouses.logger(2,"DEBUG: bad block found at  " + x + "," + y+ "," + z + " " + blockType);
 				if (blockType == Material.AIR) {
 				    airHole = true;
@@ -1512,7 +1518,8 @@ public class Greenhouses extends JavaPlugin {
 	    }
 	    // Store the contents of the greenhouse so it can be audited later
 	    //g.setOriginalGreenhouseContents(contents);
-	    g.startBiome(true);
+	    // TODO: Do not teleport for now
+	    g.startBiome(false);
 	    player.sendMessage(ChatColor.GREEN + Locale.createsuccess.replace("[biome]", Util.prettifyText(winner.getType().toString())));
 	    players.incGreenhouseCount(player);
 	    return g;

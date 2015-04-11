@@ -96,7 +96,7 @@ create:
    holeinwall: "There is a hole in the wall!"
    hoppererror: "Only one hopper is allowed in the walls or roof."
    doorerror: "You cannot have more than 4 doors in the greenhouse!"
-   success: "You successfully made a [biome] biome greenhouse!"
+   success: "You successfully made a [biome] biome greenhouse! Biome will sync at next teleport or login."
 
 limits:
    noneallowed: "Permissions do not allow you any greenhouses so [number] were removed."
