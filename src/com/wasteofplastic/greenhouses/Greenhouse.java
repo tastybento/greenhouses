@@ -1,9 +1,7 @@
 package com.wasteofplastic.greenhouses;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -20,7 +18,6 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.Hopper;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
@@ -301,8 +298,8 @@ public class Greenhouse {
     /**
      * Starts the biome in the greenhouse
      */
-    public void startBiome() {
-	setBiomeBlocks(greenhouseBiome);
+    public void startBiome(boolean teleport) {
+	setBiomeBlocks(greenhouseBiome, teleport);
     }
 
     /**
@@ -310,15 +307,20 @@ public class Greenhouse {
      * @param to 
      */
     public void endBiome() {
-	setBiomeBlocks(originalBiome);
+	setBiomeBlocks(originalBiome, false);
     }
 
 
     /**
-     * Actually set blocks to a biome and refresh the area
+     * Actually set blocks to a biome
+     * The chunk refresh command has been deprecated and no longer works on 1.8+
+     * so jumping through hoops to refresh mobs is no longer needed
+     * If teleport is true, this biome starting is happening during a teleport
+     * sequence, i.e, gh is being generated or removed
      * @param biome
+     * @param teleport 
      */
-    private void setBiomeBlocks(Biome biome) {
+    private void setBiomeBlocks(Biome biome, boolean teleport) {
 	if (biome == null) {
 	    return;
 	}
@@ -330,6 +332,35 @@ public class Greenhouse {
 		Block b = world.getBlockAt(x, groundY, z);
 		b.setBiome(biome);
 		chunks.add(b.getChunk());
+	    }
+	}
+	if (teleport) {
+	    for (Chunk c: chunks) {
+		if (c.isLoaded()) {
+		    for (final Entity e: c.getEntities()) {
+			if (e instanceof Player) {
+			    Player player = (Player)e;
+			    if (!e.isInsideVehicle()) {
+				final Location playerLoc = e.getLocation();
+				if (playerLoc.getBlockX() >= pos1.getBlockX() && playerLoc.getBlockX() < pos2.getBlockX()
+					&& playerLoc.getBlockZ() >= pos1.getBlockZ() && playerLoc.getBlockZ() < pos2.getBlockZ()) {
+				    
+				    // Teleport them somewhere far, far away
+				    e.teleport(new Location(e.getWorld(),0,-5,0));
+				    Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
+
+					@Override
+					public void run() {
+					    // Teleport them back
+					    playerLoc.getChunk().load();
+					    e.teleport(playerLoc);	
+					}}, 5L);
+				}
+				
+			    }
+			}
+		    }
+		}	    
 	    }
 	}
 	/*
@@ -348,6 +379,7 @@ public class Greenhouse {
 	    }
 	}*/
 	// Check if there are any players around
+	/*
 	boolean playerAround = false;
 	for (Chunk c: chunks) {
 	    if (c.isLoaded()) {
@@ -395,13 +427,14 @@ public class Greenhouse {
 		while (it.hasNext()) {
 		    Chunk c = it.next();
 		    plugin.logger(4, "DEBUG: next chunk is " + c.toString() + " and there are " + mobsInChunk.get(c).size() + " mobs");
-		    
+
 		    for (MobClone mob : mobsInChunk.get(c)) {
 			mob.respawn();
 		    }
 		    it.remove();
 		}
-	    }}, 2L);	
+	    }}, 2L);
+	 */	
     }
 
     /**
@@ -420,7 +453,7 @@ public class Greenhouse {
 	if (mob == null) {
 	    return;
 	}
-	plugin.logger(3,"Mob ready to spawn in location " + pos1.getBlockX() + "," + pos2.getBlockZ());
+	plugin.logger(3,"Mob ready to spawn in location " + pos1.getBlockX() + "," + pos2.getBlockZ() + " in world " + world.getName());
 	// Spawn a temporary snowball in center of greenhouse
 	Vector p1 = pos1.clone();
 	Entity snowball = world.spawnEntity(p1.midpoint(pos2).toLocation(world), EntityType.SNOWBALL);
@@ -433,25 +466,32 @@ public class Greenhouse {
 	    plugin.logger(3,"Mob limit is " + biomeRecipe.getMobLimit());
 	    // Find out how many of this type of mob is around
 
-	    int mobsInArea = snowball.getNearbyEntities(x, y, z).size();
+	    List<Entity> mobsInArea = snowball.getNearbyEntities(x, y, z);
+	    int numberOfMobs = 0;
+	    for (Entity en : mobsInArea) {
+		if (en.getType() == mob) {
+		    numberOfMobs++;
+		}
+	    }
 	    double internalArea = (x*4*z);
-	    plugin.logger(3,"Mobs in area = " + mobsInArea);
+	    plugin.logger(3,"Mobs in area = " + numberOfMobs);
 	    plugin.logger(3,"Area of greenhouse = " + internalArea);
-	    if (internalArea - (mobsInArea * biomeRecipe.getMobLimit()) <= 0) {
+	    if (internalArea - (numberOfMobs * biomeRecipe.getMobLimit()) <= 0) {
 		plugin.logger(3,"Too many mobs already in this greenhouse");
 		snowball.remove();
 		return;
 	    }
-	    List<Entity> localEntities = snowball.getNearbyEntities(x+24D, y+24D, z+24D);
+	    //List<Entity> localEntities = snowball.getNearbyEntities(x+24D, y+24D, z+24D);
 	    snowball.remove();
-	    // Check for players
+	    // Check for players - remove this because it isn't popular
+	    /*
 	    for (Entity e : localEntities) {	
 		if (e instanceof Player) {
 		    plugin.logger(3,"players around");
 		    return;
 		}
 	    }
-
+*/
 	} else {
 	    plugin.logger(3,"Could not spawn snowball!");
 	}
@@ -499,7 +539,7 @@ public class Greenhouse {
 		    Block airCheck = world.getBlockAt(x, y, z);
 		    if (airCheck.getType().equals(Material.AIR)) {
 			ParticleEffect.SNOWBALL.display(0F,0F,0F, 0.1F, 5, airCheck.getLocation(), 30D);
-			
+
 		    }
 		}
 
