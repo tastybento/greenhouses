@@ -28,7 +28,7 @@ public class Roof {
      * Finds a roof from a starting location under the roof and characterizes it
      * @param loc
      */
-    public Roof(Location loc) {
+    public Roof(Greenhouses plugin, Location loc) {
 	World world = loc.getWorld();
 	// This section tries to find a roof block
 	// Try just going up - this covers every case except if the player is standing under a hole
@@ -38,7 +38,7 @@ public class Roof {
 	for (; roofY < world.getMaxHeight(); roofY++) {
 	    if (roofBlocks.contains(loc.getBlock().getType())) {
 		roofFound = true;
-		Greenhouses.logger(3,"roof block found " + roofY + " of type " + loc.getBlock().getType().toString());
+		plugin.logger(3,"roof block found " + roofY + " of type " + loc.getBlock().getType().toString());
 		break;
 	    }
 	    loc.add(new Vector(0,1,0));
@@ -56,14 +56,14 @@ public class Roof {
 			    && (z > loc.getBlockZ() - radius && z < loc.getBlockZ() + radius))) {
 			//player.sendBlockChange(new Location(world,x,roofY,z), Material.GLASS, (byte)(radius % 14));
 			Block b = world.getBlockAt(x,roofY,z);
-			Greenhouses.logger(3,"Checking column " + x + " " + z );					
+			plugin.logger(3,"Checking column " + x + " " + z );					
 			if (!Walls.isWallBlock(b.getType())) {
 			    // Look up
 			    for (int y = roofY; y < world.getMaxHeight(); y++) {
 				if (roofBlocks.contains(world.getBlockAt(x,y,z).getType())) {
 				    roofFound = true;
 				    loc = new Location(world,x,y,z);
-				    Greenhouses.logger(3,"Roof block found at " + x + " " + y + " " + z + " of type " + loc.getBlock().getType().toString());
+				    plugin.logger(3,"Roof block found at " + x + " " + y + " " + z + " of type " + loc.getBlock().getType().toString());
 				    break;
 				}
 			    }
@@ -96,10 +96,10 @@ public class Roof {
 	int maxz = maxZ;
 	// Now we have some idea of the mins and maxes, check each block and see if it goes further
 	do {
-	    Greenhouses.logger(3, "Roof minx=" + minx);
-	    Greenhouses.logger(3, "Roof maxx=" + maxx);
-	    Greenhouses.logger(3, "Roof minz=" + minz);
-	    Greenhouses.logger(3, "Roof maxz=" + maxz);
+	    plugin.logger(3, "Roof minx=" + minx);
+	    plugin.logger(3, "Roof maxx=" + maxx);
+	    plugin.logger(3, "Roof minz=" + minz);
+	    plugin.logger(3, "Roof maxz=" + maxz);
 	    minx = minX;
 	    maxx = maxX;
 	    minz = minZ;

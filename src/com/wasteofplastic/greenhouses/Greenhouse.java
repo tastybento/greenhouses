@@ -5,7 +5,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
@@ -40,7 +39,6 @@ public class Greenhouse {
     private int height;
     private int groundY;
     private BiomeRecipe biomeRecipe;
-    private ConcurrentHashMap<Chunk,List<MobClone>> mobsInChunk = new ConcurrentHashMap<Chunk,List<MobClone>>();
 
 
     public Greenhouse(Greenhouses plugin, Location pos1, Location pos2, UUID owner) {

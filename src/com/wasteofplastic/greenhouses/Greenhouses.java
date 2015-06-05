@@ -29,6 +29,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.permissions.PermissionAttachmentInfo;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
@@ -72,7 +73,7 @@ public class Greenhouses extends JavaPlugin {
     private List<BiomeRecipe> biomeRecipes = new ArrayList<BiomeRecipe>();
     private ControlPanel biomeInv;
     // Debug level (0 = none, 1 = important ones, 2 = level 2, 3 = level 3
-    private static int debug = 1;
+    private int debug = 1;
     /**
      * @return plugin object instance
      */
@@ -424,28 +425,10 @@ public class Greenhouses extends JavaPlugin {
 	logger(3,"Snowdensity " + Settings.snowDensity);
 	logger(3,"Snowspeed " + Settings.snowSpeed);
 
-	// Permission settings
-	// Check if section exists
-	List<String> limits = getConfig().getStringList("greenhouses.limits");
-	for (String perm : limits) {
-	    try{
-		String[] split = perm.split(":");
-		if (split.length == 2) {
-		    int limit = Integer.valueOf(split[1]);
-		    if (limit < 0) {
-			logger(1,"Permission Limits : " + split[0] + " unlimited greenhouses.");
-		    } else if (limit == 0) {
-			logger(1,"Permission Limits : " + split[0] + " cannot make greenhouses.");
-		    } else {
-			logger(1,"Permission Limits : " + split[0] + " limited to " + limit + " greenhouses.");
-		    }
-		    players.addPermissionLimit(split[0], limit);
-		}
-	    } catch (Exception e){
-		getLogger().severe("Problem parsing limit permission in config.yml (" + perm + "). Skipping...");
-		e.printStackTrace();
-	    }
-	}
+	// Max greenhouse settings
+	Settings.maxGreenhouses = getConfig().getInt("greenhouses.maxgreenhouses",-1);
+	Settings.deleteExtras = getConfig().getBoolean("greenhouses.deleteextras", false);
+	
     }
 
     /*
@@ -1288,7 +1271,7 @@ public class Greenhouses extends JavaPlugin {
 	// Check the sides
 
 	// Now look along the roof until we find the dimensions of the roof
-	Roof roof = new Roof(location);
+	Roof roof = new Roof(this, location);
 	if (!roof.isRoofFound()) {
 	    player.sendMessage(ChatColor.RED + Locale.createnoroof);
 	    logger(3,"Roof not found with roof check");
@@ -1305,17 +1288,17 @@ public class Greenhouses extends JavaPlugin {
 	    return null;
 	}	
 	// Now see if the walls match the roof - they may not
-	Walls walls = new Walls(player, roof);
+	Walls walls = new Walls(this, player, roof);
 	// Roof is never smaller than walls, but walls can be smaller than the roof
 	int maxX = walls.getMaxX();
 	int minX = walls.getMinX();
 	int maxZ = walls.getMaxZ();
 	int minZ = walls.getMinZ();
 
-	Greenhouses.logger(3,"minx = " + minX);
-	Greenhouses.logger(3,"maxx = " + maxX);
-	Greenhouses.logger(3,"minz = " + minZ);
-	Greenhouses.logger(3,"maxz = " + maxZ);
+	logger(3,"minx = " + minX);
+	logger(3,"maxx = " + maxX);
+	logger(3,"minz = " + minZ);
+	logger(3,"maxz = " + maxZ);
 	// Now check again to see if the floor really is the floor and the walls follow the rules
 	// Counts
 	int wallDoors = 0;
@@ -1365,7 +1348,7 @@ public class Greenhouses extends JavaPlugin {
 			    // Doing string check for DOOR allows all 1.8 doors to be covered even if the server is not 1.8
 			    if ((y != roof.getHeight() && !wallBlocks.contains(blockType) && !blockType.toString().contains("DOOR")) 
 				    || (y == roof.getHeight() && !roof.isRoofBlock(blockType) && !blockType.toString().contains("DOOR"))) {
-				Greenhouses.logger(2,"DEBUG: bad block found at  " + x + "," + y+ "," + z + " " + blockType);
+				logger(2,"DEBUG: bad block found at  " + x + "," + y+ "," + z + " " + blockType);
 				if (blockType == Material.AIR) {
 				    airHole = true;
 				    if (y == roof.getHeight()) {
@@ -1424,7 +1407,7 @@ public class Greenhouses extends JavaPlugin {
 		redGlass.addAll(redLayer);
 	    }
 	}
-	Greenhouses.logger(3,"Floor is at height y = " + y);
+	logger(3,"Floor is at height y = " + y);
 	// Check that the player is vertically in the greenhouse
 	if (player.getLocation().getBlockY() <= y) {
 	    player.sendMessage(ChatColor.RED + Locale.errornotinside);
@@ -1582,7 +1565,7 @@ public class Greenhouses extends JavaPlugin {
      * @param level
      * @param info
      */
-    public static void logger(int level, String info) {
+    public void logger(int level, String info) {
 	if (level <= debug) {
 	    if (level == 1) {
 		Bukkit.getLogger().info(info);
@@ -1598,5 +1581,25 @@ public class Greenhouses extends JavaPlugin {
      */
     public int getDebug() {
 	return debug;
+    }
+    
+    /**
+     * Returns the maximum number of greenhouses this player can make
+     * @param player
+     * @return number of greenhouses or -1 to indicate unlimited
+     */
+    public int getMaxGreenhouses(Player player) {
+	// -1 is unimited
+	int maxGreenhouses = Settings.maxGreenhouses;
+	for (PermissionAttachmentInfo perms : player.getEffectivePermissions()) {
+	    if (perms.getPermission().startsWith("greenhouses.limit")) {
+		maxGreenhouses = Integer.valueOf(perms.getPermission().split("greenhouses.limit.")[1]);
+	    }
+	    // Do some sanity checking
+	    if (maxGreenhouses < 0) {
+		maxGreenhouses = -1;
+	    }
+	}
+	return maxGreenhouses;
     }
 }

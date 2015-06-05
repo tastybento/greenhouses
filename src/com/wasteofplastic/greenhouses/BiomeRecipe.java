@@ -86,6 +86,7 @@ public class BiomeRecipe {
      * @param player
      * @return
      */
+    @SuppressWarnings("deprecation")
     public boolean checkRecipe(Location pos1, Location pos2, Player player) {
 	plugin.logger(3,"Checking for biome " + type.toString());
 	// Calculate floor area

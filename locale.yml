@@ -64,7 +64,7 @@ info:
    none: "None"
    nomore: "&4You cannot build any more greenhouses!"
    onemore: "&6You can build one more greenhouse."
-   youcanbuild: "&AYou can builds up to [number] more greenhouses!"
+   youcanbuild: "&AYou can build up to [number] more greenhouses!"
    unlimited: "&AYou can build an unlimited number of greenhouses!"
    welcome: "&BWelcome! Click here for instructions"
 

@@ -19,5 +19,7 @@ public class Settings {
     public static int mobTick;
     public static int ecoTick;
     public static boolean allowFlowIn;
-    public static boolean allowFlowOut;   
+    public static boolean allowFlowOut;
+    public static boolean deleteExtras;
+    public static int maxGreenhouses;   
 }

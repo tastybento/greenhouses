@@ -13,23 +13,12 @@ greenhouses:
    debug: 1
 
    ### Permissions limits
-   # This will limit how many greenhouses a player can make or have by permission.
-   # Format is <permission>:<max number of greenhouses>
-   # If max number is negative then unlimited greenhouses is allowed.
-   # If a player looses a permission then the next time they log in they will
-   # randomly lose greenhouses until they max out their limit.
-   # If permissions are listed, only players who have them can build, except Ops.
-   # The permission can be any permission you like, e.g., rank-based permission
-
-   # Example:
-   #limits:
-   #  - greenhouses.player:2   <-- allows up to 2 greenhouses for default permission
-   #  - greenhouses.donor:5 <-- allows up to 5 greenhouses
-   #  - greenhouses.VIP:-1 <-- unlimited greenhouses
-   #  - myrank.developer:100 <-- allows 100 for the permission myrank.developer
-
-   limits:
-     - greenhouses.player:-1
+   # Set the maximum number of greenhouses a player can build
+   # using greenhouses.limit.<number>
+   # This is the default max. -1 is unlimited
+   maxgreenhouses: -1
+   # To have extra greenhouses deleted upon login set the following to true
+   deleteextras: false
 
    ### Weather and ecosystem settings
 

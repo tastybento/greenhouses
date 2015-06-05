@@ -20,14 +20,12 @@ public class Walls {
     private boolean useRoofMaxZ;
     private boolean useRoofMinZ;
     private Location roofBlock;
-    private Roof roof;
     Location roofHopperLoc = null;
     final static List<Material> wallBlocks = Arrays.asList(new Material[]{Material.HOPPER, Material.GLASS, Material.THIN_GLASS, Material.GLOWSTONE, Material.WOODEN_DOOR, Material.IRON_DOOR_BLOCK,Material.STAINED_GLASS,Material.STAINED_GLASS_PANE});
     /**
      * 
      */
-    public Walls(final Player player, Roof roof) {
-	this.roof = roof;
+    public Walls(Greenhouses plugin, final Player player, Roof roof) {
 	// The player is under the roof
 	// Assume the player is inside the greenhouse they are trying to create
 	Location loc = player.getLocation();
@@ -47,7 +45,7 @@ public class Walls {
 
 	} while( y-- > 0 && wallBlockCount > 0);
 	floor = y + 1;	
-	Greenhouses.logger(3,"#1 Floor found at " + floor);
+	plugin.logger(3,"#1 Floor found at " + floor);
 	// Now start with the player's x and z location
 	int radiusMinX = 0;
 	int radiusMaxX = 0;
@@ -61,16 +59,16 @@ public class Walls {
 	maxX = loc.getBlockX();
 	minZ = loc.getBlockZ();
 	maxZ = loc.getBlockZ();
-	Greenhouses.logger(3,"Starting point = " + loc.getBlockX() + "," + loc.getBlockZ());
-	Greenhouses.logger(3,"roof minX = " + roof.getMinX());
-	Greenhouses.logger(3,"roof maxX = " + roof.getMaxX());
-	Greenhouses.logger(3,"roof minZ = " + roof.getMinZ());
-	Greenhouses.logger(3,"roof maxZ = " + roof.getMaxZ());
+	plugin.logger(3,"Starting point = " + loc.getBlockX() + "," + loc.getBlockZ());
+	plugin.logger(3,"roof minX = " + roof.getMinX());
+	plugin.logger(3,"roof maxX = " + roof.getMaxX());
+	plugin.logger(3,"roof minZ = " + roof.getMinZ());
+	plugin.logger(3,"roof maxZ = " + roof.getMaxZ());
 	do {
-	    Greenhouses.logger(3,"wall radiusminX = " + radiusMinX);
-	    Greenhouses.logger(3,"wall radius maxX = " + radiusMaxX);
-	    Greenhouses.logger(3,"wall radius minZ = " + radiusMinZ);
-	    Greenhouses.logger(3,"wall radius maxZ = " + radiusMaxZ);
+	    plugin.logger(3,"wall radiusminX = " + radiusMinX);
+	    plugin.logger(3,"wall radius maxX = " + radiusMaxX);
+	    plugin.logger(3,"wall radius minZ = " + radiusMinZ);
+	    plugin.logger(3,"wall radius maxZ = " + radiusMaxZ);
 
 	    // Look around player in an ever expanding cube
 	    minX = loc.getBlockX() - radiusMinX;
@@ -83,7 +81,7 @@ public class Walls {
 		    for (int z = minZ; z <= maxZ; z++) {
 			// Only look around outside edge
 			if (!((x > minX && x < maxX) && (z > minZ && z < maxZ))) {
-			    Greenhouses.logger(3,"Checking block " + x + " " + y + " " + z);
+			    plugin.logger(3,"Checking block " + x + " " + y + " " + z);
 			    // Look at block faces
 			    for (BlockFace bf: BlockFace.values()) {
 				switch (bf) {
@@ -91,28 +89,28 @@ public class Walls {
 				    // positive x
 				    if (wallBlocks.contains(world.getBlockAt(x, y, z).getRelative(bf).getType())) {
 					stopMaxX = true;
-					Greenhouses.logger(3,"Wall found, stopping MaxX");
+					plugin.logger(3,"Wall found, stopping MaxX");
 				    }
 				    break;
 				case WEST:
 				    // negative x
 				    if (wallBlocks.contains(world.getBlockAt(x, y, z).getRelative(bf).getType())) {
 					stopMinX = true;
-					Greenhouses.logger(3,"Wall found, stopping minX");
+					plugin.logger(3,"Wall found, stopping minX");
 				    }
 				    break;
 				case NORTH:
 				    // negative Z
 				    if (wallBlocks.contains(world.getBlockAt(x, y, z).getRelative(bf).getType())) {
 					stopMinZ = true;
-					Greenhouses.logger(3,"Wall found, stopping minZ");
+					plugin.logger(3,"Wall found, stopping minZ");
 				    }
 				    break;
 				case SOUTH:
 				    // positive Z
 				    if (wallBlocks.contains(world.getBlockAt(x, y, z).getRelative(bf).getType())) {
 					stopMaxZ = true;
-					Greenhouses.logger(3,"Wall found, stopping maxZ");
+					plugin.logger(3,"Wall found, stopping maxZ");
 				    }
 				    break;
 				default:
@@ -124,19 +122,19 @@ public class Walls {
 		}
 	    }
 	    if (minX < roof.getMinX()) {
-		Greenhouses.logger(3,"minx is less that the roof minX");
+		plugin.logger(3,"minx is less that the roof minX");
 		stopMinX = true;
 	    }
 	    if (maxX > roof.getMaxX()) {
-		Greenhouses.logger(3,"maxx is > that the roof minX");
+		plugin.logger(3,"maxx is > that the roof minX");
 		stopMaxX = true;
 	    }
 	    if (minZ < roof.getMinZ()) {
-		Greenhouses.logger(3,"minz is less that the roof minz");
+		plugin.logger(3,"minz is less that the roof minz");
 		stopMinZ = true;
 	    }
 	    if (maxZ > roof.getMaxZ()) {
-		Greenhouses.logger(3,"maxZ is >t the roof maxZ");
+		plugin.logger(3,"maxZ is >t the roof maxZ");
 		stopMaxZ = true;
 	    }
 	    // Expand the edges
@@ -158,10 +156,10 @@ public class Walls {
 	maxX++;
 	minZ--;
 	maxZ++;
-	Greenhouses.logger(3,"wall minX = " + minX);
-	Greenhouses.logger(3,"wall maxX = " + maxX);
-	Greenhouses.logger(3,"wall minZ = " + minZ);
-	Greenhouses.logger(3,"wall maxZ = " + maxZ);
+	plugin.logger(3,"wall minX = " + minX);
+	plugin.logger(3,"wall maxX = " + maxX);
+	plugin.logger(3,"wall minZ = " + minZ);
+	plugin.logger(3,"wall maxZ = " + maxZ);
 	
 	// Find the floor again, only looking within the walls
 	y = roof.getHeight();
@@ -177,7 +175,7 @@ public class Walls {
 
 	} while( y-- > 0 && wallBlockCount > 0);
 	floor = y + 1;	
-	Greenhouses.logger(3,"#2 floor = " + floor);	
+	plugin.logger(3,"#2 floor = " + floor);	
 
     }
 
