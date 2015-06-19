@@ -428,7 +428,7 @@ public class Greenhouses extends JavaPlugin {
 	// Max greenhouse settings
 	Settings.maxGreenhouses = getConfig().getInt("greenhouses.maxgreenhouses",-1);
 	Settings.deleteExtras = getConfig().getBoolean("greenhouses.deleteextras", false);
-	
+
     }
 
     /*
@@ -1582,7 +1582,7 @@ public class Greenhouses extends JavaPlugin {
     public int getDebug() {
 	return debug;
     }
-    
+
     /**
      * Returns the maximum number of greenhouses this player can make
      * @param player
@@ -1593,7 +1593,13 @@ public class Greenhouses extends JavaPlugin {
 	int maxGreenhouses = Settings.maxGreenhouses;
 	for (PermissionAttachmentInfo perms : player.getEffectivePermissions()) {
 	    if (perms.getPermission().startsWith("greenhouses.limit")) {
-		maxGreenhouses = Integer.valueOf(perms.getPermission().split("greenhouses.limit.")[1]);
+		logger(2,"Permission is = " + perms.getPermission());
+		try {
+		    int max = Integer.valueOf(perms.getPermission().split("greenhouses.limit.")[1]);
+		    if (max > maxGreenhouses) {
+			maxGreenhouses = max;
+		    }
+		} catch (Exception e) {} // Do nothing
 	    }
 	    // Do some sanity checking
 	    if (maxGreenhouses < 0) {
