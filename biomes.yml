@@ -15,7 +15,10 @@ biomes:
     # Floor area * this % = number of blocks required
     watercoverage: 50
     # If the value is zero, then NO ice/water/lava is allowed
-    icecoverage: 0
+    # If the values are missing, or negative, then ice/water/lava is allowed, but not
+    # required for the biome.
+    # icecoverage: 0
+    # lavacoverage: 0
     # Plants that can grow via the hopper/bonemeal system
     # Format is:
     # Material: % chance:Block type on which it can grow
@@ -53,7 +56,9 @@ biomes:
     icon: DEAD_BUSH
     priority: 3
     contents: SAND:1
+    # No water allowed
     watercoverage: 0
+    # No ice allowed
     icecoverage: 0
     plants:
       DEAD_BUSH: 10:SAND
@@ -67,7 +72,6 @@ biomes:
     icon: RED_ROSE
     priority: 4
     contents: LOG:3 LEAVES:4 GRASS:4
-    icecoverage: 0
     plants:
       RED_ROSE: 2:GRASS:8
       DOUBLE_PLANT: 4:GRASS:5
@@ -76,6 +80,7 @@ biomes:
     icon: LAVA_BUCKET
     priority: 5
     contents: NETHERRACK:1
+    # Lava required, no ice or water allowed
     lavacoverage: 21
     icecoverage: 0
     watercoverage: 0
@@ -87,7 +92,6 @@ biomes:
     icon: VINE
     priority: 6
     contents: GRASS:4 LOG:3:3 LEAVES:3:4
-    icecoverage: 0
     plants:
       YELLOW_FLOWER: 20:GRASS
       MELON_BLOCK: 10:GRASS
@@ -98,7 +102,7 @@ biomes:
     icon: RED_MUSHROOM
     priority: 11
     contents: MYCEL:2
-    icecoverage: 0
+    # Water required at 30%
     watercoverage: 30
     plants:
       BROWN_MUSHROOM: 10:MYCEL
@@ -109,8 +113,8 @@ biomes:
   OCEAN:
     icon: WATER_BUCKET
     priority: 8
+    # Lots of water required!
     watercoverage: 95
-    icecoverage: 0
     mobs:
       SQUID: 10:STATIONARY_WATER
     moblimit: 9
@@ -118,7 +122,6 @@ biomes:
     icon: GRASS
     priority: 1
     contents: GRASS:3
-    icecoverage: 0
     plants:
       LONG_GRASS: 10:GRASS:1
     mobs:
@@ -128,8 +131,8 @@ biomes:
     icon: CLAY
     priority: 10
     contents: SAND:1
+    # 50% water required
     watercoverage: 50
-    icecoverage: 0
     # Conversions - in this case, an adjacent block is required to convert
     # Format is:
     # Original Block:Durability:% chance:New Block:Durability:Adjacent Block:Durability
@@ -138,7 +141,6 @@ biomes:
   SAVANNA:
     icon: LEAVES
     priority: 11
-    icecoverage: 0
     contents: LOG_2:3 LEAVES_2:4 GRASS:4
     plants:
       DOUBLE_PLANT: 10:GRASS:2
@@ -146,7 +148,6 @@ biomes:
     icon: DOUBLE_PLANT
     priority: 2
     contents: GRASS:4
-    icecoverage: 0
     plants:
       DOUBLE_PLANT: 20:GRASS:0
       LONG_GRASS: 20:GRASS:1
@@ -154,8 +155,8 @@ biomes:
     icon: WATER_LILY
     priority: 13
     contents: GRASS:4 LOG:3 LEAVES:4
+    # 50% water coverage required
     watercoverage: 50
-    icecoverage: 0
     plants:
       RED_MUSHROOM: 20:GRASS
       BROWN_MUSHROOM: 20:GRASS

@@ -1105,15 +1105,16 @@ public class Greenhouses extends JavaPlugin {
 	eco.remove(g);
 	logger(3,"Returning biome to original state: " + g.getOriginalBiome().toString());
 	//g.setBiome(g.getOriginalBiome()); // just in case
-	if (g.getBiome().equals(Biome.HELL) || g.getBiome().equals(Biome.DESERT)
-		|| g.getBiome().equals(Biome.DESERT_HILLS) || g.getBiome().equals(Biome.DESERT_MOUNTAINS)) {
+	if (g.getOriginalBiome().equals(Biome.HELL) || g.getOriginalBiome().equals(Biome.DESERT)
+		|| g.getOriginalBiome().equals(Biome.DESERT_HILLS) || g.getOriginalBiome().equals(Biome.DESERT_MOUNTAINS)) {
 	    // Remove any water
 	    for (int y = g.getPos1().getBlockY(); y< g.getPos2().getBlockY();y++) {
-		for (int x = g.getPos1().getBlockX()+1;x<g.getPos2().getBlockX();x++) {
-		    for (int z = g.getPos1().getBlockZ()+1;z<g.getPos2().getBlockZ();z++) {
+		for (int x = g.getPos1().getBlockX();x<=g.getPos2().getBlockX();x++) {
+		    for (int z = g.getPos1().getBlockZ();z<=g.getPos2().getBlockZ();z++) {
 			Block b = g.getPos1().getWorld().getBlockAt(x, y, z);
 			if (b.getType().equals(Material.WATER) || b.getType().equals(Material.STATIONARY_WATER)
-				|| b.getType().equals(Material.ICE) || b.getType().equals(Material.PACKED_ICE)) {
+				|| b.getType().equals(Material.ICE) || b.getType().equals(Material.PACKED_ICE)
+				|| b.getType().equals(Material.SNOW) || b.getType().equals(Material.SNOW_BLOCK)) {
 			    // Evaporate it
 			    b.setType(Material.AIR);
 			    ParticleEffect.SMOKE_LARGE.display(0F,0F,0F, 0.1F, 5, b.getLocation(), 30D);
