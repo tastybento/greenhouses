@@ -97,11 +97,11 @@ public class Greenhouse {
 
 
     public boolean insideGreenhouse(Location loc) {
-	plugin.logger(3,"Checking intersection");
+	plugin.logger(4,"Checking intersection");
 	Vector v = loc.toVector();
-	plugin.logger(3,"Pos 1 = " + pos1.toString());
-	plugin.logger(3,"Pos 2 = " + pos2.toString());
-	plugin.logger(3,"V = " + v.toString());
+	plugin.logger(4,"Pos 1 = " + pos1.toString());
+	plugin.logger(4,"Pos 2 = " + pos2.toString());
+	plugin.logger(4,"V = " + v.toString());
 	boolean i = v.isInAABB(Vector.getMinimum(pos1,  pos2), Vector.getMaximum(pos1, pos2));
 	return i;
     }
@@ -342,7 +342,7 @@ public class Greenhouse {
 				final Location playerLoc = e.getLocation();
 				if (playerLoc.getBlockX() >= pos1.getBlockX() && playerLoc.getBlockX() < pos2.getBlockX()
 					&& playerLoc.getBlockZ() >= pos1.getBlockZ() && playerLoc.getBlockZ() < pos2.getBlockZ()) {
-				    
+
 				    // Teleport them somewhere far, far away
 				    e.teleport(new Location(e.getWorld(),0,-5,0));
 				    Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
@@ -354,7 +354,7 @@ public class Greenhouse {
 					    e.teleport(playerLoc);	
 					}}, 5L);
 				}
-				
+
 			    }
 			}
 		    }
@@ -489,7 +489,7 @@ public class Greenhouse {
 		    return;
 		}
 	    }
-*/
+	     */
 	} else {
 	    plugin.logger(3,"Could not spawn snowball!");
 	}
@@ -504,7 +504,7 @@ public class Greenhouse {
 	for (int i = 0; i<10; i++) {
 	    int x = Greenhouses.randInt(minx,maxx);
 	    int z = Greenhouses.randInt(minz,maxz);
-	    Block h = world.getHighestBlockAt(x, z);
+	    Block h = getHighestBlockInGreenhouse(x,z);
 	    Block b = h.getRelative(BlockFace.DOWN);
 	    Block a = h.getRelative(BlockFace.UP);
 	    plugin.logger(3,"block found " + h.getType().toString());
@@ -531,7 +531,7 @@ public class Greenhouse {
 	int maxz = Math.max(pos1.getBlockZ(), pos2.getBlockZ());
 	for (int x = minx+1; x < maxx; x++) {
 	    for (int z = minz+1; z < maxz;z++) {
-		Block b = world.getHighestBlockAt(new Location(world,x,pos1.getBlockY(),z));
+		Block b = getHighestBlockInGreenhouse(x,z);
 		// Display snow particles in air above b
 		for (int y = b.getLocation().getBlockY(); y < heightY; y++) {
 		    Block airCheck = world.getBlockAt(x, y, z);
@@ -596,9 +596,9 @@ public class Greenhouse {
 			int maxz = Math.max(pos1.getBlockZ(), pos2.getBlockZ());
 			for (int x = minx+1; x < maxx; x++) {
 			    for (int z = minz+1; z < maxz;z++) {
-				Block bl = world.getHighestBlockAt(new Location(world,x,pos1.getBlockY(),z));
+				Block bl = getHighestBlockInGreenhouse(x,z);
 				//if (Math.random()<Settings.flowerChance) {
-				plugin.logger(3,"Block is " + bl.getType().toString());
+				plugin.logger(3,"Block is " + bl.getRelative(BlockFace.DOWN).getType().toString());
 				if (biomeRecipe.growPlant(bl)) {
 				    bonemeal--;
 				    // Spray the bonemeal 
@@ -669,5 +669,17 @@ public class Greenhouse {
 	}
     }
      */
-
+    /**
+     * Replaces the getHighestBlock function by only looking within a greenhouse
+     * @param x
+     * @param z
+     * @return Non-solid block just above the highest solid block at x,z - should always be AIR
+     */
+    public Block getHighestBlockInGreenhouse(int x, int z) {
+	Block bl = world.getBlockAt(x,heightY,z).getRelative(BlockFace.DOWN);
+	while (bl.getLocation().getBlockY() >= groundY && bl.isEmpty()) {
+	    bl = bl.getRelative(BlockFace.DOWN);
+	}
+	return bl.getRelative(BlockFace.UP);
+    }
 }

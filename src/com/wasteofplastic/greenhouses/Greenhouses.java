@@ -73,7 +73,7 @@ public class Greenhouses extends JavaPlugin {
     private List<BiomeRecipe> biomeRecipes = new ArrayList<BiomeRecipe>();
     private ControlPanel biomeInv;
     // Debug level (0 = none, 1 = important ones, 2 = level 2, 3 = level 3
-    private int debug = 1;
+    private List<String> debug = new ArrayList<String>();
     /**
      * @return plugin object instance
      */
@@ -403,7 +403,7 @@ public class Greenhouses extends JavaPlugin {
 
 
 	// Assign settings
-	this.debug = getConfig().getInt("greenhouses.debug",1);
+	this.debug = getConfig().getStringList("greenhouses.debug");
 	Settings.allowFlowIn = getConfig().getBoolean("greenhouses.allowflowin", false);
 	Settings.allowFlowOut = getConfig().getBoolean("greenhouses.allowflowout", false);
 	// Other settings
@@ -534,7 +534,7 @@ public class Greenhouses extends JavaPlugin {
 			    g.growFlowers();
 			} catch (Exception e) {
 			    getLogger().severe("Problem found with greenhouse during growing flowers. Skipping...");
-			    if (plugin.getDebug() >= 3) {
+			    if (plugin.getDebug().contains("3")) {
 				e.printStackTrace();
 			    }
 			}
@@ -585,7 +585,7 @@ public class Greenhouses extends JavaPlugin {
 			checkEco();
 		    } catch (Exception e) {
 			getLogger().severe("Problem found with greenhouse during eco check. Skipping...");
-			if (plugin.getDebug() >= 3) {
+			if (plugin.getDebug().contains("3")) {
 			    e.printStackTrace();
 			}
 		    }
@@ -1066,7 +1066,7 @@ public class Greenhouses extends JavaPlugin {
      */
     public Greenhouse getInGreenhouse(Location location) {
 	for (Greenhouse g : greenhouses) {
-	    logger(3,"greenhouse check");
+	    //logger(3,"greenhouse check");
 	    if (g.insideGreenhouse(location)) {
 		return g;
 	    }
@@ -1082,7 +1082,7 @@ public class Greenhouses extends JavaPlugin {
      */
     public Greenhouse aboveAGreenhouse(Location location) {
 	for (Greenhouse g : greenhouses) {
-	    logger(3,"greenhouse check");
+	    //logger(3,"greenhouse check");
 	    if (g.aboveGreenhouse(location)) {
 		return g;
 	    }
@@ -1566,12 +1566,13 @@ public class Greenhouses extends JavaPlugin {
      * @param info
      */
     public void logger(int level, String info) {
-	if (level <= debug) {
-	    if (level == 1) {
-		Bukkit.getLogger().info(info);
-	    } else {
-		Bukkit.getLogger().info("DEBUG ["+level+"]:"+info);
-	    }
+	if (debug.contains("0")) {
+	    return;
+	}
+	if (debug.contains("1") && level == 1) {
+	    Bukkit.getLogger().info(info);
+	} else if (debug.contains(String.valueOf(level))){
+	    Bukkit.getLogger().info("DEBUG ["+level+"]:"+info);
 	}
     }
 
@@ -1579,7 +1580,7 @@ public class Greenhouses extends JavaPlugin {
     /**
      * @return the debug
      */
-    public int getDebug() {
+    public List<String> getDebug() {
 	return debug;
     }
 

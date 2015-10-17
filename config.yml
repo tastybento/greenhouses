@@ -7,10 +7,12 @@ greenhouses:
      - AcidIsland
 
    # Console message level.
+   # List the levels of debug or messages you want.
    # 0 = no messages except for warnings or severe errors
    # 1 = normal messages (default)
    # 2 and higher - debug levels - no need to use these unless you want to try debug
-   debug: 1
+   debug:
+   - 1
 
    ### Permissions limits
    # Set the maximum number of greenhouses a player can build
