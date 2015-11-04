@@ -4,14 +4,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bukkit.ChatColor;
+import org.bukkit.CropState;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.BlockState;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.material.Crops;
 
 public class BiomeRecipe {
     private Greenhouses plugin;
@@ -530,6 +533,19 @@ public class BiomeRecipe {
 		    if (!plantMaterial.get(index).equals(Material.DOUBLE_PLANT)) {
 			bl.setType(plantMaterial.get(index));
 			bl.setData(plantType.get(index).byteValue());
+			// Set growth stage
+			/*
+			 * TODO: Find a way to do this
+			switch (plantMaterial.get(index)) {
+			case CROPS:
+			    Crops c = new Crops(CropState.RIPE);
+			    BlockState bs = bl.getState();
+			    bs.setData(c);
+			    bs.update();
+			    break;
+			default:
+			    break;		
+			}*/
 		    } else {
 			// Check if there is room above for the plant
 			plugin.logger(2,"Double plant time!");
