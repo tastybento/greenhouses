@@ -15,6 +15,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
+import com.wasteofplastic.particleeffect.ParticleEffect.ParticleData;
 import com.wasteofplastic.particleeffect.ReflectionUtils.PackageType;
 
 /**
