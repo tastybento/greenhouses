@@ -844,12 +844,15 @@ public class Greenhouses extends JavaPlugin {
         } else {
             // May need to convert Biome
             if (oBiome.equalsIgnoreCase("COLD_TAIGA")) {
+                getLogger().warning("Converting Cold Taiga biome to 1.9 Taiga Cold");
                 return Biome.TAIGA_COLD;
             }
             if (oBiome.equalsIgnoreCase("FLOWER_FOREST")) {
+                getLogger().warning("Converting Flower Forest biome to 1.9 Forest");
                 return Biome.FOREST;
             }
             if (oBiome.equalsIgnoreCase("BEACH")) {
+                getLogger().warning("Converting Beach biome to 1.9 Beaches");
                 return Biome.BEACHES;
             }
             String test = oBiome;
@@ -857,6 +860,9 @@ public class Greenhouses extends JavaPlugin {
             while (!test.isEmpty()) {
                 for (Biome biome: Biome.values()) {
                     if (biome.name().contains(test)) {
+                        if (!biome.name().equals(test)) {
+                            getLogger().warning("Converting " + oBiome + " biome to 1.9 " + biome.name() + " - may destroy greenhouse.");
+                        }
                         return biome;
                     }
                 }
