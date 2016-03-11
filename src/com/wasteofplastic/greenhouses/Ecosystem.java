@@ -22,9 +22,14 @@ import org.bukkit.scheduler.BukkitTask;
  */
 public class Ecosystem implements Listener {
     private final Greenhouses plugin;
-    private final List<Biome> snowBiomes = Arrays.asList(new Biome[]{Biome.COLD_BEACH,Biome.COLD_TAIGA,Biome.COLD_TAIGA_HILLS,
-	    Biome.COLD_TAIGA_MOUNTAINS,Biome.FROZEN_OCEAN,Biome.FROZEN_RIVER,
-	    Biome.ICE_MOUNTAINS, Biome.ICE_PLAINS, Biome.ICE_PLAINS_SPIKES});
+    private final static List<Biome> SNOWBIOMES = new ArrayList<Biome>();
+    static {
+        for (Biome biome : Biome.values()) {
+            if (biome.name().contains("COLD") || biome.name().contains("ICE") || biome.name().contains("FROZEN")) {
+                SNOWBIOMES.add(biome);
+            }
+        }
+    }
     private BukkitTask snow = null;
     private List<Greenhouse> snowGlobes = new ArrayList<Greenhouse>();
 
@@ -67,7 +72,7 @@ public class Ecosystem implements Listener {
 		List<Greenhouse> toBeRemoved = new ArrayList<Greenhouse>();
 		for (Greenhouse g : plugin.getGreenhouses()) {
 		    plugin.logger(3,"Testing greenhouse biome : " + g.getBiome().toString());
-		    if (snowBiomes.contains(g.getBiome())) {
+		    if (SNOWBIOMES.contains(g.getBiome())) {
 			plugin.logger(3,"Snow biome found!");
 			// If it is already on the list, just snow, otherwise check if the hopper has water
 			if (!snowGlobes.contains(g)) {

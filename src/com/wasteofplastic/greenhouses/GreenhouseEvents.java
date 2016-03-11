@@ -52,7 +52,7 @@ public class GreenhouseEvents implements Listener {
                 && event.getItem() != null && event.getItem().getType() == Material.WATER_BUCKET) {
             Greenhouse g = plugin.players.getInGreenhouse(player);
             if (g != null && !g.getBiome().equals(Biome.HELL) && !g.getBiome().equals(Biome.DESERT)
-        	    && !g.getBiome().equals(Biome.DESERT_HILLS) && !g.getBiome().equals(Biome.DESERT_MOUNTAINS)) {
+        	    && !g.getBiome().equals(Biome.DESERT_HILLS)) {
         	event.setCancelled(true);
         	event.getClickedBlock().getRelative(event.getBlockFace()).setType(Material.WATER);
             }
@@ -75,7 +75,7 @@ public class GreenhouseEvents implements Listener {
                 && event.getBlock().getType() == Material.ICE) {
             Greenhouse g = plugin.players.getInGreenhouse(player);
             if (g != null && !g.getBiome().equals(Biome.HELL) && !g.getBiome().equals(Biome.DESERT)
-        	    && !g.getBiome().equals(Biome.DESERT_HILLS) && !g.getBiome().equals(Biome.DESERT_MOUNTAINS)) {
+        	    && !g.getBiome().equals(Biome.DESERT_HILLS)) {
         	event.setCancelled(true);
         	event.getBlock().setType(Material.WATER);
             }

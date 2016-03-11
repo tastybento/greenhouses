@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>Greenhouses</groupId>
 	<artifactId>Greenhouses</artifactId>
-	<version>3.0</version>
+	<version>4.0</version>
 	<name>greenhouses</name>
 	<description>A plugin that provides mini biome greenhouses</description>
 	<build>
@@ -35,7 +35,7 @@
 		<dependency>
 			<groupId>org.spigotmc</groupId>
 			<artifactId>spigot-api</artifactId>
-			<version>1.8.8-R0.1-SNAPSHOT</version>
+			<version>1.9-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>net.milkbowl.vault</groupId>
