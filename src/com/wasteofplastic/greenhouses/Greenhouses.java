@@ -760,13 +760,11 @@ public class Greenhouses extends JavaPlugin {
                                 g.setPlayerName(playerName);
                                 // Set biome
                                 String oBiome = myHouses.getString(key + ".originalBiome", "PLAINS");
-                                Biome originalBiome = Biome.valueOf(oBiome);
-                                if (originalBiome == null) {
-                                    originalBiome = Biome.PLAINS;
-                                }
+                                // Do some conversions
+                                Biome originalBiome = convertBiome(oBiome);                                
                                 g.setOriginalBiome(originalBiome);
                                 String gBiome = myHouses.getString(key + ".greenhouseBiome", "PLAINS");
-                                Biome greenhouseBiome = Biome.valueOf(gBiome);
+                                Biome greenhouseBiome = convertBiome(gBiome);
                                 if (greenhouseBiome == null) {
                                     greenhouseBiome = Biome.PLAINS;
                                 }
@@ -827,6 +825,46 @@ public class Greenhouses extends JavaPlugin {
             }
         }
 
+    }
+
+
+    /**
+     * Converts biomes to known biomes if required
+     * @param oBiome
+     * @return
+     */
+    private Biome convertBiome(String oBiome) {
+        if (plugin.getServer().getVersion().contains("(MC: 1.8") || plugin.getServer().getVersion().contains("(MC: 1.7")) {
+            try {           
+                return Biome.valueOf(oBiome);
+            } catch (Exception e) {
+                getLogger().severe("Could not identify Biome " + oBiome + " setting to PLAINS - may destroy greenhouse");
+                return Biome.PLAINS;
+            }
+        } else {
+            // May need to convert Biome
+            if (oBiome.equalsIgnoreCase("COLD_TAIGA")) {
+                return Biome.TAIGA_COLD;
+            }
+            if (oBiome.equalsIgnoreCase("FLOWER_FOREST")) {
+                return Biome.FOREST;
+            }
+            if (oBiome.equalsIgnoreCase("BEACH")) {
+                return Biome.BEACHES;
+            }
+            String test = oBiome;
+
+            while (!test.isEmpty()) {
+                for (Biome biome: Biome.values()) {
+                    if (biome.name().contains(test)) {
+                        return biome;
+                    }
+                }
+                test = test.substring(0, test.length() - 1);
+            }
+        }
+        getLogger().severe("Could not identify Biome " + oBiome + " setting to PLAINS - may destroy greenhouse");
+        return Biome.PLAINS;
     }
 
 
