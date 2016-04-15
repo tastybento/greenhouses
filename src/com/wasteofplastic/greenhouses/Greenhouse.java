@@ -339,16 +339,26 @@ public class Greenhouse {
             return;
         }
         plugin.logger(2,"Biome seting to " + biome.toString());
-        //List<Pair> chunks = new ArrayList<Pair>();
+        Set<Pair> chunkCoords = new HashSet<Pair>();
         final Set<Chunk> chunks = new HashSet<Chunk>();
         for (int x = pos1.getBlockX();x<pos2.getBlockX();x++) {
             for (int z = pos1.getBlockZ();z<pos2.getBlockZ();z++) {
                 Block b = world.getBlockAt(x, groundY, z);
                 b.setBiome(biome);
-                chunks.add(b.getChunk());
+                if (teleport) {
+                    chunks.add(b.getChunk());
+                } 
+                if (plugin.getServer().getVersion().contains("(MC: 1.7")) {
+                    chunkCoords.add(new Pair(b.getChunk().getX(), b.getChunk().getZ()));
+                }
             }
         }
-        if (teleport) {
+        if (plugin.getServer().getVersion().contains("(MC: 1.7")) {
+            // Refresh chunks
+            for (Pair coords: chunkCoords) {                
+                    world.refreshChunk(coords.getLeft(), coords.getRight());                
+            }
+        } else if (teleport) {
             for (Chunk c: chunks) {
                 if (c.isLoaded()) {
                     for (final Entity entity: c.getEntities()) {

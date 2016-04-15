@@ -21,8 +21,7 @@ public class Roof {
     private int maxZ;
     private int height;
     private boolean roofFound;
-    final List<Material> roofBlocks = Arrays.asList(new Material[]{Material.GLASS, Material.STAINED_GLASS, Material.HOPPER, Material.TRAP_DOOR, Material.IRON_TRAPDOOR, Material.GLOWSTONE});
-
+    private final static List<String> ROOFBLOCKS = Arrays.asList("GLASS","STAINED_GLASS","HOPPER","TRAP_DOOR","IRON_TRAPDOOR","GLOWSTONE");
 
     /**
      * Finds a roof from a starting location under the roof and characterizes it
@@ -50,7 +49,7 @@ public class Roof {
                         if (!Walls.isWallBlock(b.getType())) {
                             // Look up
                             for (int y = roofY; y < world.getMaxHeight(); y++) {
-                                if (roofBlocks.contains(world.getBlockAt(x,y,z).getType())) {
+                                if (ROOFBLOCKS.contains(world.getBlockAt(x,y,z).getType().name())) {
                                     roofFound = true;
                                     loc = new Location(world,x,y,z);
                                     plugin.logger(3,"Roof block found at " + x + " " + y + " " + z + " of type " + loc.getBlock().getType().toString());
@@ -117,7 +116,7 @@ public class Roof {
         Location maxz = height.clone();
         Location minz = height.clone();
         int limit = 0;
-        while (roofBlocks.contains(maxx.getBlock().getType()) && limit < 100) {
+        while (ROOFBLOCKS.contains(maxx.getBlock().getType().name()) && limit < 100) {
             limit++;
             maxx.add(new Vector(1,0,0));
         }
@@ -125,7 +124,7 @@ public class Roof {
             maxX = maxx.getBlockX()-1;
         }
 
-        while (roofBlocks.contains(minx.getBlock().getType()) && limit < 200) {
+        while (ROOFBLOCKS.contains(minx.getBlock().getType().name()) && limit < 200) {
             limit++;
             minx.subtract(new Vector(1,0,0));
         }
@@ -133,7 +132,7 @@ public class Roof {
             minX = minx.getBlockX() + 1;
         }
 
-        while (roofBlocks.contains(maxz.getBlock().getType()) && limit < 300) {
+        while (ROOFBLOCKS.contains(maxz.getBlock().getType().name()) && limit < 300) {
             limit++;
             maxz.add(new Vector(0,0,1));
         } 
@@ -141,7 +140,7 @@ public class Roof {
             maxZ = maxz.getBlockZ() - 1;
         }
 
-        while (roofBlocks.contains(minz.getBlock().getType()) && limit < 400) {
+        while (ROOFBLOCKS.contains(minz.getBlock().getType().name()) && limit < 400) {
             limit++;
             minz.subtract(new Vector(0,0,1));
         }
@@ -225,7 +224,7 @@ public class Roof {
      * @return true if this is a roof block
      */
     public boolean isRoofBlock(Material blockType) {
-        if (roofBlocks.contains(blockType)) {
+        if (ROOFBLOCKS.contains(blockType.name())) {
             return true;
         }
         return false;

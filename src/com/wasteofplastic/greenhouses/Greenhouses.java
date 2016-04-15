@@ -43,6 +43,7 @@ import com.wasteofplastic.particleeffect.ParticleEffect;
  * @author tastybento
  */
 public class Greenhouses extends JavaPlugin {
+    private final static List<String> WALLBLOCKS = Arrays.asList("HOPPER", "GLASS", "GLOWSTONE", "STAINED_GLASS", "STAINED_GLASS_PANE", "THIN_GLASS", "IRON_DOOR_BLOCK");
     // Maximum size that the Minecraft inventory can be in items before going weird
     private static final int MAXIMUM_INVENTORY_SIZE = 49;
     // This plugin
@@ -1277,10 +1278,6 @@ public class Greenhouses extends JavaPlugin {
         final Location location = player.getLocation().add(new Vector(0,1,0));
         logger(3,"Player location is " + location.getBlockX() + " " + location.getBlockY() + " " + location.getBlockZ());
         final Biome originalBiome = location.getBlock().getBiome();
-        // Define the blocks
-        //final List<Material> roofBlocks = Arrays.asList(new Material[]{Material.GLASS, Material.STAINED_GLASS, Material.HOPPER, Material.TRAP_DOOR, Material.IRON_TRAPDOOR, Material.GLOWSTONE});
-        final List<Material> wallBlocks = Arrays.asList(new Material[]{Material.HOPPER, Material.GLASS, Material.THIN_GLASS, Material.GLOWSTONE, Material.WOODEN_DOOR, Material.IRON_DOOR_BLOCK,Material.STAINED_GLASS,Material.STAINED_GLASS_PANE});
-
         final World world = location.getWorld();
 
         // we have the height above this location where a roof block is
@@ -1362,7 +1359,7 @@ public class Greenhouses extends JavaPlugin {
                         if (y == roof.getHeight() || x == minX || x == maxX || z == minZ || z== maxZ) {
                             //Greenhouses.logger(3,"DEBUG: Checking " + x + " " + y + " " + z);
                             // Doing string check for DOOR allows all 1.8 doors to be covered even if the server is not 1.8
-                            if ((y != roof.getHeight() && !wallBlocks.contains(blockType) && !blockType.toString().contains("DOOR")) 
+                            if ((y != roof.getHeight() && !WALLBLOCKS.contains(blockType.name()) && !blockType.toString().contains("DOOR")) 
                                     || (y == roof.getHeight() && !roof.isRoofBlock(blockType) && !blockType.toString().contains("DOOR"))) {
                                 logger(2,"DEBUG: bad block found at  " + x + "," + y+ "," + z + " " + blockType);
                                 if (blockType == Material.AIR) {
