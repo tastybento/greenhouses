@@ -60,8 +60,6 @@ public class Greenhouses extends JavaPlugin {
     // Offline Messages
     private HashMap<UUID, List<String>> messages = new HashMap<UUID, List<String>>();
     private YamlConfiguration messageStore;
-    // A map of where pos1's are stored
-    private HashMap<UUID,Location> pos1s = new HashMap<UUID,Location>();
     // Ecosystem object and random number generator
     private Ecosystem eco = new Ecosystem(this);
     // Tasks
@@ -184,11 +182,13 @@ public class Greenhouses extends JavaPlugin {
                 if (thisBiome != null) {
                     int priority = biomeRecipe.getInt("priority", 0);
                     BiomeRecipe b = new BiomeRecipe(this, thisBiome,priority);
+                    // Set the name
+                    b.setName(type);
                     // Set the permission
                     b.setPermission(biomeRecipe.getString("permission",""));
                     // Set the icon
                     b.setIcon(Material.valueOf(biomeRecipe.getString("icon", "SAPLING")));
-                    b.setFriendlyName(ChatColor.translateAlternateColorCodes('&', biomeRecipe.getString("friendlyname", "").replace('|', '\n')));
+                    b.setFriendlyName(ChatColor.translateAlternateColorCodes('&', biomeRecipe.getString("friendlyname", "")));
                     // A value of zero on these means that there must be NO coverage, e.g., desert. If the value is not present, then the default is -1
                     b.setWatercoverage(biomeRecipe.getInt("watercoverage",-1));
                     b.setLavacoverage(biomeRecipe.getInt("lavacoverage",-1));
@@ -491,7 +491,7 @@ public class Greenhouses extends JavaPlugin {
 
         // Kick off a few tasks on the next tick
         getServer().getScheduler().runTask(plugin, new Runnable() {
-            @Override
+
             public void run() {
                 final PluginManager manager = Bukkit.getServer().getPluginManager();
                 if (manager.isPluginEnabled("Vault")) {
@@ -526,7 +526,7 @@ public class Greenhouses extends JavaPlugin {
         if (plantTick > 0) {
             logger(1,"Kicking off flower growing scheduler every " + Settings.plantTick + " minutes");
             plantTask = getServer().getScheduler().runTaskTimer(plugin, new Runnable() {
-                @Override
+
                 public void run() {
                     for (Greenhouse g : getGreenhouses()) {
                         logger(3,"Servicing greenhouse biome : " + g.getBiome().toString());
@@ -555,7 +555,6 @@ public class Greenhouses extends JavaPlugin {
             logger(1,"Kicking off block conversion scheduler every " + Settings.blockTick + " minutes");
             blockTask = getServer().getScheduler().runTaskTimer(plugin, new Runnable() {
 
-                @Override
                 public void run() {		    
                     for (Greenhouse g : getGreenhouses()) {
                         try {
@@ -580,7 +579,7 @@ public class Greenhouses extends JavaPlugin {
         if (ecoTick > 0) {
             logger(1,"Kicking off greenhouse verify scheduler every " + Settings.ecoTick + " minutes");
             ecoTask = getServer().getScheduler().runTaskTimer(plugin, new Runnable() {
-                @Override
+
                 public void run() {
                     try {
                         checkEco();
@@ -603,7 +602,7 @@ public class Greenhouses extends JavaPlugin {
         if (mobTick > 0) {
             logger(1,"Kicking off mob populator scheduler every " + Settings.plantTick + " minutes");
             mobTask = getServer().getScheduler().runTaskTimer(plugin, new Runnable() {
-                @Override
+
                 public void run() {
                     for (Greenhouse g : getGreenhouses()) {
                         g.populateGreenhouse();
@@ -765,22 +764,24 @@ public class Greenhouses extends JavaPlugin {
                                 String recipeName = myHouses.getString(key + ".greenhouseRecipe", "");
                                 boolean success = false;
 
-                                // Check to see if this biome has a recipe                                    
+                                // Check to see if this biome has a recipe  
+                                // Try by name first
                                 for (BiomeRecipe br : getBiomeRecipes()) {
-                                    // For backwards compatibility
-                                    if (recipeName.isEmpty()) {
+                                    if (br.getName().equalsIgnoreCase(recipeName)) {
+                                        success = true;
+                                        g.setBiomeRecipe(br);
+                                        break;
+                                    }                                     
+                                }
+                                // Fall back to biome
+                                if (!success) {
+                                    for (BiomeRecipe br : getBiomeRecipes()) {
                                         if (br.getBiome().equals(greenhouseBiome)) {
                                             success = true;
                                             g.setBiomeRecipe(br);
                                             break;
-                                        }
-                                    } else {
-                                        if (br.getName().equalsIgnoreCase(recipeName)) {
-                                            success = true;
-                                            g.setBiomeRecipe(br);
-                                            break;
-                                        }
-                                    } 
+                                        }                                     
+                                    }
                                 }
                                 // Check to see if it was set properly
                                 if (!success) {
@@ -1029,23 +1030,6 @@ public class Greenhouses extends JavaPlugin {
         }
     }
 
-
-    /**
-     * @return the pos1s
-     */
-    public HashMap<UUID, Location> getPos1s() {
-        return pos1s;
-    }
-
-
-    /**
-     * @param pos1s the pos1s to set
-     */
-    public void setPos1s(HashMap<UUID, Location> pos1s) {
-        this.pos1s = pos1s;
-    }
-
-
     /**
      * @return the greenhouses
      */
@@ -1087,32 +1071,6 @@ public class Greenhouses extends JavaPlugin {
             }
         }
         return false;
-    }
-
-    /**
-     * Creates a new greenhouse
-     * @param pos1
-     * @param pos2
-     * @param owner
-     * @return the greenhouse region
-     */
-    public Greenhouse createNewGreenhouse(Location pos1, Location pos2, Player owner) {
-        Greenhouse d = new Greenhouse(plugin, pos1, pos2, owner.getUniqueId());
-        d.setEnterMessage((Locale.messagesenter.replace("[owner]", owner.getDisplayName())).replace("[biome]", Util.prettifyText(d.getBiome().toString())));
-        d.setFarewellMessage(Locale.messagesleave.replace("[owner]", owner.getDisplayName()));
-        getGreenhouses().add(d);
-        getPos1s().remove(owner.getUniqueId());
-        //players.save(owner.getUniqueId());
-        // Find everyone who is in this greenhouse and tell them they are in a greenhouse now
-        for (Player p : getServer().getOnlinePlayers()) {
-            if (d.insideGreenhouse(p.getLocation())) {
-                if (!p.equals(owner)) {
-                    p.sendMessage((Locale.messagesyouarein.replace("[owner]", owner.getDisplayName())).replace("[biome]", Util.prettifyText(d.getBiome().toString())));
-                }
-                players.setInGreenhouse(p, d);
-            }
-        }
-        return d;
     }
 
     /**
@@ -1500,7 +1458,7 @@ public class Greenhouses extends JavaPlugin {
             }
             final Set<Location> original = redGlass;
             Bukkit.getScheduler().runTaskLater(this, new Runnable() {
-                @Override
+
                 public void run() {
                     for (Location loc: original) {
                         player.sendBlockChange(loc,loc.getBlock().getType(),loc.getBlock().getData());
@@ -1548,40 +1506,37 @@ public class Greenhouses extends JavaPlugin {
 
         if (winner != null) {
             logger(3,"biome winner is " + winner.getFriendlyName());
-            Greenhouse g = createNewGreenhouse(insideOne, insideTwo, player);
+            Greenhouse g = new Greenhouse(this, insideOne, insideTwo, player.getUniqueId());
             g.setOriginalBiome(originalBiome);
             g.setBiomeRecipe(winner);
-            g.setEnterMessage((Locale.messagesenter.replace("[owner]", player.getDisplayName())).replace("[biome]", Util.prettifyText(winner.getBiome().toString())));
+            String friendlyName = Util.prettifyText(winner.getBiome().toString());
+            if (!winner.getFriendlyName().isEmpty()) {
+                friendlyName = winner.getFriendlyName();  
+            }
+            g.setEnterMessage((Locale.messagesenter.replace("[owner]", player.getDisplayName())).replace("[biome]", friendlyName));
+            g.setFarewellMessage((Locale.messagesleave.replace("[owner]", player.getDisplayName())).replace("[biome]", friendlyName));
             // Store the roof hopper location so it can be tapped in the future
             if (ghHopper == 1) {
                 g.setRoofHopperLocation(roofHopperLoc);
             }
-            // Store the contents of the greenhouse so it can be audited later
-            //g.setOriginalGreenhouseContents(contents);
-            // TODO: Do not teleport for now
             g.startBiome(false);
-            player.sendMessage(ChatColor.GREEN + Locale.createsuccess.replace("[biome]", Util.prettifyText(winner.getBiome().toString())));
+            player.sendMessage(ChatColor.GREEN + Locale.createsuccess.replace("[biome]", friendlyName));
             players.incGreenhouseCount(player);
+            // Store this greenhouse
+            greenhouses.add(g);
+            // Find everyone who is in this greenhouse and tell them they are in a greenhouse now
+            for (Player p : getServer().getOnlinePlayers()) {
+                if (g.insideGreenhouse(p.getLocation())) {
+                    if (!p.equals(player)) {                       
+                        p.sendMessage((Locale.messagesyouarein.replace("[owner]", player.getDisplayName())).replace("[biome]", friendlyName));                        
+                    }
+                    players.setInGreenhouse(p, g);
+                }
+            }
             return g;
         }
         return null;
     }
-    /*
-	Flower		Plains	SPlains	Swamp	Forest	FForest	Any other
-	 Dandelion	Yes	Yes	No	Yes	No	Yes
-	 Poppy		Yes	Yes	No	Yes	Yes	Yes
-	 Blue Orchid	No	No	Yes	No	No	No
-	 Allium		No	No	No	No	Yes	No
-	 Azure Bluet	Yes	Yes	No	No	Yes	No
-	 Tulips		Yes	Yes	No	No	Yes	No
-	 Oxeye Daisy	Yes	Yes	No	No	Yes	No
-	 Sunflower	No	Gen	No	No	No	No
-	 Lilac		No	No	No	Gen	Gen	No
-	 Rose Bush	No	No	No	Gen	Gen	No
-	 Peony		No	No	No	Gen	Gen	No
-     */
-
-
 
     /**
      * Saves all the greenhouses to greenhouse.yml

@@ -2,7 +2,7 @@
 biomes:
   # Biome recipe name - can be anything you like, but must be unique
   beaches:
-    # The name of the icon. Can use | for a new line and color codes using &, e.g. &c
+    # The name of the icon. Can use & for color codes, e.g. &c
     friendlyname: "Beach"
     # The biome of the recipe. Allows multiple recipes for the same biome.
     biome: BEACHES

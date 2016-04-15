@@ -303,6 +303,7 @@ public class Greenhouse {
 
     /**
      * Starts the biome in the greenhouse
+     * @param teleport - if true will teleport the player away and back to force the biome to change
      */
     public void startBiome(boolean teleport) {
         setBiomeBlocks(greenhouseBiome, teleport);
@@ -343,23 +344,21 @@ public class Greenhouse {
         if (teleport) {
             for (Chunk c: chunks) {
                 if (c.isLoaded()) {
-                    for (final Entity e: c.getEntities()) {
-                        if (e instanceof Player) {
-                            Player player = (Player)e;
-                            if (!e.isInsideVehicle()) {
-                                final Location playerLoc = e.getLocation();
+                    for (final Entity entity: c.getEntities()) {
+                        if (entity instanceof Player) {
+                            if (!entity.isInsideVehicle()) {
+                                final Location playerLoc = entity.getLocation();
                                 if (playerLoc.getBlockX() >= pos1.getBlockX() && playerLoc.getBlockX() < pos2.getBlockX()
                                         && playerLoc.getBlockZ() >= pos1.getBlockZ() && playerLoc.getBlockZ() < pos2.getBlockZ()) {
 
                                     // Teleport them somewhere far, far away
-                                    e.teleport(new Location(e.getWorld(),0,-5,0));
+                                    entity.teleport(new Location(entity.getWorld(),0,-5,0));
                                     Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
 
-                                        @Override
                                         public void run() {
                                             // Teleport them back
                                             playerLoc.getChunk().load();
-                                            e.teleport(playerLoc);	
+                                            entity.teleport(playerLoc);	
                                         }}, 5L);
                                 }
 
