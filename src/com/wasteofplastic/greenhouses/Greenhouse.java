@@ -206,6 +206,7 @@ public class Greenhouse {
      * @param playerName the playerName to set
      */
     public void setPlayerName(String playerName) {
+        //plugin.getLogger().info("DEBUG: setting name to " + playerName);
         this.playerName = playerName;
     }
 

@@ -1513,6 +1513,7 @@ public class Greenhouses extends JavaPlugin {
             if (!winner.getFriendlyName().isEmpty()) {
                 friendlyName = winner.getFriendlyName();  
             }
+            g.setPlayerName(player.getName());
             g.setEnterMessage((Locale.messagesenter.replace("[owner]", player.getDisplayName())).replace("[biome]", friendlyName));
             g.setFarewellMessage((Locale.messagesleave.replace("[owner]", player.getDisplayName())).replace("[biome]", friendlyName));
             // Store the roof hopper location so it can be tapped in the future
