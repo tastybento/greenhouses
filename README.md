@@ -1,10 +1,12 @@
-== Greenhouses ==
+Greenhouses
+===========
 
 Greenhouses is an essential plugin to power-up your SkyBlock or AcidIsland world! It enables players to build their own biome greenhouses complete with weather, friendly mob spawning, unique plant growth and even block erosion!
 
 Greenhouses are made out of glass and must contain the blocks found in the Biome Recipe to be valid. There is a recipe GUI. Once built, the greenhouse can be used to grow plants with bonemeal, and it may spawn biome-specific mobs. If you include a hopper with water in it, snow will form inside the greenhouse when it rains. If you put bonemeal in the hopper, biome-specific plants will grow. Some blocks can also transform over time due to "erosion".
 
 Features
+--------
 
 * Craft your own self-contained biome greenhouse on an island (or elsewhere if you like)
 * Greenhouses can grow plants that cannot normally be grown, like sunflowers
@@ -15,7 +17,7 @@ Features
 * Admins can fully customize biomes and recipes
 
 How to Build A Greenhouse (Simple version)
-
+------------------------------------------
 1. Make glass blocks and build a rectangular set of walls with a flat roof.
 2. Put a hopper in the wall or roof.
 3. Put a door in the wall so you can get in and out.
@@ -24,14 +26,14 @@ How to Build A Greenhouse (Simple version)
 6. Type /g again and click on the biome to make it.
 
 Once made:
-
+----------
 * Use bonemeal to grow small plants on grass immediately in the greenhouse.
 * Or place bonemeal in the hopper to have the greenhouse sprinkle bonemeal automatically. Come back later to see what grows!
 * Place a bucket of water (or more) in the hopper to cause snow to fall in cold biomes. Snow will fall when it rains in the world. Each snowfall empties one bucket of water.
 * Friendly biome-specific mobs may spawn in your greenhouse - the usual rules apply (be more than 24 blocks away).
 
 FAQ
-
+---
 * Can I use stained glass? Yes, you can. It's pretty.
 * Can I fill my greenhouse full of water? Yes. That's an ocean.
 * Will a squid spawn there? Maybe... okay, yes it will, if it's a big enough ocean.
@@ -45,11 +47,11 @@ FAQ
 * What kind of mobs spawn in the biomes? It's what you would expect, wolves in Cold Taiga, horses on plains, etc.
 
 Required Plugin
-
+---------------
 1. Vault for permissions - make sure you use the latest version!
 
 Installation and Configuration
-
+------------------------------
 1. Download and install Vault if you haven't done so already
 2. Download the plugin
 3. Place into your plugins folder
@@ -61,25 +63,26 @@ Installation and Configuration
 9. Done! To make your first greenhouse, build a glass box and type /g make to see what kind of greenhouse you get. Type /g recipe to see the recipes.
 
 Upgrading
-
+---------
 Read the file release notes for changes and instructions on how to upgrade.
 
 Player Commands
-
-/greenhouse or /g can be used for short.
-/greenhouse help - lists these commands
-/greenhouse make: Tries to make a greenhouse
-/greenhouse remove: Removes a greenhouse that you are standing in if you are the owner
-/greenhouse list: Lists all the recipes available
-/greenhouse recipe: Displays the recipe GUI - clicking on a recipe will try to make a greenhouse
+---------------
+**/greenhouse** or **/g** can be used for short.
+**/greenhouse help** - lists these commands
+**/greenhouse make**: Tries to make a greenhouse by finding the first valid recipe
+**/greenhouse remove**: Removes a greenhouse that you are standing in if you are the owner
+**/greenhouse list**: Lists all the recipes available
+**/greenhouse recipe**: Displays the recipe GUI - clicking on a recipe will try to make a greenhouse
 
 Admin Commands
+--------------
+**/gadmin reload** : Reloads config files
+**/gadmin info <player>**: provides info on the player
+**/gadmin info**: provides info on the greenhouse you are in
 
-/gadmin reload : Reloads config files
-/gadmin info <player>: provides info on the player
-/gadmin info: provides info on the greenhouse you are in
 Permissions
-
+-----------
 Permission to use specific biomes can be added in biomes.yml.
 
 For example, the permission for the Nether (Hell) biome is greenhouses.biome.nether and is set here:
@@ -99,7 +102,7 @@ General permissions are:
      default: op
 
 Stats Disclosure
-
+----------------
 This plugin utilizes a plugin metrics system, which means that the following information is collected and sent to mcstats.org:
 
 A unique identifier
