@@ -33,16 +33,6 @@ public class Roof {
 	// This section tries to find a roof block
 	// Try just going up - this covers every case except if the player is standing under a hole
 	roofFound = false;
-	/*
-	int roofY = loc.getBlockY();
-	for (; roofY < world.getMaxHeight(); roofY++) {
-	    if (roofBlocks.contains(loc.getBlock().getType())) {
-		roofFound = true;
-		plugin.logger(3,"roof block found " + roofY + " of type " + loc.getBlock().getType().toString());
-		break;
-	    }
-	    loc.add(new Vector(0,1,0));
-	}*/
 	// This does a ever-growing check around the player to find a roof block. It is possible for the player
 	// to be outside the greenhouse in this situation, so a check is done later to mkae sure the player is inside
 	//if (!roofFound) {

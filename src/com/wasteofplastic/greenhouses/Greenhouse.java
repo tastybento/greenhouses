@@ -26,8 +26,8 @@ import com.wasteofplastic.particleeffect.ParticleEffect;
 
 public class Greenhouse {
     private Greenhouses plugin;
-    private final Vector pos1;
-    private final Vector pos2;
+    private final Location pos1;
+    private final Location pos2;
     private final World world;
     private UUID owner;
     private String playerName;
@@ -44,8 +44,8 @@ public class Greenhouse {
 
     public Greenhouse(Greenhouses plugin, Location pos1, Location pos2, UUID owner) {
         this.plugin = plugin;
-        this.pos1 = new Vector(pos1.getBlockX(),pos1.getBlockY(),pos1.getBlockZ());
-        this.pos2 = new Vector(pos2.getBlockX(),pos2.getBlockY(),pos2.getBlockZ());
+        this.pos1 = pos1;
+        this.pos2 = pos2;
         int minx = Math.min(pos1.getBlockX(), pos2.getBlockX());
         int maxx = Math.max(pos1.getBlockX(), pos2.getBlockX());
         int minz = Math.min(pos1.getBlockZ(), pos2.getBlockZ());
@@ -105,13 +105,16 @@ public class Greenhouse {
 
 
     public boolean insideGreenhouse(Location loc) {
-        plugin.logger(4,"Checking intersection");
-        Vector v = loc.toVector();
-        plugin.logger(4,"Pos 1 = " + pos1.toString());
-        plugin.logger(4,"Pos 2 = " + pos2.toString());
-        plugin.logger(4,"V = " + v.toString());
-        boolean i = v.isInAABB(Vector.getMinimum(pos1,  pos2), Vector.getMaximum(pos1, pos2));
-        return i;
+        if (loc.getWorld().equals(world)) {
+            plugin.logger(4,"Checking intersection");
+            Vector v = loc.toVector();
+            plugin.logger(4,"Pos 1 = " + pos1.toString());
+            plugin.logger(4,"Pos 2 = " + pos2.toString());
+            plugin.logger(4,"V = " + v.toString());
+            boolean i = v.isInAABB(Vector.getMinimum(pos1.toVector(),  pos2.toVector()), Vector.getMaximum(pos1.toVector(), pos2.toVector()));
+            return i;
+        }
+        return false;
     }
 
     /**
@@ -120,11 +123,14 @@ public class Greenhouse {
      * @return
      */
     public boolean aboveGreenhouse(Location loc) {
-        Vector v = loc.toVector();
-        Vector p1 = new Vector(pos1.getBlockX(),heightY,pos1.getBlockZ());
-        Vector p2 = new Vector(pos2.getBlockX(),world.getMaxHeight(),pos2.getBlockZ());
-        boolean i = v.isInAABB(Vector.getMinimum(p1,  p2), Vector.getMaximum(p1, p2));
-        return i;
+        if (loc.getWorld().equals(world)) {
+            Vector v = loc.toVector();
+            Vector p1 = new Vector(pos1.getBlockX(),heightY,pos1.getBlockZ());
+            Vector p2 = new Vector(pos2.getBlockX(),world.getMaxHeight(),pos2.getBlockZ());
+            boolean i = v.isInAABB(Vector.getMinimum(p1,  p2), Vector.getMaximum(p1, p2));
+            return i;
+        } 
+        return false;        
     }
 
 
@@ -388,8 +394,8 @@ public class Greenhouse {
         }
         plugin.logger(3,"Mob ready to spawn in location " + pos1.getBlockX() + "," + pos2.getBlockZ() + " in world " + world.getName());
         // Spawn a temporary snowball in center of greenhouse
-        Vector p1 = pos1.clone();
-        Entity snowball = world.spawnEntity(p1.midpoint(pos2).toLocation(world), EntityType.SNOWBALL);
+        Vector p1 = pos1.toVector().clone();
+        Entity snowball = world.spawnEntity(p1.midpoint(pos2.toVector()).toLocation(world), EntityType.SNOWBALL);
         if (snowball != null) {
             Double x = (Math.abs(pos2.getX()-pos1.getX()))/2D;
             Double y= (Math.abs(pos2.getY()-pos1.getY()))/2D;

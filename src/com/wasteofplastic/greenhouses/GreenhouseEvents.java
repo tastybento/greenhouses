@@ -250,10 +250,12 @@ public class GreenhouseEvents implements Listener {
             return;
         }
         // If the offending block is not above a greenhouse, forget it!
-        if (plugin.aboveAGreenhouse(e.getBlock().getLocation()) == null) {
+        Greenhouse g = plugin.aboveAGreenhouse(e.getBlock().getLocation());
+        if (g == null) {
             return;
         }
         e.getPlayer().sendMessage(ChatColor.RED + Locale.eventcannotplace);
+        e.getPlayer().sendMessage("Greenhouse is at " + g.getPos1() + " to " + g.getPos2());
         e.setCancelled(true);
     }
 
