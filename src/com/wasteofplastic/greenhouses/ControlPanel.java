@@ -137,9 +137,10 @@ public class ControlPanel implements Listener {
         }
         meta.setLore(lore);
         item.setItemMeta(meta);
-        biomePanel.addItem(item);
+        biomePanel.setItem(0, item);
         // Now add the biomes
 
+        index = 1;
         for (BiomeRecipe br : store.values()) {
             // Create an itemStack
             item = new ItemStack(br.getIcon());
@@ -175,10 +176,9 @@ public class ControlPanel implements Listener {
             } else if (br.getLavaCoverage() > 0) {
                 lore.add(Locale.recipelavamustbe.replace("[coverage]", String.valueOf(br.getLavaCoverage())));
             }
-
             meta.setLore(lore);
             item.setItemMeta(meta);
-            biomePanel.addItem(item);
+            biomePanel.setItem(index++,item);
         }
         // Stash the panel for later use when clicked
         biomePanels.put(player.getUniqueId(), store);

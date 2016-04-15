@@ -4,7 +4,6 @@ import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -44,6 +43,8 @@ import com.wasteofplastic.particleeffect.ParticleEffect;
  * @author tastybento
  */
 public class Greenhouses extends JavaPlugin {
+    // Maximum size that the Minecraft inventory can be in items before going weird
+    private static final int MAXIMUM_INVENTORY_SIZE = 49;
     // This plugin
     private static Greenhouses plugin;
     // The world
@@ -222,8 +223,7 @@ public class Greenhouses extends JavaPlugin {
                             }
                         }
                     }
-                    biomeRecipes.add(b);
-                    // TODO: Add loading of other items from the file
+                    
                     // Load plants
                     // # Plant Material: Probability in %:Block Material on what they grow:Plant Type(optional):Block Type(Optional) 
                     ConfigurationSection temp = biomes.getConfigurationSection("biomes." + type + ".plants");
@@ -291,6 +291,8 @@ public class Greenhouses extends JavaPlugin {
                             b.addConvBlocks(oldMaterial, oldType, newMaterial, newType, convChance, localMaterial, localType);
                         }
                     }
+                    // Add the recipe to the list
+                    biomeRecipes.add(b);
                 }
             } catch (Exception e) {
                 logger(1,"Problem loading biome recipe - skipping!");
@@ -301,7 +303,13 @@ public class Greenhouses extends JavaPlugin {
                 logger(1,"Valid biomes are " + validBiomes);
                 e.printStackTrace();
             }
-
+            
+            // Check maximum number
+            if (biomeRecipes.size() == MAXIMUM_INVENTORY_SIZE) {
+               getLogger().warning("Cannot load any more biome recipies - limit is 49!"); 
+               break;
+            }
+            
         }
         logger(1,"Loaded " + biomeRecipes.size() + " biome recipes.");
     }
@@ -906,7 +914,7 @@ public class Greenhouses extends JavaPlugin {
             localeFile = new File(getDataFolder(), "locale.yml");
         }
         if (!localeFile.exists()) {            
-            plugin.saveResource("locale.yml", false);
+            saveResource("locale.yml", false);
         }
     }
 
@@ -915,16 +923,9 @@ public class Greenhouses extends JavaPlugin {
      */
     public void reloadLocale() {
         if (localeFile == null) {
-            localeFile = new File(getDataFolder(), "locale.yml");
+            saveDefaultLocale();
         }
         locale = YamlConfiguration.loadConfiguration(localeFile);
-
-        // Look for defaults in the jar
-        InputStream defLocaleStream = this.getResource("locale.yml");
-        if (defLocaleStream != null) {
-            YamlConfiguration defLocale = YamlConfiguration.loadConfiguration(defLocaleStream);
-            locale.setDefaults(defLocale);
-        }
     }
 
     /**
@@ -1277,7 +1278,7 @@ public class Greenhouses extends JavaPlugin {
         logger(3,"Player location is " + location.getBlockX() + " " + location.getBlockY() + " " + location.getBlockZ());
         final Biome originalBiome = location.getBlock().getBiome();
         // Define the blocks
-        final List<Material> roofBlocks = Arrays.asList(new Material[]{Material.GLASS, Material.STAINED_GLASS, Material.HOPPER, Material.TRAP_DOOR, Material.IRON_TRAPDOOR, Material.GLOWSTONE});
+        //final List<Material> roofBlocks = Arrays.asList(new Material[]{Material.GLASS, Material.STAINED_GLASS, Material.HOPPER, Material.TRAP_DOOR, Material.IRON_TRAPDOOR, Material.GLOWSTONE});
         final List<Material> wallBlocks = Arrays.asList(new Material[]{Material.HOPPER, Material.GLASS, Material.THIN_GLASS, Material.GLOWSTONE, Material.WOODEN_DOOR, Material.IRON_DOOR_BLOCK,Material.STAINED_GLASS,Material.STAINED_GLASS_PANE});
 
         final World world = location.getWorld();
