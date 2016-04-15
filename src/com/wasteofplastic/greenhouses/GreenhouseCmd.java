@@ -84,7 +84,7 @@ public class GreenhouseCmd implements CommandExecutor {
 		player.sendMessage(Locale.listinfo);
 		int index = 1;
 		for (BiomeRecipe br : plugin.getBiomeRecipes()) {
-		    player.sendMessage(ChatColor.YELLOW + Integer.toString(index++) + ": " + Util.prettifyText(br.getType().toString()));
+		    player.sendMessage(ChatColor.YELLOW + Integer.toString(index++) + ": " + Util.prettifyText(br.getBiome().toString()));
 		}
 		return true;
 	    } else if (split[0].equalsIgnoreCase("remove")) {
@@ -190,7 +190,7 @@ public class GreenhouseCmd implements CommandExecutor {
 		    return true;
 		}
 		BiomeRecipe br = recipeList.get(recipeNumber-1);
-		player.sendMessage(ChatColor.GREEN + "[" + Util.prettifyText(br.getType().toString()) + " recipe]");
+		player.sendMessage(ChatColor.GREEN + "[" + Util.prettifyText(br.getBiome().toString()) + " recipe]");
 		if (br.getWaterCoverage() == 0) {
 		    player.sendMessage(Locale.recipenowater);
 		} else if (br.getWaterCoverage() > 0) {

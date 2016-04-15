@@ -1,5 +1,6 @@
 package com.wasteofplastic.greenhouses;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -49,7 +50,7 @@ public class Greenhouse {
         int maxx = Math.max(pos1.getBlockX(), pos2.getBlockX());
         int minz = Math.min(pos1.getBlockZ(), pos2.getBlockZ());
         int maxz = Math.max(pos1.getBlockZ(), pos2.getBlockZ());
-        this.area = (maxx-minx + 1) * (maxz-minz +1);
+        this.area = (maxx-minx - 1) * (maxz-minz -1);
         this.heightY = Math.max(pos1.getBlockY(), pos2.getBlockY()); // Should always be pos2 is higher, but just in case
         this.groundY = Math.min(pos1.getBlockY(), pos2.getBlockY());
         this.height = heightY - groundY;
@@ -86,9 +87,16 @@ public class Greenhouse {
     /**
      * @param winner.getType() the greenhouseBiome to set
      */
-    public void setBiome(BiomeRecipe winner) {
-        this.greenhouseBiome = winner.getType();
+    public void setBiomeRecipe(BiomeRecipe winner) {
+        this.greenhouseBiome = winner.getBiome();
         this.biomeRecipe = winner;
+    }
+
+    /**
+     * @return the greenhouse's biome recipe
+     */
+    public BiomeRecipe getBiomeRecipe() {
+        return biomeRecipe;
     }
 
     public void setBiome(Biome greenhouseBiome2) {
@@ -361,78 +369,6 @@ public class Greenhouse {
                 }	    
             }
         }
-        /*
-         * NMS approach showed no difference to Bukkit API approach
-	int diffx, diffz;
-	int view = Bukkit.getServer().getViewDistance() << 4;
-	for (Chunk chunk : chunks) {
-	    net.minecraft.server.v1_7_R4.Chunk c = ((org.bukkit.craftbukkit.v1_7_R4.CraftChunk) chunk).getHandle();
-	    net.minecraft.server.v1_7_R4.World world = c.world;
-	    for (EntityPlayer ep : (List<EntityPlayer>) world.players) {
-	        diffx = (int) Math.abs(ep.locX - (chunk.getX() << 4));
-	        diffz = (int) Math.abs(ep.locZ - (chunk.getZ() << 4));
-	        if (diffx <= view && diffz <= view) {
-	            ep.chunkCoordIntPairQueue.add(new ChunkCoordIntPair(chunk.getX(), chunk.getZ()));
-	        }
-	    }
-	}*/
-        // Check if there are any players around
-        /*
-	boolean playerAround = false;
-	for (Chunk c: chunks) {
-	    if (c.isLoaded()) {
-		for (Entity e: c.getEntities()) {
-		    if (e instanceof Player) {
-			playerAround = true;
-			break;
-		    }
-		}
-	    }
-	} 
-	if (!playerAround) {
-	    return;
-	}
-	// Go through chunks and refresh them
-	for (Chunk c: chunks) {
-	    // Only do this if the chunk is not already being refreshed
-	    if (!mobsInChunk.containsKey(c)) {
-		//c.unload(true, false);
-		//c.load();
-		List<MobClone> mobs = new ArrayList<MobClone>();
-		for (Entity e: c.getEntities()) {
-		    if ((e instanceof LivingEntity) && (!(e instanceof Player))) {
-			mobs.add(new MobClone((LivingEntity) e));
-			// TODO Check what happens when mobs are wearing items!
-			e.remove();
-		    }
-		}
-		mobsInChunk.put(c, mobs);
-		plugin.logger(4, "DEBUG: put in " + mobs.size() + " mobs to chunk." + c.toString());
-		//mobs.clear();
-		world.refreshChunk(c.getX(),c.getZ());
-	    }
-	} 
-	//plugin.getLogger().info("DEBUG: number of mobs = " + locs.size());
-	// re spawn them
-	// To work, this respawning has to happen 2 ticks after the refresh at a minimum
-	// 1 tick leaves the mobs invisible.
-
-	Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
-	    @Override
-	    public void run() {
-		plugin.logger(4, "DEBUG: there are " + mobsInChunk.size() + " chunks to reset");
-		Iterator<Chunk> it = mobsInChunk.keySet().iterator();
-		while (it.hasNext()) {
-		    Chunk c = it.next();
-		    plugin.logger(4, "DEBUG: next chunk is " + c.toString() + " and there are " + mobsInChunk.get(c).size() + " mobs");
-
-		    for (MobClone mob : mobsInChunk.get(c)) {
-			mob.respawn();
-		    }
-		    it.remove();
-		}
-	    }}, 2L);
-         */	
     }
 
     /**
@@ -523,8 +459,13 @@ public class Greenhouse {
 
     }
 
+    /**
+     * Lay down snow in the greenhouse
+     */
     public void snow() {
-        // Lay down snow
+        // Lay down snow and ice
+        List<Block> waterToIceBlocks = new ArrayList<Block>();
+        long water = 0;
         int minx = Math.min(pos1.getBlockX(), pos2.getBlockX());
         int maxx = Math.max(pos1.getBlockX(), pos2.getBlockX());
         int minz = Math.min(pos1.getBlockZ(), pos2.getBlockZ());
@@ -532,20 +473,24 @@ public class Greenhouse {
         for (int x = minx+1; x < maxx; x++) {
             for (int z = minz+1; z < maxz;z++) {
                 Block b = getHighestBlockInGreenhouse(x,z);
-                // Display snow particles in air above b
-                for (int y = b.getLocation().getBlockY(); y < heightY; y++) {
+                // Display snow particles in air above b and count water blocks
+                for (int y = pos1.getBlockY(); y < heightY; y++) {
                     Block airCheck = world.getBlockAt(x, y, z);
                     if (airCheck.getType().equals(Material.AIR)) {
                         ParticleEffect.SNOWBALL.display(0F,0F,0F, 0.1F, 5, airCheck.getLocation(), 30D);
-
+                    } else if (airCheck.getType().equals(Material.WATER) || airCheck.getType().equals(Material.STATIONARY_WATER)) {
+                        water++;
                     }
                 }
-
-                if (Math.random()<Settings.snowDensity) {
-
-                    Block belowB = b.getRelative(BlockFace.DOWN);
+                Block belowB = b.getRelative(BlockFace.DOWN);
+                if (Math.random()<Settings.snowDensity) {                   
                     if (belowB.getType().equals(Material.WATER) || belowB.getType().equals(Material.STATIONARY_WATER)) {
-                        belowB.setType(Material.ICE);
+                        // If the recipe requires a certain amount of water, then we need to wait until later to make ice
+                        if (biomeRecipe.getWaterCoverage() > 0) {
+                            waterToIceBlocks.add(belowB);
+                        } else {
+                            belowB.setType(Material.ICE);
+                        }
                     } else if (belowB.getType().equals(Material.SNOW)) {
                         //plugin.getLogger().info("DEBUG: snow height = " + ((int)belowB.getData()));
                         int snowHeight = (int)belowB.getData() + 1;
@@ -557,7 +502,22 @@ public class Greenhouse {
                         if (!belowB.isLiquid() && !belowB.getType().equals(Material.SNOW))
                             b.setType(Material.SNOW);
                     }
-                } 
+                }
+            }
+        }
+        plugin.logger(3,"water = " + water);
+        if (biomeRecipe.getWaterCoverage() > 0 && water >0) {
+            plugin.logger(3,"water coverage required = " + biomeRecipe.getWaterCoverage());
+            // Check if ice can be made
+            for (Block toIce: waterToIceBlocks) {
+                plugin.logger(3,"water ratio = " + ((double)(water-1)/(double)area * 100));
+                if (((double)(water-1)/(double)area * 100) > biomeRecipe.getWaterCoverage()) {
+                    toIce.setType(Material.ICE);
+                    water--;
+                } else {
+                    plugin.logger(3,"no more ice allowed");
+                    break;
+                }
             }
         }
     }

@@ -138,35 +138,20 @@ public class Greenhouses extends JavaPlugin {
      * @param file
      * @return
      */
-    @SuppressWarnings("deprecation")
     public YamlConfiguration loadYamlFile(String file) {
         File dataFolder = plugin.getDataFolder();
         File yamlFile = new File(dataFolder, file);
 
-        YamlConfiguration config = null;
-        if (yamlFile.exists()) {
-            try {
-                config = new YamlConfiguration();
-                config.load(yamlFile);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        } else {
+        YamlConfiguration config = new YamlConfiguration();
+        if (!yamlFile.exists()) {
             // Create the missing file
-            config = new YamlConfiguration();
             logger(1,"No " + file + " found. Creating it...");
-            try {
-                // Look for defaults in the jar
-                InputStream definJarStream = this.getResource(file);
-                if (definJarStream != null) {
-                    config = YamlConfiguration.loadConfiguration(definJarStream);
-                    //config.setDefaults(defLocale);
-                }
-
-                config.save(yamlFile);
-            } catch (Exception e) {
-                getPlugin().getLogger().severe("Could not create the " + file + " file!");
-            }
+            this.saveResource(file, false);
+        }
+        try {
+            config.load(yamlFile);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         return config;
     }
@@ -187,21 +172,30 @@ public class Greenhouses extends JavaPlugin {
         for (String type: biomeSection.getValues(false).keySet()) {
             logger(1,"Loading "+type + " biome recipe:");
             try {
-                Biome thisBiome = Biome.valueOf(type);
+                ConfigurationSection biomeRecipe = biomeSection.getConfigurationSection(type);
+                Biome thisBiome = null;
+                if (biomeRecipe.contains("biome")) {
+                    // Try and get the biome via the biome setting
+                    thisBiome = Biome.valueOf(biomeRecipe.getString("biome").toUpperCase());               
+                } else {
+                    // Old style, where type was the biome name
+                    thisBiome = Biome.valueOf(type);
+                }
                 if (thisBiome != null) {
-                    int priority = biomeSection.getInt(type + ".priority", 0);
+                    int priority = biomeRecipe.getInt("priority", 0);
                     BiomeRecipe b = new BiomeRecipe(this, thisBiome,priority);
                     // Set the permission
-                    b.setPermission(biomeSection.getString(type + ".permission",""));
+                    b.setPermission(biomeRecipe.getString("permission",""));
                     // Set the icon
-                    b.setIcon(Material.valueOf(biomeSection.getString(type + ".icon", "SAPLING")));
+                    b.setIcon(Material.valueOf(biomeRecipe.getString("icon", "SAPLING")));
+                    b.setFriendlyName(ChatColor.translateAlternateColorCodes('&', biomeRecipe.getString("friendlyname", "").replace('|', '\n')));
                     // A value of zero on these means that there must be NO coverage, e.g., desert. If the value is not present, then the default is -1
-                    b.setWatercoverage(biomeSection.getInt(type + ".watercoverage",-1));
-                    b.setLavacoverage(biomeSection.getInt(type + ".lavacoverage",-1));
-                    b.setIcecoverage(biomeSection.getInt(type + ".icecoverage",-1));
-                    b.setMobLimit(biomeSection.getInt(type + ".moblimit", 9));
+                    b.setWatercoverage(biomeRecipe.getInt("watercoverage",-1));
+                    b.setLavacoverage(biomeRecipe.getInt("lavacoverage",-1));
+                    b.setIcecoverage(biomeRecipe.getInt("icecoverage",-1));
+                    b.setMobLimit(biomeRecipe.getInt("moblimit", 9));
                     // Set the needed blocks
-                    String contents = biomeSection.getString(type + ".contents", "");
+                    String contents = biomeRecipe.getString("contents", "");
                     logger(3,"contents = '" + contents + "'");
                     if (!contents.isEmpty()) {
                         String[] split = contents.split(" ");
@@ -297,7 +291,6 @@ public class Greenhouses extends JavaPlugin {
                             b.addConvBlocks(oldMaterial, oldType, newMaterial, newType, convChance, localMaterial, localType);
                         }
                     }
-
                 }
             } catch (Exception e) {
                 logger(1,"Problem loading biome recipe - skipping!");
@@ -306,7 +299,7 @@ public class Greenhouses extends JavaPlugin {
                     validBiomes = validBiomes + " " + biome.name();
                 }
                 logger(1,"Valid biomes are " + validBiomes);
-                //e.printStackTrace();
+                e.printStackTrace();
             }
 
         }
@@ -697,8 +690,8 @@ public class Greenhouses extends JavaPlugin {
                                     greenhouseSection.set(greenhouseNum + ".playerName", playerInfo.getString("playerName",""));
                                     greenhouseSection.set(greenhouseNum + ".pos-one", playerInfo.getString("greenhouses." + key + ".pos-one",""));
                                     greenhouseSection.set(greenhouseNum + ".pos-two", playerInfo.getString("greenhouses." + key + ".pos-two",""));
-                                    greenhouseSection.set(greenhouseNum + ".originalBiome", playerInfo.getString("greenhouses." + key + ".originalBiome", "SUNFLOWER_PLAINS"));
-                                    greenhouseSection.set(greenhouseNum + ".greenhouseBiome", playerInfo.getString("greenhouses." + key + ".greenhouseBiome", "SUNFLOWER_PLAINS"));
+                                    greenhouseSection.set(greenhouseNum + ".originalBiome", playerInfo.getString("greenhouses." + key + ".originalBiome", "PLAINS"));
+                                    greenhouseSection.set(greenhouseNum + ".greenhouseBiome", playerInfo.getString("greenhouses." + key + ".greenhouseBiome", "PLAINS"));
                                     greenhouseSection.set(greenhouseNum + ".roofHopperLocation", playerInfo.getString("greenhouses." + key + ".roofHopperLocation"));
                                     greenhouseSection.set(greenhouseNum + ".farewellMessage", playerInfo.getString("greenhouses." + key + ".flags.farewellMessage",""));
                                     greenhouseSection.set(greenhouseNum + ".enterMessage", playerInfo.getString("greenhouses." + key + ".flags.enterMessage",""));
@@ -769,14 +762,25 @@ public class Greenhouses extends JavaPlugin {
                                     greenhouseBiome = Biome.PLAINS;
                                 }
 
-                                // Check to see if this biome has a recipe
+                                String recipeName = myHouses.getString(key + ".greenhouseRecipe", "");
                                 boolean success = false;
+
+                                // Check to see if this biome has a recipe                                    
                                 for (BiomeRecipe br : getBiomeRecipes()) {
-                                    if (br.getType().equals(greenhouseBiome)) {
-                                        success = true;
-                                        g.setBiome(br);
-                                        break;
-                                    }
+                                    // For backwards compatibility
+                                    if (recipeName.isEmpty()) {
+                                        if (br.getBiome().equals(greenhouseBiome)) {
+                                            success = true;
+                                            g.setBiomeRecipe(br);
+                                            break;
+                                        }
+                                    } else {
+                                        if (br.getName().equalsIgnoreCase(recipeName)) {
+                                            success = true;
+                                            g.setBiomeRecipe(br);
+                                            break;
+                                        }
+                                    } 
                                 }
                                 // Check to see if it was set properly
                                 if (!success) {
@@ -1114,7 +1118,7 @@ public class Greenhouses extends JavaPlugin {
     /**
      * Checks if a location is inside a greenhouse (3D space)
      * @param location
-     * @return
+     * @return Greenhouse or null if none
      */
     public Greenhouse getInGreenhouse(Location location) {
         for (Greenhouse g : greenhouses) {
@@ -1289,7 +1293,7 @@ public class Greenhouses extends JavaPlugin {
         BiomeRecipe greenhouseRecipe = null;
         if (type != null) {
             for (BiomeRecipe br: plugin.getBiomeRecipes()) {
-                if (br.getType().equals(type)) {
+                if (br.getBiome().equals(type)) {
                     if (!br.getPermission().isEmpty()) {
                         if (!VaultHelper.checkPerm(player, br.getPermission())) {
                             player.sendMessage(ChatColor.RED + Locale.errornoPermission);
@@ -1526,7 +1530,7 @@ public class Greenhouses extends JavaPlugin {
                 if (r.getPermission().isEmpty() || (!r.getPermission().isEmpty() && VaultHelper.checkPerm(player, r.getPermission()))) {
                     // Only check higher priority ones
                     if (r.getPriority()>priority) {
-                        player.sendMessage(ChatColor.GOLD + "Trying " + Util.prettifyText(r.getType().toString()));
+                        player.sendMessage(ChatColor.GOLD + "Trying " + Util.prettifyText(r.getBiome().toString()));
                         if (r.checkRecipe(insideOne, insideTwo, null)) {
                             player.sendMessage(ChatColor.GOLD + "Maybe...");
                             winner = r;
@@ -1536,18 +1540,18 @@ public class Greenhouses extends JavaPlugin {
                         }
                     }
                 } else {
-                    plugin.logger(2, "No permission for " + player.getName() + " to make " + r.getType().toString());
+                    plugin.logger(2, "No permission for " + player.getName() + " to make " + r.getBiome().toString());
                     //player.sendMessage(ChatColor.RED + "No permission for " + r.getType().toString());
                 }
             }
         }
 
         if (winner != null) {
-            logger(3,"biome winner is " + winner.toString());
+            logger(3,"biome winner is " + winner.getFriendlyName());
             Greenhouse g = createNewGreenhouse(insideOne, insideTwo, player);
             g.setOriginalBiome(originalBiome);
-            g.setBiome(winner);
-            g.setEnterMessage((Locale.messagesenter.replace("[owner]", player.getDisplayName())).replace("[biome]", Util.prettifyText(winner.getType().toString())));
+            g.setBiomeRecipe(winner);
+            g.setEnterMessage((Locale.messagesenter.replace("[owner]", player.getDisplayName())).replace("[biome]", Util.prettifyText(winner.getBiome().toString())));
             // Store the roof hopper location so it can be tapped in the future
             if (ghHopper == 1) {
                 g.setRoofHopperLocation(roofHopperLoc);
@@ -1556,7 +1560,7 @@ public class Greenhouses extends JavaPlugin {
             //g.setOriginalGreenhouseContents(contents);
             // TODO: Do not teleport for now
             g.startBiome(false);
-            player.sendMessage(ChatColor.GREEN + Locale.createsuccess.replace("[biome]", Util.prettifyText(winner.getType().toString())));
+            player.sendMessage(ChatColor.GREEN + Locale.createsuccess.replace("[biome]", Util.prettifyText(winner.getBiome().toString())));
             players.incGreenhouseCount(player);
             return g;
         }
@@ -1596,6 +1600,7 @@ public class Greenhouses extends JavaPlugin {
                 greenhouseSection.set(greenhouseNum + ".pos-two", getStringLocation(g.getPos2()));
                 greenhouseSection.set(greenhouseNum + ".originalBiome", g.getOriginalBiome().toString());
                 greenhouseSection.set(greenhouseNum + ".greenhouseBiome", g.getBiome().toString());
+                greenhouseSection.set(greenhouseNum + ".greenhouseRecipe", g.getBiomeRecipe().getName());
                 greenhouseSection.set(greenhouseNum + ".roofHopperLocation", getStringLocation(g.getRoofHopperLocation()));
                 greenhouseSection.set(greenhouseNum + ".farewellMessage", g.getFarewellMessage());
                 greenhouseSection.set(greenhouseNum + ".enterMessage", g.getEnterMessage());
