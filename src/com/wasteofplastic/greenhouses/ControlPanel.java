@@ -38,8 +38,8 @@ public class ControlPanel implements Listener {
         Player player = (Player) event.getWhoClicked(); // The player that clicked the item
         Inventory inventory = event.getInventory(); // The inventory that was clicked in
         int slot = event.getRawSlot();
-        HashMap<Integer,BiomeRecipe> store = biomePanels.get(player.getUniqueId());
-        if (store == null) {
+        HashMap<Integer,BiomeRecipe> panel = biomePanels.get(player.getUniqueId());
+        if (panel == null) {
             // No panel, so just return
             return;
         }
@@ -56,8 +56,8 @@ public class ControlPanel implements Listener {
                 player.closeInventory();
                 return;
             }
-            if (store.containsKey(slot)) {
-                BiomeRecipe item = store.get(slot);
+            if (panel.containsKey(slot)) {
+                BiomeRecipe biomeRecipe = panel.get(slot);
                 // Sets up a greenhouse
                 Greenhouse oldg = plugin.players.getInGreenhouse(player);
                 // Check ownership
@@ -79,7 +79,7 @@ public class ControlPanel implements Listener {
                     player.sendMessage(ChatColor.translateAlternateColorCodes('&', Locale.infonomore));
                 } else {
                     // Make greenhouse
-                    Greenhouse g = plugin.tryToMakeGreenhouse(player,item.getBiome());
+                    Greenhouse g = plugin.tryToMakeGreenhouse(player, biomeRecipe);
                     if (g == null) {
                         player.closeInventory(); // Closes the inventory
                         //error.norecipe

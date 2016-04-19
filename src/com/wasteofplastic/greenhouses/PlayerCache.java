@@ -163,20 +163,17 @@ public class PlayerCache {
      * @return
      */
     public boolean isAtLimit(Player player) {
-        // Do a permission check if there are limits
-        int limit = plugin.getMaxGreenhouses(player);
-        if (limit < 0) {
-            return false;
+        if (getRemainingGreenhouses(player) == 0) {
+            return true;
         }
-        plugin.logger(2, "Permission limit is " + limit);
-        // Players are at their limit if they do not have the permission
-        if (limit > 0 && playerCache.get(player.getUniqueId()).getNumberOfGreenhouses() < limit) {
-            return false;
-        }  
-        return true;
-
+        return false;
     }
 
+    /**
+     * Returns how many greenhouses the player is allowed to make
+     * @param player
+     * @return
+     */
     public int getRemainingGreenhouses(Player player) {
         int limit = plugin.getMaxGreenhouses(player);
         if (limit < 0) {

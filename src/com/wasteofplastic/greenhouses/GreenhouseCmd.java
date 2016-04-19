@@ -4,6 +4,7 @@ package com.wasteofplastic.greenhouses;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.commons.lang.math.NumberUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.block.Biome;
 import org.bukkit.command.Command;
@@ -159,25 +160,25 @@ public class GreenhouseCmd implements CommandExecutor {
                 if (plugin.players.isAtLimit(player)) {
                     player.sendMessage(ChatColor.translateAlternateColorCodes('&', Locale.infonomore));
                 } else {
-                    // Check we are in a greenhouse
-                    Biome b = null;
+                    // Check we are in a greenhouse                    
                     try {
-                        b = Biome.valueOf(split[1].toUpperCase());
+                        if (NumberUtils.isNumber(split[1])) {
+                            int recipeNum = Integer.valueOf(split[1]);
+                            List<BiomeRecipe> recipeList = plugin.getBiomeRecipes();
+                            if (recipeNum < 1 || recipeNum > recipeList.size()) {
+                                player.sendMessage(ChatColor.RED + Locale.errornorecipe);
+                                return true;
+                            }
+                            if (plugin.tryToMakeGreenhouse(player,recipeList.get(recipeNum)) == null) {
+                                // Failed for some reason - maybe permissions
+                                player.sendMessage(ChatColor.RED + Locale.errornorecipe);
+                                return true;
+                            }
+                        }                       
                     } catch (Exception e) {
                         player.sendMessage(ChatColor.RED + Locale.errornorecipe);
                         return true;
-                    }
-                    if (b == null) {
-                        player.sendMessage(ChatColor.RED + Locale.errornorecipe);
-                        return true;
-                    }
-                    Greenhouse g = plugin.tryToMakeGreenhouse(player,b);
-                    if (g == null) {
-                        // norecipe
-                        player.sendMessage(ChatColor.RED + Locale.errornorecipe);
-                        return true;
-                    }
-                    // Greenhouse is made
+                    }                                        
                 }
                 return true;
             } else if (split[0].equalsIgnoreCase("recipe")) {

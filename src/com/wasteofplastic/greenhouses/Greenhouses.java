@@ -224,7 +224,7 @@ public class Greenhouses extends JavaPlugin {
                             }
                         }
                     }
-                    
+
                     // Load plants
                     // # Plant Material: Probability in %:Block Material on what they grow:Plant Type(optional):Block Type(Optional) 
                     ConfigurationSection temp = biomes.getConfigurationSection("biomes." + type + ".plants");
@@ -304,13 +304,13 @@ public class Greenhouses extends JavaPlugin {
                 logger(1,"Valid biomes are " + validBiomes);
                 e.printStackTrace();
             }
-            
+
             // Check maximum number
             if (biomeRecipes.size() == MAXIMUM_INVENTORY_SIZE) {
-               getLogger().warning("Cannot load any more biome recipies - limit is 49!"); 
-               break;
+                getLogger().warning("Cannot load any more biome recipies - limit is 49!"); 
+                break;
             }
-            
+
         }
         logger(1,"Loaded " + biomeRecipes.size() + " biome recipes.");
     }
@@ -1244,35 +1244,25 @@ public class Greenhouses extends JavaPlugin {
      * Checks that a greenhouse meets specs and makes it
      * If type is stated then only this specific type will be checked
      * @param player
-     * @param type
+     * @param greenhouseRecipe
      * @return
      */
     @SuppressWarnings("deprecation")
-    public Greenhouse tryToMakeGreenhouse(final Player player, Biome type) {
-        // Do an immediate permissions check of the biome recipe if the type is declared
-        BiomeRecipe greenhouseRecipe = null;
-        if (type != null) {
-            for (BiomeRecipe br: plugin.getBiomeRecipes()) {
-                if (br.getBiome().equals(type)) {
-                    if (!br.getPermission().isEmpty()) {
-                        if (!VaultHelper.checkPerm(player, br.getPermission())) {
-                            player.sendMessage(ChatColor.RED + Locale.errornoPermission);
-                            logger(2,"no permssions to use this biome");
-                            return null;
-                        }
-                    }
-                    greenhouseRecipe = br;
-                    break;
+    public Greenhouse tryToMakeGreenhouse(final Player player, BiomeRecipe greenhouseRecipe) {
+        if (greenhouseRecipe != null) {
+            // Do an immediate permissions check of the biome recipe if the type is declared
+            if (!greenhouseRecipe.getPermission().isEmpty()) {
+                if (!VaultHelper.checkPerm(player, greenhouseRecipe.getPermission())) {
+                    player.sendMessage(ChatColor.RED + Locale.errornoPermission);
+                    logger(2,"no permssions to use this biome");
+                    return null;
                 }
             }
-            if (greenhouseRecipe == null) {
-                player.sendMessage(ChatColor.RED + Locale.errornoPermission);
-                logger(2,"No biomes were allowed to be used");
-                // This biome is unknown
-                return null;
-            } else {
-                player.sendMessage(ChatColor.GOLD + "Trying to make a " + Util.prettifyText(type.name()) + " biome greenhouse...");
-            }
+            String name = greenhouseRecipe.getFriendlyName();
+            if (name.isEmpty()) {
+                name = Util.prettifyText(greenhouseRecipe.getBiome().name()) + " biome";
+            } 
+            player.sendMessage(ChatColor.GOLD + "Trying to make a " + name + " greenhouse...");
         }
         // Proceed to check the greenhouse
         final Location location = player.getLocation().add(new Vector(0,1,0));
