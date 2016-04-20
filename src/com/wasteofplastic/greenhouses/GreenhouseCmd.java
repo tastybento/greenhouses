@@ -83,7 +83,7 @@ public class GreenhouseCmd implements CommandExecutor {
                 // List all the biomes that can be made
                 player.sendMessage(ChatColor.GREEN + Locale.listtitle);
                 player.sendMessage(Locale.listinfo);
-                int index = 1;
+                int index = 0;
                 for (BiomeRecipe br : plugin.getBiomeRecipes()) {
                     if (br.getFriendlyName().isEmpty()) {
                         player.sendMessage(ChatColor.YELLOW + Integer.toString(index++) + ": " + Util.prettifyText(br.getBiome().toString()));
