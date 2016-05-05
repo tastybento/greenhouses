@@ -5,6 +5,9 @@
 	<artifactId>Greenhouses</artifactId>
 	<name>greenhouses</name>
 	<description>A plugin that provides mini biome greenhouses</description>
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
 	<build>
 		<defaultGoal>clean package install</defaultGoal>
 		<finalName>greenhouses</finalName>
@@ -32,9 +35,10 @@
 	</build>
 	<dependencies>
 		<dependency>
-			<groupId>org.spigotmc</groupId>
-			<artifactId>spigot-api</artifactId>
-			<version>1.9-R0.1-SNAPSHOT</version>
+			<groupId>org.bukkit</groupId>
+			<artifactId>bukkit</artifactId>
+			<version>1.9.2-R0.1-SNAPSHOT</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>net.milkbowl.vault</groupId>
@@ -45,7 +49,7 @@
 	<repositories>
 		<repository>
 			<id>spigot-repo</id>
-			<url>https://hub.spigotmc.org/nexus/content/groups/public/</url>
+			<url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
 		</repository>
 		<repository>
 			<id>vault-repo</id>

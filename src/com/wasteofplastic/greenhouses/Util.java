@@ -13,6 +13,7 @@ import org.bukkit.map.MinecraftFont;
 import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionEffect;
 
+@SuppressWarnings("deprecation")
 public class Util {
     private static HashSet<Material> tools = new HashSet<Material>();
     // Currency symbol or word
