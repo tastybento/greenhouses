@@ -7,7 +7,7 @@ depend: [Vault]
 commands:
     greenhouse:
         description: Main player command
-        aliases: [greenhouses, g]
+        aliases: [greenhouses, gh]
         usage:  |
              /greenhouse help
     gadmin:
