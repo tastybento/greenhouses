@@ -520,7 +520,6 @@ public class BiomeRecipe {
         for (int prob : plantProbability) {
             plugin.logger(3,"probability = " + ((double)prob/100));
             if (Math.random() < ((double)prob/100)) {
-                grewPlant = true;
                 plugin.logger(2,"trying to grow plant. Index is " + index);
                 // Okay worth trying to plant something
                 Material belowBl = bl.getRelative(BlockFace.DOWN).getType();
@@ -532,6 +531,7 @@ public class BiomeRecipe {
                     if (!plantMaterial.get(index).equals(Material.DOUBLE_PLANT)) {
                         bl.setType(plantMaterial.get(index));
                         bl.setData(plantType.get(index).byteValue());
+                        grewPlant = true;
                         // Set growth stage
                         /*
                          * TODO: Find a way to do this
@@ -555,6 +555,7 @@ public class BiomeRecipe {
                             // put the top on
                             aboveBl.setType(Material.DOUBLE_PLANT);
                             aboveBl.setData((byte)8);
+                            grewPlant = true;
                         } else {
                             plugin.logger(3,"Above above is not AIR");
                         }

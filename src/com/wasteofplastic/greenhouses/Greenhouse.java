@@ -3,7 +3,9 @@ package com.wasteofplastic.greenhouses;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Set;
 import java.util.UUID;
 
@@ -555,19 +557,23 @@ public class Greenhouse {
                 if (h.getInventory().contains(Material.INK_SACK)) {
                     ItemStack[] hopperInv = h.getInventory().getContents();
                     int bonemeal = 0;
+                    int total = 0;
                     for (ItemStack item: hopperInv) {
                         if (item != null && item.getDurability() == 15) {
                             // Bonemeal
                             bonemeal = bonemeal + item.getAmount();
                         }
                     }
+                    total = bonemeal;
                     // We need one bonemeal for each flower made
                     if (bonemeal >0) {
+                        /*
                         ItemStack remBoneMeal = new ItemStack(Material.INK_SACK);
                         remBoneMeal.setDurability((short)15);
                         remBoneMeal.setAmount(1);
+                        */
                         // Rewrite to use on bonemeal per flower
-                        plugin.logger(3,"Bonemeal found!");
+                        plugin.logger(3,"Bonemeal found! Amount = " + bonemeal);
                         // Now go and grow stuff with the set probability
                         int minx = Math.min(pos1.getBlockX(), pos2.getBlockX());
                         int maxx = Math.max(pos1.getBlockX(), pos2.getBlockX());
@@ -578,8 +584,9 @@ public class Greenhouse {
                                 Block bl = getHighestBlockInGreenhouse(x,z);
                                 //if (Math.random()<Settings.flowerChance) {
                                 plugin.logger(3,"Block is " + bl.getRelative(BlockFace.DOWN).getType().toString());
-                                if (biomeRecipe.growPlant(bl)) {
+                                if (bonemeal > 0 && biomeRecipe.growPlant(bl)) {
                                     bonemeal--;
+                                    plugin.logger(3,"Grew plant, spraying bonemeal");
                                     // Spray the bonemeal 
                                     for (int y = bl.getLocation().getBlockY(); y< heightY; y++) {
                                         Block airCheck = world.getBlockAt(x, y, z);
@@ -588,12 +595,30 @@ public class Greenhouse {
                                             //ParticleEffect.EXPLOSION_NORMAL.display(0F,0F,0F, 0.1F, 5, airCheck.getLocation(), 30D);
                                         }
                                     }
-                                    // Remove the bonemeal from the hopper
-                                    h.getInventory().removeItem(remBoneMeal);
-
                                 }
                             }
                         }
+                        plugin.logger(3,"Bonemeal left = " + bonemeal);
+                        // Remove the bonemeal from the hopper
+                        
+                        total -= bonemeal;
+                        plugin.logger(3,"Amount to be removed  = " + total);
+                        for (int index = 0; index < h.getInventory().getSize(); index++) {                   
+                            ItemStack i = h.getInventory().getItem(index);
+                            if (i != null && i.getType().equals(Material.INK_SACK) && i.getDurability() == 15) {
+                                plugin.logger(3,"Bonemeal found of size " + i.getAmount());
+                                if (total - i.getAmount() > 0) {                                    
+                                    plugin.logger(3,"Completely used up");
+                                    // Item stack completely used up
+                                    total -= i.getAmount();
+                                    h.getInventory().remove(i);
+                                } else {
+                                    plugin.logger(3,"Left overs");
+                                    i.setAmount(i.getAmount() - total);
+                                    total = 0;
+                                }
+                            }
+                        }                                 
                     }
                 }
             } else {
