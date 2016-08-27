@@ -398,57 +398,42 @@ public class Greenhouse {
         }
         plugin.logger(3,"populating mobs in greenhouse");
         // Make sure no players are around
+        /*
         if (plugin.players.getNumberInGreenhouse(this) > 0)
             return;
+            */
         // Quick check - see if any animal is going to spawn
         EntityType mob = biomeRecipe.getMob();
         if (mob == null) {
             return;
         }
         plugin.logger(3,"Mob ready to spawn in location " + pos1.getBlockX() + "," + pos2.getBlockZ() + " in world " + world.getName());
-        // Spawn a temporary snowball in center of greenhouse
-        Vector p1 = pos1.toVector().clone();
-        Entity snowball = world.spawnEntity(p1.midpoint(pos2.toVector()).toLocation(world), EntityType.SNOWBALL);
-        if (snowball != null) {
-            Double x = (Math.abs(pos2.getX()-pos1.getX()))/2D;
-            Double y= (Math.abs(pos2.getY()-pos1.getY()))/2D;
-            Double z = (Math.abs(pos2.getZ()-pos1.getZ()))/2D;
-            //Double distance = (pos1.distance(pos2)/2)+24D
-            // Limit spawning
-            plugin.logger(3,"Mob limit is " + biomeRecipe.getMobLimit());
-            // Find out how many of this type of mob is around
-
-            List<Entity> mobsInArea = snowball.getNearbyEntities(x, y, z);
-            int numberOfMobs = 0;
-            for (Entity en : mobsInArea) {
-                if (en.getType() == mob) {
-                    numberOfMobs++;
+        // Load greenhouse chunks
+        int numberOfMobs = 0;
+        Set<Pair> chunkSet = new HashSet<Pair>();
+        for (int x = (pos1.getBlockX()-15); x < (pos2.getBlockX()+15); x += 16) {
+            for (int z = (pos1.getBlockZ()-15); z < (pos2.getBlockZ()+15); z += 16) {
+                Chunk chunk = world.getChunkAt(x/16, z/16);
+                chunkSet.add(new Pair(x/16,z/16));
+                chunk.load();
+                plugin.logger(3, "Chunk = " + (x/16) + "," + (z/16) + " number of entities = " + chunk.getEntities().length);
+                for (Entity entity : chunk.getEntities()) {
+                    plugin.logger(3,entity.getType().toString());
+                    if (mob.equals(entity.getType())) {
+                        numberOfMobs++;
+                    }
                 }
             }
-            double internalArea = (x*4*z);
-            plugin.logger(3,"Mobs in area = " + numberOfMobs);
-            plugin.logger(3,"Area of greenhouse = " + internalArea);
-            if (internalArea - (numberOfMobs * biomeRecipe.getMobLimit()) <= 0) {
-                plugin.logger(3,"Too many mobs already in this greenhouse");
-                snowball.remove();
-                return;
-            }
-            //List<Entity> localEntities = snowball.getNearbyEntities(x+24D, y+24D, z+24D);
-            snowball.remove();
-            // Check for players - remove this because it isn't popular
-            /*
-	    for (Entity e : localEntities) {	
-		if (e instanceof Player) {
-		    plugin.logger(3,"players around");
-		    return;
-		}
-	    }
-             */
-        } else {
-            plugin.logger(3,"Could not spawn snowball!");
         }
-        plugin.logger(3,"no players around");
-        // No players around
+        plugin.logger(3,"Mobs in area = " + numberOfMobs);
+        plugin.logger(3,"Area of greenhouse = " + area);
+        if (area - (numberOfMobs * biomeRecipe.getMobLimit()) <= 0) {
+            plugin.logger(3,"Too many mobs already in this greenhouse");
+            for (Pair pair: chunkSet) {
+                world.unloadChunkRequest(pair.getLeft(), pair.getRight());
+            }
+            return;
+        }
         Material type = biomeRecipe.getMobSpawnOn(mob);
         int minx = Math.min(pos1.getBlockX(), pos2.getBlockX());
         int maxx = Math.max(pos1.getBlockX(), pos2.getBlockX());
@@ -469,12 +454,14 @@ public class Greenhouse {
                 Location midBlock = new Location(world, h.getLocation().getX()+0.5D, h.getLocation().getY(), h.getLocation().getZ()+0.5D);
                 Entity e = world.spawnEntity(midBlock, mob);
                 if (e != null)
-                    plugin.logger(2,"Spawned a "+ Util.prettifyText(mob.toString()) + " on "+ Util.prettifyText(type.toString()) + " at " 
+                    plugin.logger(1,"Spawned a "+ Util.prettifyText(mob.toString()) + " on "+ Util.prettifyText(type.toString()) + " at " 
                             + midBlock.getBlockX() + "," + midBlock.getBlockY() + "," + midBlock.getBlockZ());
-                return;
+                break;
             }
         }
-
+        for (Pair pair: chunkSet) {
+            world.unloadChunkRequest(pair.getLeft(), pair.getRight());
+        }
     }
 
     /**
