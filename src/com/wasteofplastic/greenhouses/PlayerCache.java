@@ -39,10 +39,13 @@ public class PlayerCache {
         // Check permission limits on number of greenhouses
         int limit = plugin.getMaxGreenhouses(player); // 0 = none allowed. Positive numbers = limit. Negative = unlimited
 
+	    if (plugin.getPlayerGHouse(player.getUniqueId()) == null) {
+	    	return;
+	    }
         List<Greenhouse> toBeRemoved = new ArrayList<Greenhouse>();
         // Look at how many greenhouses player has and remove any over their limit
         int owned = 0;
-        for (Greenhouse g: plugin.getGreenhouses()) {
+	    for (Greenhouse g: plugin.getPlayerGHouse(player.getUniqueId())) {
             if (g.getOwner().equals(player.getUniqueId())) {
                 owned++;
                 if (owned <= limit) {
@@ -57,7 +60,7 @@ public class PlayerCache {
         }
         if (Settings.deleteExtras && limit >= 0) {
             // Remove greenhouses
-            for (Greenhouse g: toBeRemoved) {
+            for (Greenhouse g : toBeRemoved) {
                 plugin.removeGreenhouse(g);
                 plugin.logger(2,"Removed greenhouse over the limit for " + player.getName());
             }
