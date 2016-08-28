@@ -2,6 +2,7 @@ package com.wasteofplastic.greenhouses;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -94,6 +95,11 @@ public class GreenhouseEvents implements Listener {
     public void onPlayerMove(PlayerMoveEvent event) {
         //plugin.logger(3,event.getEventName());
         Player player = event.getPlayer();
+    	UUID uuid = player.getUniqueId();
+    	if (plugin.getPlayerGHouse(uuid) == null || plugin.getPlayerGHouse(uuid).isEmpty()) {
+    		return;
+    	}
+    	
         World world = player.getWorld();
         // Check we are in the right world
         if (!Settings.worldName.contains(world.getName())) {
@@ -104,7 +110,7 @@ public class GreenhouseEvents implements Listener {
         if (event.getFrom().getBlockX() != event.getTo().getBlockX()
                 || event.getFrom().getBlockY() != event.getTo().getBlockY()
                 || event.getFrom().getBlockZ() != event.getTo().getBlockZ()) {
-            boolean result = checkMove(player, event.getFrom(), event.getTo());
+            boolean result = checkMove(player, event.getFrom(), event.getTo(), uuid);
             if (result) {
                 Location newLoc = event.getFrom();
                 newLoc.setX(newLoc.getBlockX() + 0.5);
@@ -123,6 +129,11 @@ public class GreenhouseEvents implements Listener {
             return;
         }
         // Check if they changed worlds
+    	UUID uuid = event.getPlayer().getUniqueId();
+    	if (plugin.getPlayerGHouse(uuid) == null || plugin.getPlayerGHouse(uuid).isEmpty()) {
+    		return;
+    	}
+    	
         World fromWorld = event.getFrom().getWorld();
         World toWorld = event.getTo().getWorld();
         // Check we are in the right world
@@ -130,7 +141,7 @@ public class GreenhouseEvents implements Listener {
             return;
         }
         // Did we move a block?
-        checkMove(event.getPlayer(), event.getFrom(), event.getTo());
+        checkMove(event.getPlayer(), event.getFrom(), event.getTo(), uuid);
     }
 
     /**
@@ -139,9 +150,17 @@ public class GreenhouseEvents implements Listener {
      * @param to
      * @return false if the player can move into that area, true if not allowed
      */
-    private boolean checkMove(Player player, Location from, Location to) {
+    private boolean checkMove(Player player, Location from, Location to, UUID uuid) {
         Greenhouse fromGreenhouse = null;
         Greenhouse toGreenhouse= null;
+    	for (Greenhouse d: plugin.getPlayerGHouse(uuid)) {
+    	    if (d.insideGreenhouse(to)) {
+    	    	toGreenhouse = d;
+    	    }
+    	    if (d.insideGreenhouse(from)) {
+    	    	fromGreenhouse = d;
+    	    }
+    	}
         if (plugin.getGreenhouses().isEmpty()) {
             // No greenhouses yet
             return false;
@@ -150,7 +169,7 @@ public class GreenhouseEvents implements Listener {
         plugin.logger(4,"From : " + from.toString());
         plugin.logger(4,"From: " + from.getBlockX() + "," + from.getBlockZ());
         plugin.logger(4,"To: " + to.getBlockX() + "," + to.getBlockZ());
-        for (Greenhouse d: plugin.getGreenhouses()) {
+    	for (Greenhouse d: plugin.getPlayerGHouse(uuid)) {
             plugin.logger(4,"Greenhouse (" + d.getPos1().getBlockX() + "," + d.getPos1().getBlockZ() + " : " + d.getPos2().getBlockX() + "," + d.getPos2().getBlockZ() + ")");
             if (d.insideGreenhouse(to)) {
                 plugin.logger(4,"To intersects d!");
