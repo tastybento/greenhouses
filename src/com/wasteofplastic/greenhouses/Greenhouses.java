@@ -57,6 +57,7 @@ public class Greenhouses extends JavaPlugin {
     public PlayerCache players;
     // Greenhouses
     private HashSet<Greenhouse> greenhouses = new HashSet<Greenhouse>();
+    private HashMap<UUID, HashSet<Greenhouse>> playerhouses = new HashMap<UUID, HashSet<Greenhouse>>();
     private File greenhouseFile;
     private YamlConfiguration greenhouseConfig;
     // Offline Messages
@@ -458,6 +459,8 @@ public class Greenhouses extends JavaPlugin {
 	}*/
         try {
             // Remove players from memory
+        	greenhouses.clear();
+    		playerhouses.clear();
             players.removeAllPlayers();
             saveMessages();
         } catch (final Exception e) {
@@ -812,7 +815,7 @@ public class Greenhouses extends JavaPlugin {
                                 g.setEnterMessage(myHouses.getString(key +".enterMessage",(Locale.messagesenter.replace("[owner]", playerName )).replace("[biome]", Util.prettifyText(gBiome))));
                                 g.setFarewellMessage(myHouses.getString(key +".farewellMessage",Locale.messagesleave.replace("[owner]", playerName)));
                                 // Add to the cache
-                                greenhouses.add(g);
+                                addGHToPlayer(owner, g);
                             }
                         } else {
                             getLogger().severe("Problem loading greenhouse with locations " + myHouses.getString(key + ".pos-one") + " and " + myHouses.getString(key + ".pos-two") + " skipping.");
@@ -839,6 +842,36 @@ public class Greenhouses extends JavaPlugin {
             }
         }
 
+    }
+    
+    public void addGHToPlayer(UUID owner, Greenhouse g) {
+    	HashSet<Greenhouse> storedhouses = null;
+    	
+    	if (playerhouses.get(owner) != null) {
+    		storedhouses = playerhouses.get(owner);
+			playerhouses.remove(owner);
+		} else {
+			storedhouses = new HashSet<Greenhouse>();
+		}
+    	
+    	storedhouses.add(g);
+		greenhouses.add(g);
+		playerhouses.put(owner, storedhouses);
+    }
+    
+    public void removeGHFromPlayer(UUID owner, Greenhouse g) {
+    	HashSet<Greenhouse> storedhouses = null;
+    	
+    	if (playerhouses.get(owner) != null) {
+    		storedhouses = playerhouses.get(owner);
+			playerhouses.remove(owner);
+		} else {
+			storedhouses = new HashSet<Greenhouse>();
+		}
+    	
+    	storedhouses.remove(g);
+		greenhouses.remove(g);
+		playerhouses.put(owner, storedhouses);
     }
 
 
@@ -1038,6 +1071,18 @@ public class Greenhouses extends JavaPlugin {
     public HashSet<Greenhouse> getGreenhouses() {
         return greenhouses;
     }
+    
+    /**
+     * 
+     * @param uuid
+     * @return Cached player greenhouses
+     */
+    public HashSet<Greenhouse> getPlayerGHouse(UUID uuid) {
+    	if (playerhouses.containsKey(uuid)) {
+    		return playerhouses.get(uuid);
+    	}
+    	return null;
+    }
 
 
     /**
@@ -1222,6 +1267,7 @@ public class Greenhouses extends JavaPlugin {
             logger(1,"Greenhouse biome was " + Util.prettifyText(gg.getBiome().toString()) + " - reverted to " + Util.prettifyText(gg.getOriginalBiome().toString()));
             //UUID ownerUUID = gg.getOwner();
             removeGreenhouse(gg);
+    	    removeGHFromPlayer(owner.getUniqueId(), gg);
             //players.save(ownerUUID);
         }
         saveGreenhouses();
