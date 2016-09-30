@@ -57,8 +57,12 @@ public class Greenhouse {
         this.groundY = Math.min(pos1.getBlockY(), pos2.getBlockY());
         this.height = heightY - groundY;
         this.world = pos1.getWorld();
-        if (!pos1.getWorld().equals(pos2.getWorld())) {
-            plugin.getLogger().severe("Pos 1 and Pos 2 are not in the same world!");
+        if (pos1.getWorld() == null || pos2.getWorld() == null) {
+            plugin.getLogger().severe("This greenhouse's world does not exist!");
+        } else {
+            if (!pos1.getWorld().equals(pos2.getWorld())) {
+                plugin.getLogger().severe("Pos 1 and Pos 2 are not in the same world!");
+            }
         }
         this.originalBiome = pos1.getBlock().getBiome();
         this.greenhouseBiome = pos2.getBlock().getBiome();
@@ -66,7 +70,6 @@ public class Greenhouse {
         this.playerName = "";
         flags.put("enterMessage", "");
         flags.put("farewellMessage", "");
-
     }
 
 
@@ -358,7 +361,7 @@ public class Greenhouse {
         if (plugin.getServer().getVersion().contains("(MC: 1.7")) {
             // Refresh chunks
             for (Pair coords: chunkCoords) {                
-                    world.refreshChunk(coords.getLeft(), coords.getRight());                
+                world.refreshChunk(coords.getLeft(), coords.getRight());                
             }
         } else if (teleport) {
             for (Chunk c: chunks) {
@@ -401,7 +404,7 @@ public class Greenhouse {
         /*
         if (plugin.players.getNumberInGreenhouse(this) > 0)
             return;
-            */
+         */
         // Quick check - see if any animal is going to spawn
         EntityType mob = biomeRecipe.getMob();
         if (mob == null) {
@@ -558,7 +561,7 @@ public class Greenhouse {
                         ItemStack remBoneMeal = new ItemStack(Material.INK_SACK);
                         remBoneMeal.setDurability((short)15);
                         remBoneMeal.setAmount(1);
-                        */
+                         */
                         // Rewrite to use on bonemeal per flower
                         plugin.logger(3,"Bonemeal found! Amount = " + bonemeal);
                         // Now go and grow stuff with the set probability
@@ -587,7 +590,7 @@ public class Greenhouse {
                         }
                         plugin.logger(3,"Bonemeal left = " + bonemeal);
                         // Remove the bonemeal from the hopper
-                        
+
                         total -= bonemeal;
                         plugin.logger(3,"Amount to be removed  = " + total);
                         for (int index = 0; index < h.getInventory().getSize(); index++) {                   

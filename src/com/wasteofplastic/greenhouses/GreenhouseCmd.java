@@ -57,10 +57,11 @@ public class GreenhouseCmd implements CommandExecutor {
          * playerUUID is the unique ID of the player who issued the command
          */
         final UUID playerUUID = player.getUniqueId();
-        final Greenhouse greenhouseInNow = players.getInGreenhouse(player);
+        
         switch (split.length) {
         // /greenhouse command by itself
         case 0:
+            final Greenhouse greenhouseInNow = players.getInGreenhouse(player);
             if (greenhouseInNow==null || greenhouseInNow.getOwner().equals(playerUUID)) {
                 player.openInventory(plugin.getRecipeInv(player));
                 return true;
@@ -93,10 +94,11 @@ public class GreenhouseCmd implements CommandExecutor {
                 }
                 return true;
             } else if (split[0].equalsIgnoreCase("remove")) {
-                if (greenhouseInNow != null) {
-                    if (greenhouseInNow.getOwner().equals(playerUUID)) {
+                final Greenhouse greenhouseNow = players.getInGreenhouse(player);
+                if (greenhouseNow != null) {
+                    if (greenhouseNow.getOwner().equals(playerUUID)) {
                         player.sendMessage(ChatColor.RED + Locale.errorremoving);
-                        plugin.removeGreenhouse(greenhouseInNow);
+                        plugin.removeGreenhouse(greenhouseNow);
                         return true;
                     }
                     player.sendMessage(ChatColor.RED + Locale.errornotyours);
@@ -106,7 +108,8 @@ public class GreenhouseCmd implements CommandExecutor {
                 return true;
             } else if (split[0].equalsIgnoreCase("make")) {
                 // Sets up a greenhouse
-                if (players.getInGreenhouse(player) != null) {
+                final Greenhouse greenhouseN = players.getInGreenhouse(player);
+                if (greenhouseN != null) {
                     // alreadyexists
                     player.sendMessage(ChatColor.RED + Locale.erroralreadyexists);
                     return true;
@@ -131,16 +134,17 @@ public class GreenhouseCmd implements CommandExecutor {
                 for (String instructions : Locale.infoinstructions) {
                     player.sendMessage(ChatColor.GREEN + ChatColor.translateAlternateColorCodes('&', instructions));
                 }
-                if (greenhouseInNow != null) {
+                final Greenhouse greenhouseIn = players.getInGreenhouse(player);
+                if (greenhouseIn != null) {
                     player.sendMessage(ChatColor.GOLD + Locale.infoinfo);
                     // general.biome
-                    player.sendMessage(ChatColor.GREEN + Locale.generalbiome + ": " + Util.prettifyText(greenhouseInNow.getBiome().toString()));
-                    if (greenhouseInNow.getOwner() != null) {
-                        Player owner = plugin.getServer().getPlayer(greenhouseInNow.getOwner());
+                    player.sendMessage(ChatColor.GREEN + Locale.generalbiome + ": " + Util.prettifyText(greenhouseIn.getBiome().toString()));
+                    if (greenhouseIn.getOwner() != null) {
+                        Player owner = plugin.getServer().getPlayer(greenhouseIn.getOwner());
                         if (owner != null) {
                             player.sendMessage(ChatColor.YELLOW + Locale.generalowner + ": " + owner.getDisplayName() + " (" + owner.getName() + ")");
                         } else {
-                            player.sendMessage(ChatColor.YELLOW + Locale.generalowner + ": " + greenhouseInNow.getPlayerName());
+                            player.sendMessage(ChatColor.YELLOW + Locale.generalowner + ": " + greenhouseIn.getPlayerName());
                         }
                     }
                 }

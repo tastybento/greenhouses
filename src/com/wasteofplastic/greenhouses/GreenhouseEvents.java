@@ -2,7 +2,6 @@ package com.wasteofplastic.greenhouses;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -10,19 +9,15 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.block.Biome;
-import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockFormEvent;
 import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.player.PlayerTeleportEvent;
 
 /**
  * @author tastybento
@@ -46,23 +41,21 @@ public class GreenhouseEvents implements Listener {
         Player player = event.getPlayer();
         World world = player.getWorld();
         // Check we are in the right world
-        if (!Settings.worldName.contains(world.getName())) {
+        if (!world.getEnvironment().equals(Environment.NETHER) || !Settings.worldName.contains(world.getName())) {
             return;
         }
         if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK)) {
-            // Find out which greenhouse the player is in
-            if(event.getClickedBlock().getWorld().getEnvironment() == Environment.NETHER 
-                    && event.getItem() != null && event.getItem().getType() == Material.WATER_BUCKET) {
-                Greenhouse g = plugin.players.getInGreenhouse(player);
-                if (g != null && !g.getBiome().equals(Biome.HELL) && !g.getBiome().equals(Biome.DESERT)
-                        && !g.getBiome().equals(Biome.DESERT_HILLS)) {
-                    event.setCancelled(true);
-                    event.getClickedBlock().getRelative(event.getBlockFace()).setType(Material.WATER);
-                }
+            Biome biome = event.getClickedBlock().getBiome();
+            // Allow pouring of water if biome is okay
+            if (event.getItem().getType().equals(Material.WATER_BUCKET) && !biome.equals(Biome.HELL) 
+                    && !biome.equals(Biome.DESERT) && !biome.equals(Biome.DESERT_HILLS)) {
+                event.setCancelled(true);
+                event.getClickedBlock().getRelative(event.getBlockFace()).setType(Material.WATER);
             }
+
         }
     }
-    
+
     /**
      * Makes water in the Nether if ice is broken and in a greenhouse
      * @param event
@@ -75,15 +68,12 @@ public class GreenhouseEvents implements Listener {
         if (!Settings.worldName.contains(world.getName())) {
             return;
         }
-        // Find out which greenhouse the player is in
-        if(event.getBlock().getWorld().getEnvironment() == Environment.NETHER 
-                && event.getBlock().getType() == Material.ICE) {
-            Greenhouse g = plugin.players.getInGreenhouse(player);
-            if (g != null && !g.getBiome().equals(Biome.HELL) && !g.getBiome().equals(Biome.DESERT)
-                    && !g.getBiome().equals(Biome.DESERT_HILLS)) {
-                event.setCancelled(true);
-                event.getBlock().setType(Material.WATER);
-            }
+        Biome biome = event.getBlock().getBiome();
+        // Set to water if the biome is okay.
+        if(event.getBlock().getWorld().getEnvironment() == Environment.NETHER && event.getBlock().getType() == Material.ICE
+                && !biome.equals(Biome.HELL) && !biome.equals(Biome.DESERT) && !biome.equals(Biome.DESERT_HILLS)) {
+            event.setCancelled(true);
+            event.getBlock().setType(Material.WATER);
         }
     }
 
@@ -91,6 +81,7 @@ public class GreenhouseEvents implements Listener {
      * Tracks player movement
      * @param event
      */
+    /*
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled=true)
     public void onPlayerMove(PlayerMoveEvent event) {
         //plugin.logger(3,event.getEventName());
@@ -99,7 +90,7 @@ public class GreenhouseEvents implements Listener {
     	if (plugin.getPlayerGHouse(uuid) == null || plugin.getPlayerGHouse(uuid).isEmpty()) {
     		return;
     	}
-    	
+
         World world = player.getWorld();
         // Check we are in the right world
         if (!Settings.worldName.contains(world.getName())) {
@@ -133,7 +124,7 @@ public class GreenhouseEvents implements Listener {
     	if (plugin.getPlayerGHouse(uuid) == null || plugin.getPlayerGHouse(uuid).isEmpty()) {
     		return;
     	}
-    	
+
         World fromWorld = event.getFrom().getWorld();
         World toWorld = event.getTo().getWorld();
         // Check we are in the right world
@@ -143,24 +134,17 @@ public class GreenhouseEvents implements Listener {
         // Did we move a block?
         checkMove(event.getPlayer(), event.getFrom(), event.getTo(), uuid);
     }
-
+     */
     /**
      * @param player
      * @param from
      * @param to
      * @return false if the player can move into that area, true if not allowed
      */
+    /*
     private boolean checkMove(Player player, Location from, Location to, UUID uuid) {
         Greenhouse fromGreenhouse = null;
         Greenhouse toGreenhouse= null;
-    	for (Greenhouse d: plugin.getPlayerGHouse(uuid)) {
-    	    if (d.insideGreenhouse(to)) {
-    	    	toGreenhouse = d;
-    	    }
-    	    if (d.insideGreenhouse(from)) {
-    	    	fromGreenhouse = d;
-    	    }
-    	}
         if (plugin.getGreenhouses().isEmpty()) {
             // No greenhouses yet
             return false;
@@ -227,7 +211,7 @@ public class GreenhouseEvents implements Listener {
         }  
         return false;
     }
-
+     */
 
     /**
      * Checks is broken blocks cause the greenhouse to fail

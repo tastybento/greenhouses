@@ -38,14 +38,15 @@ public class PlayerCache {
         }
         // Check permission limits on number of greenhouses
         int limit = plugin.getMaxGreenhouses(player); // 0 = none allowed. Positive numbers = limit. Negative = unlimited
-
+        /*
 	    if (plugin.getPlayerGHouse(player.getUniqueId()) == null) {
 	    	return;
 	    }
+	    */
         List<Greenhouse> toBeRemoved = new ArrayList<Greenhouse>();
         // Look at how many greenhouses player has and remove any over their limit
         int owned = 0;
-	    for (Greenhouse g: plugin.getPlayerGHouse(player.getUniqueId())) {
+	    for (Greenhouse g: plugin.getGreenhouses()) {
             if (g.getOwner().equals(player.getUniqueId())) {
                 owned++;
                 if (owned <= limit) {
@@ -92,35 +93,24 @@ public class PlayerCache {
     /*
      * Player info query methods
      */
-
+    /*
     public void setInGreenhouse(Player player, Greenhouse inGreenhouse) {
         if (playerCache.containsKey(player.getUniqueId())) {
             playerCache.get(player.getUniqueId()).setInGreenhouse(inGreenhouse);
         }
     }
-
+*/
     /**
      * @param playerUUID
      * @return the greenhouse the player is in or null if no greenhouse
      */
     public Greenhouse getInGreenhouse(Player player) {
-        return playerCache.get(player.getUniqueId()).getInGreenhouse();
-    }
-
-    /**
-     * Returns how many players are in a specific greenhouse
-     * Used to determine if the biome can be switched off or not
-     * @param greenhouse
-     * @return number of players
-     */
-    public int getNumberInGreenhouse(Greenhouse g) {
-        int count = 0;
-        for (Players p : playerCache.values()) {
-            if (p.getInGreenhouse() != null && p.getInGreenhouse().equals(g)) {
-                count++;
+        for (Greenhouse g : plugin.getGreenhouses()) {
+            if (g.insideGreenhouse(player.getLocation())) {
+                return g;
             }
         }
-        return count;
+        return null;
     }
 
     /**
@@ -182,7 +172,11 @@ public class PlayerCache {
         if (limit < 0) {
             return -1;
         }
-        int remaining = limit - playerCache.get(player.getUniqueId()).getNumberOfGreenhouses();
+        int size = 0;
+        if (plugin.getPlayerhouses().containsKey(player.getUniqueId())) {
+            size = plugin.getPlayerhouses().get(player.getUniqueId()).size();
+        }
+        int remaining = limit - size;
         if (remaining < 0) {
             return 0;
         } else {

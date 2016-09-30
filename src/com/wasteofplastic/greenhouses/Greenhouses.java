@@ -746,6 +746,7 @@ public class Greenhouses extends JavaPlugin {
             if (myHouses != null) {
                 // Get a list of all the greenhouses
                 for (String key : myHouses.getKeys(false)) {
+                    logger(3,"Loading greenhouse #" + key);
                     try {
                         String playerName = myHouses.getString(key + ".playerName", "");
                         // Load all the values
@@ -762,20 +763,21 @@ public class Greenhouses extends JavaPlugin {
                                 logger(3,"Greenhouse pos2: " + g.getPos2().toString());
                                 // Set owner name
                                 g.setPlayerName(playerName);
+                                logger(3,"Owner is " + playerName);                             
                                 // Set biome
                                 String oBiome = myHouses.getString(key + ".originalBiome", "PLAINS");
                                 // Do some conversions
                                 Biome originalBiome = convertBiome(oBiome);                                
                                 g.setOriginalBiome(originalBiome);
-                                String gBiome = myHouses.getString(key + ".greenhouseBiome", "PLAINS");
+                                logger(3,"original biome = " + oBiome + " converted = " + originalBiome);
+                                String gBiome = myHouses.getString(key + ".greenhouseBiome", "PLAINS");                           
                                 Biome greenhouseBiome = convertBiome(gBiome);
                                 if (greenhouseBiome == null) {
                                     greenhouseBiome = Biome.PLAINS;
                                 }
-
+                                logger(3,"greenhouse biome = " + gBiome + " converted = " + greenhouseBiome);
                                 String recipeName = myHouses.getString(key + ".greenhouseRecipe", "");
                                 boolean success = false;
-
                                 // Check to see if this biome has a recipe  
                                 // Try by name first
                                 for (BiomeRecipe br : getBiomeRecipes()) {
@@ -832,16 +834,6 @@ public class Greenhouses extends JavaPlugin {
         }
 
         logger(1,"Loaded " + getGreenhouses().size() + " greenhouses.");
-        // Put all online players in greenhouses
-        for (Player p : getServer().getOnlinePlayers()) {
-            for (Greenhouse d: greenhouses) {
-                if (d.insideGreenhouse(p.getLocation())) {
-                    players.setInGreenhouse(p, d);
-                    break;
-                }
-            }
-        }
-
     }
     
     public void addGHToPlayer(UUID owner, Greenhouse g) {
@@ -1077,13 +1069,14 @@ public class Greenhouses extends JavaPlugin {
      * @param uuid
      * @return Cached player greenhouses
      */
+    /*
     public HashSet<Greenhouse> getPlayerGHouse(UUID uuid) {
     	if (playerhouses.containsKey(uuid)) {
     		return playerhouses.get(uuid);
     	}
     	return null;
     }
-
+*/
 
     /**
      * @param greenhouses the greenhouses to set
@@ -1091,6 +1084,14 @@ public class Greenhouses extends JavaPlugin {
     public void setGreenhouses(HashSet<Greenhouse> greenhouses) {
         this.greenhouses = greenhouses;
     }
+
+    /**
+     * @return the playerhouses
+     */
+    public HashMap<UUID, HashSet<Greenhouse>> getPlayerhouses() {
+        return playerhouses;
+    }
+
 
     /**
      * Clears the greenhouses list
@@ -1187,31 +1188,6 @@ public class Greenhouses extends JavaPlugin {
         }
         g.endBiome();
         boolean ownerOnline = false;
-        // Find everyone who is in this greenhouse and remove them
-        for (final Player p : getServer().getOnlinePlayers()) {
-            if (p.getUniqueId().equals(g.getOwner()))
-                ownerOnline=true;
-            if (g.insideGreenhouse(p.getLocation())) {
-                players.setInGreenhouse(p, null);
-                p.sendMessage(ChatColor.RED + Locale.messagesremoved);
-                /*
-		if (!p.isInsideVehicle()) {
-		    // Teleport them to make biome change
-		    final Location playerLoc = p.getLocation();
-		    p.teleport(new Location(playerLoc.getWorld(),0,-10,0));
-		    if (!p.isInsideVehicle()) {
-			Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
-
-			    @Override
-			    public void run() {
-				playerLoc.getChunk().load();
-				p.teleport(playerLoc); 
-
-			    }}, 5L);
-		    }
-		}*/
-            }
-        }
         if (!ownerOnline) {
             setMessage(g.getOwner(), Locale.messagesremovedmessage.replace("[biome]", Util.prettifyText(g.getBiome().toString())) + " [" + g.getPos1().getBlockX() + "," + g.getPos1().getBlockZ() + "]");
         } 
@@ -1566,7 +1542,6 @@ public class Greenhouses extends JavaPlugin {
                     if (!p.equals(player)) {                       
                         p.sendMessage((Locale.messagesyouarein.replace("[owner]", player.getDisplayName())).replace("[biome]", friendlyName));                        
                     }
-                    players.setInGreenhouse(p, g);
                 }
             }
             return g;

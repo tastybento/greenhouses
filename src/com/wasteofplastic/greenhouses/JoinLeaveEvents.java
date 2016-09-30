@@ -30,21 +30,6 @@ public class JoinLeaveEvents implements Listener {
 	// Add player to the cache, and clear any greenhouses over their permitted limit
 	plugin.players.addPlayer(p);
 	plugin.logger(3,"Cached " + p.getName());
-	if (plugin.getPlayerGHouse(playerUUID) == null) {
-		return;
-	}
-	// Check to see if the player is in a greenhouse - one may have cropped up around them while they were logged off
-	for (Greenhouse g : plugin.getPlayerGHouse(playerUUID)) {
-	    if (g.insideGreenhouse(p.getLocation())) {
-		plugin.logger(2,p.getName() + " is in a greenhouse");
-		if (players.getInGreenhouse(p) == null || !players.getInGreenhouse(p).equals(g)) {
-		    players.setInGreenhouse(p, g);
-		    p.sendMessage(g.getEnterMessage());
-		    g.startBiome(false);
-		}
-		break;
-	    }
-	}
 	// Load any messages for the player
 	final List<String> messages = plugin.getMessages(playerUUID);
 	if (!messages.isEmpty()) {
