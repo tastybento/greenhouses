@@ -34,7 +34,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
-import com.wasteofplastic.particle.ParticleEffect;
+import com.wasteofplastic.particle.ParticleEffects;
 
 /**
  * This plugin simulates greenhouses in Minecraft. It enables players to build biomes inside
@@ -1179,7 +1179,7 @@ public class Greenhouses extends JavaPlugin {
                                 || b.getType().equals(Material.SNOW) || b.getType().equals(Material.SNOW_BLOCK)) {
                             // Evaporate it
                             b.setType(Material.AIR);
-                            ParticleEffect.SMOKE_LARGE.send(Bukkit.getOnlinePlayers(),b.getLocation(),0D,0D,0D,1F,5,20);
+                            ParticleEffects.SMOKE_LARGE.send(Bukkit.getOnlinePlayers(),b.getLocation(),0D,0D,0D,1F,5,20);
                             //ParticleEffect.SMOKE_LARGE.display(0F,0F,0F, 0.1F, 5, b.getLocation(), 30D);
                         }
                     }

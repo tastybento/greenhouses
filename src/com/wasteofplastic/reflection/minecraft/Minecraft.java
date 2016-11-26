@@ -28,22 +28,22 @@
 
 package com.wasteofplastic.reflection.minecraft;
 
-import org.bukkit.Bukkit;
-import org.bukkit.entity.Entity;
-import org.inventivetalent.reflection.util.AccessUtil;
-
-import com.wasteofplastic.reflection.resolver.ConstructorResolver;
-import com.wasteofplastic.reflection.resolver.FieldResolver;
-import com.wasteofplastic.reflection.resolver.MethodResolver;
-import com.wasteofplastic.reflection.resolver.minecraft.OBCClassResolver;
-
-import sun.reflect.ConstructorAccessor;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Entity;
+import org.inventivetalent.reflection.util.AccessUtil;
+
+import sun.reflect.ConstructorAccessor;
+
+import com.wasteofplastic.reflection.resolver.ConstructorResolver;
+import com.wasteofplastic.reflection.resolver.FieldResolver;
+import com.wasteofplastic.reflection.resolver.MethodResolver;
+import com.wasteofplastic.reflection.resolver.minecraft.OBCClassResolver;
 
 /**
  * Helper class to access minecraft/bukkit specific objects
@@ -125,7 +125,12 @@ public class Minecraft {
         v1_9_R2(10902),
         
         v1_10_R1(11001),
-        v1_10_R2(11002);
+        v1_10_R2(11002),
+        
+        v1_11_R1(11101),
+        v1_11_R2(11102),
+        
+        V1_12_R1(11201);
 
         private int version;
 

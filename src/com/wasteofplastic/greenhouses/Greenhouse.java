@@ -24,7 +24,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
-import com.wasteofplastic.particle.ParticleEffect;
+import com.wasteofplastic.particle.ParticleEffects;
 
 public class Greenhouse {
     private Greenhouses plugin;
@@ -486,7 +486,7 @@ public class Greenhouse {
                     Block airCheck = world.getBlockAt(x, y, z);
                     if (airCheck.getType().equals(Material.AIR)) {
                         //).display(0F,0F,0F, 0.1F, 5, 
-                        ParticleEffect.SNOWBALL.send(Bukkit.getOnlinePlayers(),airCheck.getLocation(),0D,0D,0D,1F,5,20);
+                        ParticleEffects.SNOWBALL.send(Bukkit.getOnlinePlayers(),airCheck.getLocation(),0D,0D,0D,1F,5,20);
                     } else if (airCheck.getType().equals(Material.WATER) || airCheck.getType().equals(Material.STATIONARY_WATER)) {
                         water++;
                     }
@@ -581,7 +581,7 @@ public class Greenhouse {
                                     for (int y = bl.getLocation().getBlockY(); y< heightY; y++) {
                                         Block airCheck = world.getBlockAt(x, y, z);
                                         if (airCheck.getType().equals(Material.AIR)) {
-                                            ParticleEffect.EXPLOSION_NORMAL.send(Bukkit.getOnlinePlayers(),airCheck.getLocation(),0D,0D,0D,1F,5,20);
+                                            ParticleEffects.EXPLOSION_NORMAL.send(Bukkit.getOnlinePlayers(),airCheck.getLocation(),0D,0D,0D,1F,5,20);
                                             //ParticleEffect.EXPLOSION_NORMAL.display(0F,0F,0F, 0.1F, 5, airCheck.getLocation(), 30D);
                                         }
                                     }
