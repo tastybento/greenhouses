@@ -1,4 +1,4 @@
-package com.wasteofplastic.greenhouses;
+package com.wasteofplastic.greenhouses.greenhouse;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,6 +24,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
+import com.wasteofplastic.greenhouses.Greenhouses;
+import com.wasteofplastic.greenhouses.Settings;
+import com.wasteofplastic.greenhouses.util.Pair;
+import com.wasteofplastic.greenhouses.util.Util;
 import com.wasteofplastic.particle.ParticleEffects;
 
 public class Greenhouse {

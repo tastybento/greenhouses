@@ -34,6 +34,21 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
+import com.wasteofplastic.askyblock.MetricsLite;
+import com.wasteofplastic.greenhouses.greenhouse.BiomeRecipe;
+import com.wasteofplastic.greenhouses.greenhouse.Ecosystem;
+import com.wasteofplastic.greenhouses.greenhouse.Greenhouse;
+import com.wasteofplastic.greenhouses.greenhouse.Roof;
+import com.wasteofplastic.greenhouses.greenhouse.Walls;
+import com.wasteofplastic.greenhouses.listeners.GreenhouseEvents;
+import com.wasteofplastic.greenhouses.listeners.GreenhouseGuard;
+import com.wasteofplastic.greenhouses.listeners.JoinLeaveEvents;
+import com.wasteofplastic.greenhouses.ui.AdminCmd;
+import com.wasteofplastic.greenhouses.ui.ControlPanel;
+import com.wasteofplastic.greenhouses.ui.GreenhouseCmd;
+import com.wasteofplastic.greenhouses.ui.Locale;
+import com.wasteofplastic.greenhouses.util.Util;
+import com.wasteofplastic.greenhouses.util.VaultHelper;
 import com.wasteofplastic.particle.ParticleEffects;
 
 /**
@@ -481,10 +496,8 @@ public class Greenhouses extends JavaPlugin {
         saveDefaultConfig();
         saveDefaultLocale();
         // Metrics
-        try {
-            final Metrics metrics = new Metrics(this);
-            metrics.start();
-        } catch (final IOException localIOException) {}
+        new MetricsLite(this);
+        // Economy
         if (!VaultHelper.setupEconomy()) {
             getLogger().severe("Could not set up economy!");
         }

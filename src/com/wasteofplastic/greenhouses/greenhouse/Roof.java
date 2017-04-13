@@ -1,4 +1,4 @@
-package com.wasteofplastic.greenhouses;
+package com.wasteofplastic.greenhouses.greenhouse;
 
 import java.util.Arrays;
 import java.util.List;
@@ -8,6 +8,8 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.util.Vector;
+
+import com.wasteofplastic.greenhouses.Greenhouses;
 
 /**
  * Contains the parameters of a greenhouse roof

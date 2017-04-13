@@ -1,4 +1,4 @@
-package com.wasteofplastic.greenhouses;
+package com.wasteofplastic.greenhouses.listeners;
 
 import java.util.List;
 import java.util.UUID;
@@ -10,6 +10,10 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+
+import com.wasteofplastic.greenhouses.Greenhouses;
+import com.wasteofplastic.greenhouses.PlayerCache;
+import com.wasteofplastic.greenhouses.ui.Locale;
 
 public class JoinLeaveEvents implements Listener {
     private Greenhouses plugin;

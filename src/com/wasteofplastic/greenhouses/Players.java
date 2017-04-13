@@ -4,6 +4,8 @@ import java.util.UUID;
 
 import org.bukkit.entity.Player;
 
+import com.wasteofplastic.greenhouses.greenhouse.Greenhouse;
+
 /**
  * Tracks the following info on the player
  * UUID, player name, whether they are in a greenhouse or not and how many greenhouses they have

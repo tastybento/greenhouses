@@ -15,7 +15,7 @@
  *     along with ASkyBlock.  If not, see <http://www.gnu.org/licenses/>.
  *******************************************************************************/
 
-package com.wasteofplastic.greenhouses;
+package com.wasteofplastic.greenhouses.util;
 
 public class Pair {
     private final int left;

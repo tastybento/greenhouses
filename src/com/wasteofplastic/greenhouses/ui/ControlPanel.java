@@ -1,4 +1,4 @@
-package com.wasteofplastic.greenhouses;
+package com.wasteofplastic.greenhouses.ui;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,6 +15,12 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+
+import com.wasteofplastic.greenhouses.Greenhouses;
+import com.wasteofplastic.greenhouses.greenhouse.BiomeRecipe;
+import com.wasteofplastic.greenhouses.greenhouse.Greenhouse;
+import com.wasteofplastic.greenhouses.util.Util;
+import com.wasteofplastic.greenhouses.util.VaultHelper;
 
 
 /**

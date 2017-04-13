@@ -1,4 +1,4 @@
-package com.wasteofplastic.greenhouses;
+package com.wasteofplastic.greenhouses.greenhouse;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +13,9 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.weather.WeatherChangeEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
+
+import com.wasteofplastic.greenhouses.Greenhouses;
+import com.wasteofplastic.greenhouses.Settings;
 
 /**
  * Monitors the greenhouses and grows things, adds weather etc.

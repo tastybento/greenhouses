@@ -1,4 +1,4 @@
-package com.wasteofplastic.greenhouses;
+package com.wasteofplastic.greenhouses.listeners;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +18,12 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+
+import com.wasteofplastic.greenhouses.Greenhouses;
+import com.wasteofplastic.greenhouses.Settings;
+import com.wasteofplastic.greenhouses.greenhouse.Greenhouse;
+import com.wasteofplastic.greenhouses.ui.Locale;
+import com.wasteofplastic.greenhouses.util.Util;
 
 /**
  * @author tastybento

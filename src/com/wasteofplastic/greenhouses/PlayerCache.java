@@ -8,6 +8,9 @@ import java.util.UUID;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
+import com.wasteofplastic.greenhouses.greenhouse.Greenhouse;
+import com.wasteofplastic.greenhouses.ui.Locale;
+
 /**
  * @author tastybento
  * Provides a memory cache of online player information

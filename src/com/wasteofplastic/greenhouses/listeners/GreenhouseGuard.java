@@ -1,9 +1,13 @@
-package com.wasteofplastic.greenhouses;
+package com.wasteofplastic.greenhouses.listeners;
 
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockFromToEvent;
+
+import com.wasteofplastic.greenhouses.Greenhouses;
+import com.wasteofplastic.greenhouses.Settings;
+import com.wasteofplastic.greenhouses.greenhouse.Greenhouse;
 
 public class GreenhouseGuard implements Listener {
     private final Greenhouses plugin;

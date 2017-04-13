@@ -1,4 +1,4 @@
-package com.wasteofplastic.greenhouses;
+package com.wasteofplastic.greenhouses.ui;
 
 import java.util.ArrayList;
 import java.util.List;

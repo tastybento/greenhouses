@@ -1,4 +1,4 @@
-package com.wasteofplastic.greenhouses;
+package com.wasteofplastic.greenhouses.util;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
