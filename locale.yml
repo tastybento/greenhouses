@@ -69,6 +69,7 @@ info:
    welcome: "&BWelcome! Click here for instructions"
 
 recipe:
+   blockscolor: "&f"
    hint: "Use /greenhouse list to see a list of recipe numbers!"
    wrongnumber: "Recipe number must be between 1 and [size]"
    title: "[[biome] recipe]"

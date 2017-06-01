@@ -86,4 +86,5 @@ public class Locale {
     public static String helpopengui;
     public static String limitsnoneallowed;   
     public static String limitslimitedto;
+    public static String lineColor;
 }

@@ -1,6 +1,7 @@
 package com.wasteofplastic.greenhouses.ui;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
@@ -127,18 +128,19 @@ public class ControlPanel implements Listener {
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName(Locale.generalgreenhouses);
         List<String> lore = new ArrayList<String>();
-        lore.addAll(Util.chop(ChatColor.translateAlternateColorCodes('&', Locale.infowelcome),110)); 
+        lore.addAll(new ArrayList<String>(Arrays.asList(Locale.infowelcome.split("|")))); 
         if (plugin.players.isAtLimit(player)) {
             lore.add(ChatColor.translateAlternateColorCodes('&', Locale.infonomore));
         } else {
             if (plugin.players.getRemainingGreenhouses(player) > 0) {
                 if (plugin.players.getRemainingGreenhouses(player) == 1) {
-                    lore.addAll(Util.chop(ChatColor.translateAlternateColorCodes('&', Locale.infoonemore),110));
+                    lore.addAll(new ArrayList<String>(Arrays.asList(Locale.infoonemore.split("|")))); 
                 } else {
-                    lore.addAll(Util.chop(ChatColor.translateAlternateColorCodes('&', Locale.infoyoucanbuild).replace("[number]", String.valueOf(plugin.players.getRemainingGreenhouses(player))),110));
+                    String temp = Locale.infoyoucanbuild.replace("[number]", String.valueOf(plugin.players.getRemainingGreenhouses(player)));
+                    lore.addAll(new ArrayList<String>(Arrays.asList(temp.split("|")))); 
                 }
             } else {
-                lore.addAll(Util.chop(ChatColor.translateAlternateColorCodes('&', Locale.infounlimited),110));
+                lore.addAll(new ArrayList<String>(Arrays.asList(Locale.infounlimited.split("|"))));
             }   
         }
         meta.setLore(lore);
@@ -162,7 +164,7 @@ public class ControlPanel implements Listener {
                 lore.add(ChatColor.YELLOW + Locale.recipeminimumblockstitle);
                 int i = 1;
                 for (String list : reqBlocks) {
-                    lore.add((i++) + ": " + list);
+                    lore.add(Locale.lineColor + (i++) + ": " + list);
                 }
             } else {
                 lore.add(ChatColor.YELLOW + Locale.recipenootherblocks);

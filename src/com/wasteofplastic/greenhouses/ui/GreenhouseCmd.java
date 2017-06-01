@@ -233,7 +233,7 @@ public class GreenhouseCmd implements CommandExecutor {
                     player.sendMessage(ChatColor.YELLOW + Locale.recipeminimumblockstitle);
                     int index = 1;
                     for (String list : reqBlocks) {
-                        player.sendMessage((index++) + ": " + list);
+                        player.sendMessage(Locale.lineColor + (index++) + ": " + list);
                     }
                 } else {
                     player.sendMessage(ChatColor.YELLOW + Locale.recipenootherblocks);
