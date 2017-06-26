@@ -1,12 +1,12 @@
 package com.wasteofplastic.greenhouses.util;
 
-import net.milkbowl.vault.economy.Economy;
-import net.milkbowl.vault.permission.Permission;
-
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
 import com.wasteofplastic.greenhouses.Greenhouses;
+
+import net.milkbowl.vault.economy.Economy;
+import net.milkbowl.vault.permission.Permission;
 
 /**
  * Helper class for Vault Economy and Permissions

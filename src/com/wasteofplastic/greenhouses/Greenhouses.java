@@ -17,6 +17,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.block.Biome;
@@ -49,7 +50,6 @@ import com.wasteofplastic.greenhouses.ui.Locale;
 import com.wasteofplastic.greenhouses.util.MetricsLite;
 import com.wasteofplastic.greenhouses.util.Util;
 import com.wasteofplastic.greenhouses.util.VaultHelper;
-import com.wasteofplastic.particle.ParticleEffects;
 
 /**
  * This plugin simulates greenhouses in Minecraft. It enables players to build biomes inside
@@ -1193,7 +1193,8 @@ public class Greenhouses extends JavaPlugin {
                                 || b.getType().equals(Material.SNOW) || b.getType().equals(Material.SNOW_BLOCK)) {
                             // Evaporate it
                             b.setType(Material.AIR);
-                            ParticleEffects.SMOKE_LARGE.send(Bukkit.getOnlinePlayers(),b.getLocation(),0D,0D,0D,1F,5,20);
+                            //ParticleEffects.SMOKE_LARGE.send(Bukkit.getOnlinePlayers(),b.getLocation(),0D,0D,0D,1F,5,20);
+                            b.getWorld().spawnParticle(Particle.SMOKE_LARGE, b.getLocation(), 5);
                             //ParticleEffect.SMOKE_LARGE.display(0F,0F,0F, 0.1F, 5, b.getLocation(), 30D);
                         }
                     }

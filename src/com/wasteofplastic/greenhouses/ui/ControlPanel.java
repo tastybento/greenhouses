@@ -128,19 +128,19 @@ public class ControlPanel implements Listener {
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName(Locale.generalgreenhouses);
         List<String> lore = new ArrayList<String>();
-        lore.addAll(new ArrayList<String>(Arrays.asList(Locale.infowelcome.split("|")))); 
+        lore.addAll(new ArrayList<String>(Arrays.asList(Locale.infowelcome.split("\\|")))); 
         if (plugin.players.isAtLimit(player)) {
             lore.add(ChatColor.translateAlternateColorCodes('&', Locale.infonomore));
         } else {
             if (plugin.players.getRemainingGreenhouses(player) > 0) {
                 if (plugin.players.getRemainingGreenhouses(player) == 1) {
-                    lore.addAll(new ArrayList<String>(Arrays.asList(Locale.infoonemore.split("|")))); 
+                    lore.addAll(new ArrayList<String>(Arrays.asList(Locale.infoonemore.split("\\|")))); 
                 } else {
                     String temp = Locale.infoyoucanbuild.replace("[number]", String.valueOf(plugin.players.getRemainingGreenhouses(player)));
-                    lore.addAll(new ArrayList<String>(Arrays.asList(temp.split("|")))); 
+                    lore.addAll(new ArrayList<String>(Arrays.asList(temp.split("\\|")))); 
                 }
             } else {
-                lore.addAll(new ArrayList<String>(Arrays.asList(Locale.infounlimited.split("|"))));
+                lore.addAll(new ArrayList<String>(Arrays.asList(Locale.infounlimited.split("\\|"))));
             }   
         }
         meta.setLore(lore);

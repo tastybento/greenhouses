@@ -3,9 +3,7 @@ package com.wasteofplastic.greenhouses.greenhouse;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Set;
 import java.util.UUID;
 
@@ -13,6 +11,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.World;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
@@ -28,7 +27,6 @@ import com.wasteofplastic.greenhouses.Greenhouses;
 import com.wasteofplastic.greenhouses.Settings;
 import com.wasteofplastic.greenhouses.util.Pair;
 import com.wasteofplastic.greenhouses.util.Util;
-import com.wasteofplastic.particle.ParticleEffects;
 
 public class Greenhouse {
     private Greenhouses plugin;
@@ -490,7 +488,8 @@ public class Greenhouse {
                     Block airCheck = world.getBlockAt(x, y, z);
                     if (airCheck.getType().equals(Material.AIR)) {
                         //).display(0F,0F,0F, 0.1F, 5, 
-                        ParticleEffects.SNOWBALL.send(Bukkit.getOnlinePlayers(),airCheck.getLocation(),0D,0D,0D,1F,5,20);
+                        //ParticleEffects.SNOWBALL.send(Bukkit.getOnlinePlayers(),airCheck.getLocation(),0D,0D,0D,1F,5,20);
+                        world.spawnParticle(Particle.SNOWBALL, airCheck.getLocation(), 5);
                     } else if (airCheck.getType().equals(Material.WATER) || airCheck.getType().equals(Material.STATIONARY_WATER)) {
                         water++;
                     }
@@ -585,7 +584,8 @@ public class Greenhouse {
                                     for (int y = bl.getLocation().getBlockY(); y< heightY; y++) {
                                         Block airCheck = world.getBlockAt(x, y, z);
                                         if (airCheck.getType().equals(Material.AIR)) {
-                                            ParticleEffects.EXPLOSION_NORMAL.send(Bukkit.getOnlinePlayers(),airCheck.getLocation(),0D,0D,0D,1F,5,20);
+                                            world.spawnParticle(Particle.EXPLOSION_NORMAL, airCheck.getLocation(), 5);
+                                            //ParticleEffects.EXPLOSION_NORMAL.send(Bukkit.getOnlinePlayers(),airCheck.getLocation(),0D,0D,0D,1F,5,20);
                                             //ParticleEffect.EXPLOSION_NORMAL.display(0F,0F,0F, 0.1F, 5, airCheck.getLocation(), 30D);
                                         }
                                     }
