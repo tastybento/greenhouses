@@ -52,13 +52,14 @@ public class GreenhouseEvents implements Listener {
         }
         if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK)) {
             Biome biome = event.getClickedBlock().getBiome();
-            // Allow pouring of water if biome is okay
-            if (event.getItem().getType().equals(Material.WATER_BUCKET) && !biome.equals(Biome.HELL) 
-                    && !biome.equals(Biome.DESERT) && !biome.equals(Biome.DESERT_HILLS)) {
-                event.setCancelled(true);
-                event.getClickedBlock().getRelative(event.getBlockFace()).setType(Material.WATER);
+            if (event.getItem() != null && biome != null) {
+                // Allow pouring of water if biome is okay
+                if (event.getItem().getType().equals(Material.WATER_BUCKET) && !biome.equals(Biome.HELL) 
+                        && !biome.equals(Biome.DESERT) && !biome.equals(Biome.DESERT_HILLS)) {
+                    event.setCancelled(true);
+                    event.getClickedBlock().getRelative(event.getBlockFace()).setType(Material.WATER);
+                }
             }
-
         }
     }
 
