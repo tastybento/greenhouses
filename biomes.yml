@@ -25,7 +25,7 @@ biomes:
     # lavacoverage: 0
     # Plants that can grow via the hopper/bonemeal system
     # Format is:
-    # Material: % chance:Block type on which it can grow
+    # Material:Type(optional): % chance:Block type on which it can grow
     # Note that with really small greenhouses, melons and pumpkins can change
     # grass to dirt, which may break the eco system!
     plants:
@@ -58,7 +58,7 @@ biomes:
     contents: LOG:3 LEAVES:3 GRASS:3
     icecoverage: 10
     plants:
-      LONG_GRASS: 10:GRASS:1
+      LONG_GRASS:1: 10:GRASS
     mobs:
       WOLF: 10:SNOW
     moblimit: 9
@@ -71,7 +71,7 @@ biomes:
     contents: LOG:3 LEAVES:3 GRASS:3
     icecoverage: 10
     plants:
-      LONG_GRASS: 10:GRASS:1
+      LONG_GRASS:1: 10:GRASS
     mobs:
       RABBIT: 10:SNOW
     moblimit: 9
@@ -100,9 +100,9 @@ biomes:
     priority: 4
     contents: LOG:3 LEAVES:4 GRASS:4
     plants:
-      RED_ROSE: 2:GRASS:8
-      DOUBLE_PLANT: 4:GRASS:5
-      LONG_GRASS: 20:GRASS:1
+      RED_ROSE:8: 2:GRASS
+      DOUBLE_PLANT:5: 4:GRASS
+      LONG_GRASS:1: 20:GRASS
   HELL:
     friendlyname: "&cNether"
     biome: HELL
@@ -126,8 +126,8 @@ biomes:
       YELLOW_FLOWER: 20:GRASS
       MELON_BLOCK: 10:GRASS
       RED_ROSE: 20:GRASS
-      DOUBLE_PLANT: 20:GRASS:3
-      LONG_GRASS: 20:GRASS:2
+      DOUBLE_PLANT:3: 20:GRASS
+      LONG_GRASS:2: 20:GRASS
   MUSHROOM_ISLAND:
     friendlyname: "Mushroom Island"
     biome: MUSHROOM_ISLAND
@@ -158,7 +158,7 @@ biomes:
     priority: 1
     contents: GRASS:3
     plants:
-      LONG_GRASS: 10:GRASS:1
+      LONG_GRASS:1: 10:GRASS
     mobs:
       HORSE: 10:GRASS
     moblimit: 9
@@ -181,7 +181,7 @@ biomes:
     priority: 11
     contents: LOG_2:3 LEAVES_2:4 GRASS:4
     plants:
-      DOUBLE_PLANT: 10:GRASS:2
+      DOUBLE_PLANT:2: 10:GRASS
   SWAMPLAND:
     friendlyname: "&2Slimy Swamp"
     icon: WATER_LILY

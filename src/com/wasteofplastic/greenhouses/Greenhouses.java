@@ -253,13 +253,27 @@ public class Greenhouses extends JavaPlugin {
                         HashMap<String,Object> plants = (HashMap<String,Object>)temp.getValues(false);
                         if (plants != null) {
                             for (String s: plants.keySet()) {
-                                Material plantMaterial = Material.valueOf(s);
+                                //logger(1, "Plant = " + s);
+                                Material plantMaterial = null;
+                                int plantType = 0;
+                                if (s.contains(":")) {
+                                    String[] split = s.split(":");
+                                    if (split.length == 2) {
+                                        plantMaterial = Material.valueOf(split[0]);
+                                        plantType = Integer.valueOf(split[1]);
+                                    }
+                                } else {
+                                    plantMaterial = Material.valueOf(s);
+                                }
+                                //logger(1, "Plant = " + plantMaterial);
                                 String[] split = ((String)plants.get(s)).split(":");
+                                //logger(1, "Split length = " + split.length);
                                 int plantProbability = Integer.valueOf(split[0]);
                                 Material plantGrowOn = Material.valueOf(split[1]);
-                                int plantType = 0;
                                 if (split.length == 3) {
+                                    //logger(1, "Split legth is ==3");
                                     plantType = Integer.valueOf(split[2]);
+                                    //logger(1, "plant type = " + plantType);
                                 }
                                 b.addPlants(plantMaterial, plantType, plantProbability, plantGrowOn);
                             }
@@ -480,8 +494,8 @@ public class Greenhouses extends JavaPlugin {
 	}*/
         try {
             // Remove players from memory
-        	greenhouses.clear();
-    		playerhouses.clear();
+            greenhouses.clear();
+            playerhouses.clear();
             players.removeAllPlayers();
             saveMessages();
         } catch (final Exception e) {
@@ -854,35 +868,35 @@ public class Greenhouses extends JavaPlugin {
 
         logger(1,"Loaded " + getGreenhouses().size() + " greenhouses.");
     }
-    
+
     public void addGHToPlayer(UUID owner, Greenhouse g) {
-    	HashSet<Greenhouse> storedhouses = null;
-    	
-    	if (playerhouses.get(owner) != null) {
-    		storedhouses = playerhouses.get(owner);
-			playerhouses.remove(owner);
-		} else {
-			storedhouses = new HashSet<Greenhouse>();
-		}
-    	
-    	storedhouses.add(g);
-		greenhouses.add(g);
-		playerhouses.put(owner, storedhouses);
+        HashSet<Greenhouse> storedhouses = null;
+
+        if (playerhouses.get(owner) != null) {
+            storedhouses = playerhouses.get(owner);
+            playerhouses.remove(owner);
+        } else {
+            storedhouses = new HashSet<Greenhouse>();
+        }
+
+        storedhouses.add(g);
+        greenhouses.add(g);
+        playerhouses.put(owner, storedhouses);
     }
-    
+
     public void removeGHFromPlayer(UUID owner, Greenhouse g) {
-    	HashSet<Greenhouse> storedhouses = null;
-    	
-    	if (playerhouses.get(owner) != null) {
-    		storedhouses = playerhouses.get(owner);
-			playerhouses.remove(owner);
-		} else {
-			storedhouses = new HashSet<Greenhouse>();
-		}
-    	
-    	storedhouses.remove(g);
-		greenhouses.remove(g);
-		playerhouses.put(owner, storedhouses);
+        HashSet<Greenhouse> storedhouses = null;
+
+        if (playerhouses.get(owner) != null) {
+            storedhouses = playerhouses.get(owner);
+            playerhouses.remove(owner);
+        } else {
+            storedhouses = new HashSet<Greenhouse>();
+        }
+
+        storedhouses.remove(g);
+        greenhouses.remove(g);
+        playerhouses.put(owner, storedhouses);
     }
 
 
@@ -1082,7 +1096,7 @@ public class Greenhouses extends JavaPlugin {
     public HashSet<Greenhouse> getGreenhouses() {
         return greenhouses;
     }
-    
+
     /**
      * 
      * @param uuid
@@ -1095,7 +1109,7 @@ public class Greenhouses extends JavaPlugin {
     	}
     	return null;
     }
-*/
+     */
 
     /**
      * @param greenhouses the greenhouses to set
@@ -1264,7 +1278,7 @@ public class Greenhouses extends JavaPlugin {
             logger(1,"Greenhouse biome was " + Util.prettifyText(gg.getBiome().toString()) + " - reverted to " + Util.prettifyText(gg.getOriginalBiome().toString()));
             //UUID ownerUUID = gg.getOwner();
             removeGreenhouse(gg);
-    	    removeGHFromPlayer(owner.getUniqueId(), gg);
+            removeGHFromPlayer(owner.getUniqueId(), gg);
             //players.save(ownerUUID);
         }
         saveGreenhouses();
