@@ -224,13 +224,18 @@ public class Greenhouses extends JavaPlugin {
                             if (subSplit.length > 1) {
                                 Material blockMaterial = Material.valueOf(subSplit[0]);
                                 // TODO: Need to parse these inputs better. INTS and Strings
-
+                                //logger(3,"subsplit = " + subSplit);
+                                //logger(3,"subsplit length = " + subSplit.length);
                                 int blockType = 0;
                                 int blockQty = 0;
                                 if (subSplit.length == 2) {
                                     blockQty = Integer.valueOf(subSplit[1]);
                                     blockType = -1; // anything okay
-                                } else if (split.length == 3) {
+                                } else if (subSplit.length == 3) {
+                                    //logger(3,"subsplit[1] = " + subSplit[1]);
+                                    //logger(3,"subsplit[2] = " + subSplit[2]);
+                                    //logger(3,"subsplit[1] value = " + Integer.valueOf(subSplit[1]));
+                                    //logger(3,"subsplit[2] value = " + Integer.valueOf(subSplit[2]));
                                     blockType = Integer.valueOf(subSplit[1]);
                                     blockQty = Integer.valueOf(subSplit[2]);
                                 }
